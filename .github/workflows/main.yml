@@ -21,6 +21,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: www # The folder containing your HTML files
-          branch: gh-pagesgit add .
-git commit -m "Deploy: Web page with secure Gemini injection"
-git push origin main --force
+          branch: gh-pages
