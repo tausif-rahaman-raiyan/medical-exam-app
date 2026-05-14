@@ -11,49 +11,55 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Inject Gemini Key 🔐
+      - name: Inject Gemini Key into ALL HTML files 🔐
         env:
           GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           # Create a backup for safety
-          cp www/index.html www/index.html.backup
+          cp -r www www.backup
           
-          # Use a Python-based replacement for better handling of special characters
+          # Use Python to replace __SECRET_KEY__ in ALL HTML files
           python3 << 'EOF'
           import os
-          import re
+          import glob
           
           gemini_key = os.environ['GEMINI_KEY']
           
-          # Read the file
-          with open('www/index.html', 'r', encoding='utf-8') as f:
-              content = f.read()
+          # Find ALL HTML files in www directory and subdirectories
+          html_files = glob.glob('www/**/*.html', recursive=True)
           
-          # Replace the placeholder with the actual key
-          updated_content = content.replace('__SECRET_KEY__', gemini_key)
+          print(f"Found {len(html_files)} HTML files to process")
           
-          # Write back to file
-          with open('www/index.html', 'w', encoding='utf-8') as f:
-              f.write(updated_content)
+          files_updated = 0
+          for html_file in html_files:
+              with open(html_file, 'r', encoding='utf-8', errors='ignore') as f:
+                  content = f.read()
+              
+              if '__SECRET_KEY__' in content:
+                  # Replace the placeholder with the actual key
+                  updated_content = content.replace('__SECRET_KEY__', gemini_key)
+                  
+                  with open(html_file, 'w', encoding='utf-8') as f:
+                      f.write(updated_content)
+                  
+                  files_updated += 1
+                  print(f"✓ Updated: {html_file}")
           
-          print("✓ Key injected successfully")
+          print(f"\n✓ Successfully updated {files_updated} HTML files with Gemini API key")
           EOF
           
-          # Verify the replacement without logging the actual key
-          if grep -q 'window.GEMINI_API_KEY = "[^"]*"' www/index.html; then
-            echo "✓ Verified: Key is assigned to window.GEMINI_API_KEY"
+          # Verify the replacement worked
+          PLACEHOLDER_COUNT=$(grep -r "__SECRET_KEY__" www --include="*.html" | wc -l)
+          if [ "$PLACEHOLDER_COUNT" -eq 0 ]; then
+            echo "✓ Verification passed: All placeholders have been replaced"
           else
-            echo "✗ ERROR: Could not verify key injection"
+            echo "✗ ERROR: Found $PLACEHOLDER_COUNT files still containing __SECRET_KEY__"
             exit 1
           fi
           
-          # Extra safety check: ensure placeholder is gone
-          if grep -q "__SECRET_KEY__" www/index.html; then
-            echo "✗ ERROR: Placeholder __SECRET_KEY__ still exists!"
-            exit 1
-          else
-            echo "✓ Placeholder successfully replaced"
-          fi
+          # Count files with actual keys
+          KEY_COUNT=$(grep -r "window.GEMINI_API_KEY = \"[^_]*\"" www --include="*.html" | wc -l)
+          echo "✓ Confirmed: $KEY_COUNT HTML files now contain the injected API key"
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
