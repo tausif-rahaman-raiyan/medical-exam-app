@@ -116,7 +116,11 @@
         .dark .text-sm.opacity-60 { color: #94A3B8 !important; }
     </style>
 </head>
-
+<script>
+    // --- GEMINI AI CONFIGURATION ---
+    // The GitHub Action will swap __SECRET_KEY__ for your real key during build
+    window.GEMINI_API_KEY = "__SECRET_KEY__";
+</script>
 <body class="antialiased dark">
 
 <header class="sticky top-0 z-50 bg-white/80 dark:bg-[#1a1227]/80 backdrop-blur-xl border-b border-purple-100 dark:border-purple-900/30 p-4 transition-transform duration-300" id="mainHeader">
