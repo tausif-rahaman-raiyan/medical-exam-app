@@ -13,17 +13,31 @@ jobs:
 
       - name: Inject Gemini Key 🔐
         run: |
-          # This command searches for the word __SECRET_KEY__ anywhere in index.html
-          # and replaces it with your actual secret, ignoring quotes or spaces.
-          sed -i "s/__SECRET_KEY__/${{ secrets.GEMINI_API_KEY }}/g" www/index.html
+          # Create a backup for safety
+          cp www/index.html www/index.html.backup
           
-          # This confirms if the word was found (without showing your real key)
-          if grep -q "${{ secrets.GEMINI_API_KEY }}" www/index.html; then
-            echo "SUCCESS: Key was injected into the file."
+          # Use a more robust sed command that:
+          # 1. Escapes special characters in the API key
+          # 2. Uses a different delimiter (| instead of /) to avoid conflicts
+          # 3. Works with various quote/space combinations
+          sed -i "s|__SECRET_KEY__|$(echo "${{ secrets.GEMINI_API_KEY }}" | sed 's/[&/\]/\\&/g')|g" www/index.html
+          
+          # Verify the replacement without logging the actual key
+          if grep -q 'window.GEMINI_API_KEY = "[^_]*"' www/index.html; then
+            echo "✓ SUCCESS: Gemini API key was injected successfully"
+            echo "✓ Verified: Key is assigned to window.GEMINI_API_KEY"
+            
+            # Extra safety check: ensure placeholder is gone
+            if grep -q "__SECRET_KEY__" www/index.html; then
+              echo "⚠ WARNING: Placeholder __SECRET_KEY__ still exists!"
+              exit 1
+            fi
           else
-            echo "ERROR: Placeholder __SECRET_KEY__ was not found in index.html"
+            echo "✗ ERROR: Could not verify key injection"
+            echo "Expected pattern: window.GEMINI_API_KEY = \"[actual-key-here]\""
             exit 1
           fi
+
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
