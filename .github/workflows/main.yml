@@ -1,0 +1,43 @@
+name: Build and Deploy
+on: [push]
+
+permissions:
+  contents: write # Needed to publish to the gh-pages branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Android APK
+        run: |
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: My-Medical-App-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # --- NEW STEP: DEPLOY TO GITHUB PAGES ---
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: www # The folder containing your web files
+          branch: gh-pages # The branch where the web app will live
