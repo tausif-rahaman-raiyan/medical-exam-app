@@ -1,16 +1,17 @@
-name: Build and Deploy
+name: Medical App Build and Secure Deploy
 on: [push]
 
 permissions:
-  contents: write # Needed to publish to the gh-pages branch
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: set up JDK 21
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -20,11 +21,27 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # STEP: Injection - Swaps your placeholder for the real secret key
+      - name: Inject Gemini API Key 🔐
+        run: |
+          # Finds __SECRET_KEY__ in your index.html and replaces it with your GitHub Secret
+          sed -i 's/__SECRET_KEY__/${{ secrets.GEMINI_API_KEY }}/g' www/index.html
+          
+          # Optional: If you have a separate JS file, uncomment the line below:
+          # sed -i 's/__SECRET_KEY__/${{ secrets.GEMINI_API_KEY }}/g' www/assets/script.js
+          
+          echo "API Key injected successfully (masked in logs)."
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x android/gradlew
+
       - name: Build Android APK
         run: |
-          npx cap sync android
           cd android
-          chmod +x gradlew
+          ./gradlew clean
           ./gradlew assembleDebug
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
@@ -32,12 +49,13 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: My-Medical-App-APK
+          name: Medical-App-Release-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      # --- NEW STEP: DEPLOY TO GITHUB PAGES ---
+      # Optional: GitHub Pages Deployment
+      # Note: Only works if the repo is Public OR you have GitHub Pro
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: www # The folder containing your web files
-          branch: gh-pages # The branch where the web app will live
+          folder: www
+          branch: gh-pages
