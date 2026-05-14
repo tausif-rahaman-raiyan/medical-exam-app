@@ -13,10 +13,17 @@ jobs:
 
       - name: Inject Gemini Key 🔐
         run: |
-          # Replaces the placeholder with your GitHub Secret
-          sed -i 's/__SECRET_KEY__/${{ secrets.GEMINI_API_KEY }}/g' www/index.html
-          echo "Injection successful."
-
+          # This command searches for the word __SECRET_KEY__ anywhere in index.html
+          # and replaces it with your actual secret, ignoring quotes or spaces.
+          sed -i "s/__SECRET_KEY__/${{ secrets.GEMINI_API_KEY }}/g" www/index.html
+          
+          # This confirms if the word was found (without showing your real key)
+          if grep -q "${{ secrets.GEMINI_API_KEY }}" www/index.html; then
+            echo "SUCCESS: Key was injected into the file."
+          else
+            echo "ERROR: Placeholder __SECRET_KEY__ was not found in index.html"
+            exit 1
+          fi
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
