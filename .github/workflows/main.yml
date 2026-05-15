@@ -1,51 +1,40 @@
-name: Deploy Web App
-on: [push]
+name: Build Medical App APK
 
-permissions:
-  contents: write
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # This allows you to run it manually later
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Remove API keys from HTML files 🔐
-        run: |
-          # Replace ALL instances of the API key with a placeholder
-          # This ensures no keys are ever committed to git
-          python3 << 'EOF'
-          import os
-          import glob
-          
-          # Find ALL HTML files in www directory
-          html_files = glob.glob('www/**/*.html', recursive=True)
-          
-          print(f"Processing {len(html_files)} HTML files...")
-          
-          for html_file in html_files:
-              with open(html_file, 'r', encoding='utf-8', errors='ignore') as f:
-                  content = f.read()
-              
-              # Remove any actual API keys (just in case they got committed)
-              # and ensure placeholder is there instead
-              if 'window.GEMINI_API_KEY' in content:
-                  updated_content = content.replace(
-                      'window.GEMINI_API_KEY = "__SECRET_KEY__"',
-                      'window.GEMINI_API_KEY = "__SECRET_KEY__"'  # Keep placeholder
-                  )
-                  
-                  with open(html_file, 'w', encoding='utf-8') as f:
-                      f.write(updated_content)
-                  
-                  print(f"✓ Secured: {html_file}")
-          
-          print("\n✓ All HTML files secured - no API keys embedded")
-          EOF
-
-      - name: Deploy to GitHub Pages 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          folder: www
-          branch: gh-pages
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Android Project
+        run: npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Build APK with Gradle
+        working-directory: ./android
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MedicalExamApp-Debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
