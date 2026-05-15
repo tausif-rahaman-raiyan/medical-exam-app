@@ -11,7 +11,8 @@ iframe { max-width: 100%; border-radius: 12px; }
 
 --></style>
 <script src='../assets/tailwindcss.js'></script>
-<script src='https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'></script>
+<script src='../assets/data.js'></script>
+<script src='../assets/profile-manager.js'></script>
 <link href='../assets/all.min.css' rel='stylesheet'/>
 <style>
 /*<![CDATA[*/
@@ -221,10 +222,7 @@ body {
 ল&#2509;য&#2494;বর&#2503;টর&#2495;র ন&#2495;র&#2494;পদ ব&#2509;যবহ&#2494;র
 </h1>
 <div class='post-body entry-content'>
-<!-- Include external libraries for extra "Wow" factor -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<!-- Firebase SDK loaded in footer -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -405,7 +403,7 @@ body {
 
 <script>
 // --- GEMINI AI OMR SCANNER ---
-window.GEMINI_API_KEY = "__SECRET_KEY__"; 
+window.GEMINI_API_KEY = localStorage.getItem('medicalExamApp_apiKey') || "__SECRET_KEY__"; 
 
 window.openHardOMRCamera = () => {
     document.getElementById('entry-modal').classList.add('hidden');
