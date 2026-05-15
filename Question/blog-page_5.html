@@ -11,7 +11,7 @@ iframe { max-width: 100%; border-radius: 12px; }
 
 --></style>
 <script src='../assets/tailwindcss.js'></script>
-<script src='https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'></script>
+<script src='../assets/profile-manager.js'></script>
 <link href='../assets/all.min.css' rel='stylesheet'/>
 <style>
 /*<![CDATA[*/
@@ -183,7 +183,7 @@ body {
 <!-- Global Header -->
 <header class='sticky top-0 z-50 bg-white/80 dark:bg-[#1a1227]/80 backdrop-blur-xl border-b border-purple-100 dark:border-purple-900/30 p-4 transition-transform duration-300' id='mainHeader'>
 <div class='max-w-5xl mx-auto flex justify-between items-center'>
-<a class='flex items-center space-x-3' href='https://www.instagram.com/tausifrahamanraiyan//'>
+<a class='flex items-center space-x-3' href='../index.html'>
 <div class='w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-purple-500/20'>BH</div>
 <h1 class='text-sm md:text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-fuchsia-500 dark:from-purple-400 dark:to-fuchsia-300'>
                 Medical Secret Files
@@ -206,7 +206,7 @@ body {
 <button class='w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center text-zinc-700 dark:text-zinc-200' id='myResultsBtn'>
 <i class='fa fa-trophy mr-3 text-yellow-500'></i> My Results
                 </button>
-<a class='w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center' href='https://www.instagram.com/tausifrahamanraiyan//'>
+<a class='w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center' href='../index.html'>
 <i class='fa fa-home mr-3 text-purple-500'></i> Home
                 </a>
 </div>
@@ -221,10 +221,7 @@ body {
 জ&#2509;য&#2507;ত&#2495;র&#2509;ব&#2495;জ&#2509;ঞ&#2494;ন
 </h1>
 <div class='post-body entry-content'>
-<!-- Include external libraries for extra "Wow" factor -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<!-- Firebase SDK loaded in footer -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -394,8 +391,17 @@ body {
                 <i class="fa fa-camera text-3xl text-emerald-600 dark:text-emerald-400"></i>
             </div>
             <h3 class="text-2xl font-black mb-2 dark:text-white">Scan OMR Sheet</h3>
-            <p class="text-sm opacity-60 mb-6 px-2 dark:text-white">Take a clear photo of your filled OMR sheet.</p>
-            <label class="w-full flex items-center justify-center bg-emerald-600 text-white font-bold py-4 rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer">
+            <p class="text-sm opacity-60 mb-4 px-2 dark:text-white">Take a clear photo of your filled OMR sheet.</p>
+            <div id="no-api-warning" class="hidden mb-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-2xl p-4 text-left">
+                <p class="text-sm font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2 mb-1">
+                    <i class="fa fa-exclamation-triangle"></i> API Key Required
+                </p>
+                <p class="text-xs text-rose-500 dark:text-rose-400 mb-3">The AI scanner needs a Gemini API key. Set your key first, then come back to scan.</p>
+                <button onclick="document.getElementById('camera-modal').classList.add('hidden'); document.getElementById('entry-modal').classList.remove('hidden'); if(window.profileManager) window.profileManager.showApiKeyModal();" class="w-full bg-rose-500 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-rose-600 transition-colors">
+                    <i class="fa fa-key mr-2"></i> Set API Key Now
+                </button>
+            </div>
+            <label id="omr-upload-label" class="w-full flex items-center justify-center bg-emerald-600 text-white font-bold py-4 rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer">
                 <i class="fa fa-upload mr-2"></i> UPLOAD IMAGE
                 <input type="file" accept="image/*" capture="environment" class="hidden" onchange="processHardOMR(event)">
             </label>
@@ -405,11 +411,22 @@ body {
 
 <script>
 // --- GEMINI AI OMR SCANNER ---
-window.GEMINI_API_KEY = "__SECRET_KEY__"; 
+window.GEMINI_API_KEY = localStorage.getItem('medicalExamApp_apiKey') || "__SECRET_KEY__"; 
 
 window.openHardOMRCamera = () => {
+    window.GEMINI_API_KEY = localStorage.getItem('medicalExamApp_apiKey') || "__SECRET_KEY__";
     document.getElementById('entry-modal').classList.add('hidden');
     document.getElementById('camera-modal').classList.remove('hidden');
+    document.getElementById('camera-modal').classList.add('flex');
+    const warning = document.getElementById('no-api-warning');
+    const uploadLabel = document.getElementById('omr-upload-label');
+    if (window.GEMINI_API_KEY === '__SECRET_KEY__') {
+        if (warning) warning.classList.remove('hidden');
+        if (uploadLabel) { uploadLabel.classList.add('opacity-40', 'pointer-events-none'); }
+    } else {
+        if (warning) warning.classList.add('hidden');
+        if (uploadLabel) { uploadLabel.classList.remove('opacity-40', 'pointer-events-none'); }
+    }
 };
 
 window.processHardOMR = (event) => {
