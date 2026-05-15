@@ -171,7 +171,7 @@ const subjectData = [
             {t:"२०२१-२०२२ মেডিকেল প্রশ্নপত্র", c:"1020324108", url:"Question/blog-page_48.html"},
             {t:"२०२२-२०२३ মেডিকেল প্রশ্নপত্র", c:"1020324109", url:"Question/blog-page_621.html"},
             {t:"२०२३-२०२४ মেডিকেল প্রশ্নপত্র", c:"1020324110", url:"Question/blog-page_30.html"},
-            {t:"२०२४-२०२५ মেডিকেল প্রশ্নপত্র", c:"1020325111", url:"Question/blog-page_231.html"}
+            {t:"२०२४-२०२५ মেডিকেল প্রশ্নপত্র", c:"1020324111", url:"Question/blog-page_231.html"}
         ]
     }
 ];
