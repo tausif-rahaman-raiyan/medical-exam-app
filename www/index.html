@@ -125,7 +125,7 @@
 
 <header class="sticky top-0 z-50 bg-white/80 dark:bg-[#1a1227]/80 backdrop-blur-xl border-b border-purple-100 dark:border-purple-900/30 p-4 transition-transform duration-300" id="mainHeader">
     <div class="max-w-5xl mx-auto flex justify-between items-center">
-        <a class="flex items-center space-x-3" href="home.html">
+        <a class="flex items-center space-x-3" href="index.html">
             <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-purple-500/20">BH</div>
             <h1 class="text-sm md:text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-fuchsia-500 dark:from-purple-400 dark:to-fuchsia-300">
                 Medical Secret Files
@@ -137,21 +137,32 @@
                 <img class="w-10 h-10 rounded-full border-2 border-purple-500 object-cover" id="userImg" src="https://ui-avatars.com/api/?name=Guest"/>
             </button>
             
-            <div class="hidden absolute right-0 mt-3 w-64 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border dark:border-zinc-800 py-2 z-[100]" id="userDropdown">
+            <div class="hidden absolute right-0 mt-3 w-80 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border dark:border-zinc-800 py-2 z-[100]" id="userDropdown">
                 <div class="px-5 py-3 border-b dark:border-zinc-800">
                     <p class="text-sm font-bold truncate" id="userName">Guest User</p>
                     <p class="text-[10px] opacity-60 truncate" id="userEmail">Sign in to save progress</p>
                 </div>
                 
-               <button class="w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center text-purple-600 font-bold" id="authBtn">
+                <button class="w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center text-purple-600 font-bold" id="authBtn">
                     <i class="fa fa-google mr-3"></i> <span id="authBtnText">Login with Google</span>
                 </button>
+
                 <button class="w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center text-zinc-700 dark:text-zinc-200" id="myResultsBtn">
                     <i class="fa fa-trophy mr-3 text-yellow-500"></i> My Results
                 </button>
-                <a class="w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center" href="home.html">
+
+                <button class="w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center text-blue-600 dark:text-blue-400" id="apiSettingsBtn">
+                    <i class="fa fa-key mr-3"></i> API Input
+                    <span id="apiStatus" class="ml-auto text-[10px] font-bold uppercase text-rose-500 px-2 py-1 rounded bg-black/5">✗ Not Set</span>
+                </button>
+
+                <a class="w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center text-zinc-700 dark:text-zinc-200 border-t border-zinc-200 dark:border-zinc-700" href="index.html">
                     <i class="fa fa-home mr-3 text-purple-500"></i> Home
                 </a>
+
+                <button class="w-full text-left px-5 py-3 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center text-rose-600 dark:text-rose-400" id="logoutBtn" style="display: none;">
+                    <i class="fa fa-sign-out mr-3"></i> Logout
+                </button>
             </div>
         </div>
     </div>
@@ -164,7 +175,7 @@
     </div>
     
     <div class="space-y-4" id="view-modules">
-        </div>
+    </div>
 </main>
 
 <div class="fixed inset-0 z-[300] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm" id="results-modal">
@@ -186,13 +197,13 @@
             <select class="flex-1 p-2 rounded-lg border dark:bg-zinc-800 dark:border-zinc-600 text-[12px] md:text-sm dark:text-white outline-none focus:border-purple-500" id="filter-topic">
                 <option value="">All Topics</option>
             </select>
-            <button class="p-2 px-3 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-colors" id="clear-filters-btn" title="Clear Filters">
+            <button class="p-2 px-3 bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/40 transition-colors" id="clear-filters-btn">
                 <i class="fa fa-trash-alt"></i>
             </button>
         </div>
 
         <div class="p-4 overflow-y-auto flex-1 space-y-3 min-h-[250px]" id="results-list">
-            </div>
+        </div>
     </div>
 </div>
 
@@ -217,198 +228,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+<!-- Load modular scripts -->
+<script src="assets/data.js"></script>
+<script src="assets/profile-manager.js"></script>
+
 <script type="text/javascript">
-const subjectData = [
-{ cat: "উদ্ভিদবিজ্ঞান", items: [
-        {t:"কোষ ও এর গঠন", c:"1020325001", url:"Question/blog-page_4.html"},
-        {t:"কোষ বিভাজন", c:"1020325002", url:"Question/blog-page_76.html"},
-        {t:"কোষ রসায়ন", c:"1020325003", url:"Question/blog-page_40.html"},
-        {t:"অণুজীব", c:"1020325004", url:"Question/blog-page_33.html"},
-        {t:"শৈবাল ও ছত্রাক", c:"1020325005", url:"Question/blog-page_21.html"},
-        {t:"ব্রায়োফাইটা ও টেরিডোফাইটা", c:"1020325006", url:"Question/blog-page_26.html"},
-        {t:"নগ্নবীজী ও আবৃতবীজী উদ্ভিদ", c:"1020325007", url:"Question/blog-page_12.html"},
-        {t:"টিস্যু ও টিস্যুতন্ত্র", c:"1020325008", url:"Question/blog-page_22.html"},
-        {t:"উদ্ভিদ শারীরতত্ত্ব", c:"1020325009", url:"Question/blog-page_0.html"},
-        {t:"উদ্ভিদ প্রজনন", c:"1020325010", url:"Question/blog-page_7.html"},
-        {t:"জীবপ্রযুক্তি", c:"1020325011", url:"Question/blog-page_54.html"},
-        {t:"জীবের পরিবেশ, বিস্তার ও সংরক্ষণ", c:"1020325012", url:"Question/blog-page_10.html"},
-        {t:"জীববিজ্ঞান প্রথম পত্র শর্ট সিলেবাস", c:"1020325013", url:"Question/blog-page_83.html"},
-        {t:"জীববিজ্ঞান প্রথম পত্র পেপার ফাইনাল", c:"1020325014", url:"Question/blog-page_19.html"}
-    ]},
-    { cat: "প্রাণিবিজ্ঞান", items: [
-        {t:"প্রাণীর বিভিন্নতা ও শ্রেণিবিন্যাস", c:"1020325015", url:"Question/blog-page_97.html"},
-        {t:"প্রাণীর পরিচিতি", c:"1020325016", url:"Question/blog-page_36.html"},
-        {t:"পরিপাক ও শোষণ", c:"1020325017", url:"Question/blog-page_69.html"},
-        {t:"রক্ত ও সঞ্চালন", c:"1020325018", url:"Question/blog-page_71.html"},
-        {t:"শ্বাস ক্রিয়া ও শ্বসন", c:"1020325019", url:"Question/blog-page_47.html"},
-        {t:"বর্জ্য ও নিষ্কাশন", c:"1020325020", url:"Question/blog-page_14.html"},
-        {t:"চলন ও অঙ্গচালনা", c:"1020325021", url:"Question/blog-page_42.html"},
-        {t:"সমন্বয় ও নিয়ন্ত্রণ", c:"1020325022", url:"Question/blog-page_66.html"},
-        {t:"মানব জীবনের ধারাবাহিকতা", c:"1020325023", url:"Question/blog-page_27.html"},
-        {t:"মানবদেহের প্রতিরক্ষা", c:"1020325024", url:"Question/blog-page_46.html"},
-        {t:"জিনতত্ত্ব ও বিবর্তন", c:"1020325025", url:"Question/blog-page_94.html"},
-        {t:"প্রাণীর আচরণ", c:"1020325026", url:"Question/blog-page_73.html"},
-        {t:"জীববিজ্ঞান দ্বিতীয় পত্র শর্ট সিলেবাস", c:"1020325027", url:"Question/blog-page_59.html"},
-        {t:"জীববিজ্ঞান দ্বিতীয় পত্র পেপার ফাইনাল", c:"1020325028", url:"Question/blog-page_1.html"}
-    ]},
-    { cat: "পদার্থবিজ্ঞান প্রথম পত্র", items: [
-        {t:"ভৌতজগত ও পরিমাপ", c:"1020325029", url:"Question/blog-page_89.html"},
-        {t:"ভেক্টর", c:"1020325030", url:"Question/blog-page_41.html"},
-        {t:"গতিবিদ্যা", c:"1020325031", url:"Question/blog-page_51.html"},
-        {t:"নিউটনীয় বলবিদ্যা", c:"1020325032", url:"Question/blog-page_84.html"},
-        {t:"কাজ, শক্তি ও ক্ষমতা", c:"1020325033", url:"Question/blog-page_65.html"},
-        {t:"মহাকর্ষ ও অভিকর্ষ", c:"1020325034", url:"Question/blog-page_13.html"},
-        {t:"পদার্থের গাঠনিক ধর্ম", c:"1020325035", url:"Question/blog-page_63.html"},
-        {t:"পর্যাবৃত্ত গতি", c:"1020325036", url:"Question/blog-page_82.html"},
-        {t:"তরঙ্গ", c:"1020325037", url:"Question/blog-page_98.html"},
-        {t:"আদর্শ গ্যাস ও গ্যাসের গতিতত্ত্ব", c:"1020325038", url:"Question/blog-page_34.html"},
-        {t:"পদার্থবিজ্ঞান প্রথম পত্র শর্ট সিলেবাস", c:"1020325039", url:"Question/blog-page_8.html"},
-        {t:"পদার্থবিজ্ঞান প্রথম পত্র পেপার ফাইনাল", c:"1020325040", url:"Question/blog-page_86.html"}
-    ]},
-    { cat: "পদার্থবিজ্ঞান দ্বিতীয় পত্র", items: [
-        {t:"তাপগতিবিদ্যা", c:"1020325041", url:"Question/blog-page_95.html"},
-        {t:"স্থির তড়িৎ", c:"1020325042", url:"Question/blog-page_53.html"},
-        {t:"চল তড়িৎ", c:"1020325043", url:"Question/blog-page_67.html"},
-        {t:"তড়িৎ প্রবাহের চৌম্বক ক্রিয়া ও চুম্বকত্ব", c:"1020325044", url:"Question/blog-page_44.html"},
-        {t:"তড়িৎ চৌম্বকীয় আবেশ ও দিক পরিবর্তী প্রবাহ", c:"1020325045", url:"Question/blog-page_15.html"},
-        {t:"জ্যামিতিক আলোকবিজ্ঞান", c:"1020325046", url:"Question/blog-page_68.html"},
-        {t:"ভৌত আলোকবিজ্ঞান", c:"1020325047", url:"Question/blog-page_55.html"},
-        {t:"আধুনিক পদার্থবিজ্ঞানের সূচনা", c:"1020325048", url:"Question/blog-page_25.html"},
-        {t:"পরমাণুর মডেল এবং নিউক্লিয়ার পদার্থবিজ্ঞান", c:"1020325049", url:"Question/blog-page_38.html"},
-        {t:"সেমিকন্ডাক্টর ও ইলেকট্রনিক্স", c:"1020325050", url:"Question/blog-page_56.html"},
-        {t:"জ্যোতির্বিজ্ঞান", c:"1020325051", url:"Question/blog-page_5.html"},
-        {t:"পদার্থবিজ্ঞান দ্বিতীয় পত্র শর্ট সিলেবাস", c:"1020325052", url:"Question/blog-page_61.html"},
-        {t:"পদার্থবিজ্ঞান দ্বিতীয় পত্র পেপার ফাইনাল", c:"1020325053", url:"Question/blog-page_80.html"}
-    ]},
-    { cat: "রসায়ন প্রথম পত্র", items: [
-        {t:"ল্যাবরেটরির নিরাপদ ব্যবহার", c:"1020325054", url:"Question/blog-page_45.html"},
-        {t:"গুণগত রসায়ন", c:"1020325055", url:"Question/blog-page_70.html"},
-        {t:"মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন", c:"1020325056", url:"Question/blog-page_2.html"},
-        {t:"রাসায়নিক পরিবর্তন", c:"1020325057", url:"Question/blog-page_32.html"},
-        {t:"কর্মমুখী রসায়ন", c:"1020325058", url:"Question/blog-page_74.html"},
-        {t:"রসায়ন প্রথম পত্র শর্ট সিলেবাস", c:"1020325059", url:"Question/blog-page_75.html"},
-        {t:"রসায়ন প্রথম পত্র পেপার ফাইনাল", c:"1020325060", url:"Question/blog-page_16.html"}
-    ]},
-    { cat: "রসায়ন দ্বিতীয় পত্র", items: [
-        {t:"পরিবেশ রসায়ন", c:"1020325061", url:"Question/blog-page_99.html"},
-        {t:"জৈব রসায়ন", c:"1020325062", url:"Question/blog-page_37.html"},
-        {t:"পরিমাণগত রসায়ন", c:"1020325063", url:"Question/blog-page_9.html"},
-        {t:"তড়িৎ রসায়ন", c:"1020325064", url:"Question/blog-page_87.html"},
-        {t:"অর্থনৈতিক রসায়ন", c:"1020325065", url:"Question/blog-page_17.html"},
-        {t:"রসায়ন দ্বিতীয় পত্র শর্ট সিলেবাস", c:"1020325066", url:"Question/blog-page_28.html"},
-        {t:"রসায়ন দ্বিতীয় পত্র পেপার ফাইনাল", c:"1020325067", url:"Question/blog-page_52.html"}
-    ]},
-    { cat: "সাধারণ জ্ঞান", items: [
-        {t:"সাম্প্রতিক বাংলাদেশ ও আন্তর্জাতিক বিষয়াবলী-১", c:"1020325112", url:"Question/blog-page_72.html"},
-        {t:"সাম্প্রতিক বাংলাদেশ ও আন্তর্জাতিক বিষয়াবলী-২", c:"1020325113", url:"Question/blog-page_57.html"},
-        {t:"মানবিক গুণাবলী", c:"1020325114", url:"Question/blog-page_92.html"},
-        {t:"General Knowledge: Before 1948", c:"1020325068", url:"Question/general-knowledge-before-1948.html"},
-        {t:"General Knowledge: After 1948", c:"1020325069", url:"Question/general-knowledge-after-1948.html"},
-        {t:"General Knowledge: BCS, MAT, DAT and others", c:"1020325070", url:"Question/general-knowledge-bcs-mat-dat-and-others.html"},
-        {t:"General Knowledge: Recent", c:"1020325071", url:"Question/general-knowledge-recent.html"},
-        {t:"General Knowledge: International", c:"1020325072", url:"Question/general-knowledge-international.html"}
-    ]},
-    { cat: "ইংরেজি", items: [
-        {t:"English Grammar 01", c:"1020325073", url:"Question/english-grammar-01.html"},
-        {t:"English Grammar 02", c:"1020325074", url:"Question/english-grammar-02.html"},
-        {t:"English Vocabulary 01", c:"1020325075", url:"Question/english-vocabulary-01.html"},
-        {t:"English Vocabulary 02", c:"1020325076", url:"Question/english-vocabulary-02.html"},
-        {t:"Eng BCS, DAT, MAT, Others", c:"1020325077", url:"Question/eng-bcs-dat-mat-others.html"}
-    ]},
-    { cat: "সাবজেক্ট ফাইনাল", items: [
-        {t:"জীববিজ্ঞান সাবজেক্ট ফাইনাল", c:"1020325078", url:"Question/blog-page_49.html"},
-        {t:"পদার্থবিজ্ঞান সাবজেক্ট ফাইনাল", c:"1020325079", url:"Question/blog-page_3.html"},
-        {t:"রসায়ন সাবজেক্ট ফাইনাল", c:"1020325080", url:"Question/blog-page_88.html"},
-        {t:"General Knowledge: Full Syllabus 01", c:"1020325081", url:"Question/general-knowledge-full-syllabus-01.html"},
-        {t:"General Knowledge: Full Syllabus 02", c:"1020325082", url:"Question/general-knowledge-full-syllabus-02.html"},
-        {t:"English: Full Syllabus 01", c:"1020325083", url:"Question/english-full-syllabus-01.html"},
-        {t:"English: Full Syllabus 02", c:"1020325084", url:"Question/english-full-syllabus-02.html"}
-    ]},
-    { cat: "মডেল টেস্ট", items: [
-        {t:"মডেল টেস্ট-০১", c:"1020325085", url:"Question/blog-page_85.html"},
-        {t:"মডেল টেস্ট-০২", c:"1020325086", url:"Question/blog-page_18.html"},
-        {t:"মডেল টেস্ট-০৩", c:"1020325087", url:"Question/blog-page_58.html"},
-        {t:"মডেল টেস্ট-০৪", c:"1020325088", url:"Question/blog-page_39.html"},
-        {t:"মডেল টেস্ট-০৫", c:"1020325089", url:"Question/blog-page_20.html"},
-        {t:"মডেল টেস্ট-০৬", c:"1020325090", url:"Question/blog-page_6.html"},
-        {t:"মডেল টেস্ট-০৭", c:"1020325091", url:"Question/blog-page_29.html"},
-        {t:"মডেল টেস্ট-০৮", c:"1020325092", url:"Question/blog-page_31.html"},
-        {t:"মডেল টেস্ট-০৯", c:"1020325093", url:"Question/blog-page_60.html"},
-        {t:"মডেল টেস্ট-১০", c:"1020325094", url:"Question/blog-page_11.html"},
-        {t:"মডেল টেস্ট-১১", c:"1020325095", url:"Question/blog-page_24.html"},
-        {t:"মডেল টেস্ট-১২", c:"1020325096", url:"Question/blog-page_77.html"},
-        {t:"মডেল টেস্ট-১৩", c:"1020325097", url:"Question/blog-page_78.html"},
-        {t:"মডেল টেস্ট-১৪", c:"1020325098", url:"Question/blog-page_35.html"},
-        {t:"মডেল টেস্ট-১৫", c:"1020325099", url:"Question/blog-page_23.html"}
-    ]},
-    { cat: "বিগত ১২ বছরের মেডিকেল প্রশ্ন", items: [
-        {t:"২০১৩-২০১৪ মেডিকেল প্রশ্নপত্র", c:"1020324100", url:"Question/blog-page_64.html"},
-        {t:"২০১৪-২০১৫ মেডিকেল প্রশ্নপত্র", c:"1020324101", url:"Question/blog-page_91.html"},
-        {t:"২০১৫-২০১৬ মেডিকেল প্রশ্নপত্র", c:"1020324102", url:"Question/blog-page_81.html"},
-        {t:"২০১৬-২০১৭ মেডিকেল প্রশ্নপত্র", c:"1020324103", url:"Question/blog-page_50.html"},
-        {t:"২০১৭-২০১৮ মেডিকেল প্রশ্নপত্র", c:"1020324104", url:"Question/blog-page_79.html"},
-        {t:"২০১৮-২০১৯ মেডিকেল প্রশ্নপত্র", c:"1020324105", url:"Question/blog-page_96.html"},
-        {t:"২০১৯-২০২০ মেডিকেল প্রশ্নপত্র", c:"1020324106", url:"Question/blog-page_370.html"},
-        {t:"২০২০-২০২১ মেডিকেল প্রশ্নপত্র", c:"1020324107", url:"Question/blog-page_43.html"},
-        {t:"২০২১-২০২২ মেডিকেল প্রশ্নপত্র", c:"1020324108", url:"Question/blog-page_48.html"},
-        {t:"২০২২-২০২৩ মেডিকেল প্রশ্নপত্র", c:"1020324109", url:"Question/blog-page_621.html"},
-        {t:"২০২৩-২০২৪ মেডিকেল প্রশ্নপত্র", c:"1020324110", url:"Question/blog-page_30.html"},
-        {t:"২০২৪-২০২৫ মেডিকেল প্রশ্নপত্র", c:"1020325111", url:"Question/blog-page_231.html"}
-    ]}
-];
-
-// Build the Module UI on Homepage
-const modContainer = document.getElementById('view-modules');
-if (modContainer) {
-    subjectData.forEach(subject => {
-        const wrapper = document.createElement('div');
-        wrapper.className = "bg-[#0F172A] rounded-3xl border border-white/10 shadow-sm overflow-hidden mb-4";
-        
-        wrapper.innerHTML = `
-            <button onclick="this.nextElementSibling.classList.toggle('open')" class="w-full p-6 font-bold flex justify-between items-center text-white hover:bg-purple-900/10 transition-colors">
-                <span class="flex items-center"><i class="fa fa-book-medical mr-3 text-purple-600"></i> ${subject.cat}</span>
-                <i class="fa fa-chevron-down text-xs opacity-30"></i>
-            </button>
-            <div class="accordion-content">
-                <div class="p-2 space-y-1">
-                    ${subject.items.map(item => `
-                        <div class="flex justify-between items-center p-4 rounded-2xl hover:bg-white/5 transition-all">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-semibold text-zinc-200">${item.t}</span>
-                                <span class="text-[10px] text-purple-500 font-bold uppercase tracking-tighter">Code: ${item.c}</span>
-                            </div>
-                            <a href="${item.url}" class="bg-purple-600 text-white px-6 py-2 rounded-xl text-xs font-black btn-glow transition-all">START</a>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-        modContainer.appendChild(wrapper);
-    });
-}
-
-// UI Helpers
-document.getElementById('profileBtn').onclick = (e) => {
-    e.stopPropagation();
-    document.getElementById('userDropdown').classList.toggle('hidden');
-};
-
-window.onclick = () => document.getElementById('userDropdown').classList.add('hidden');
-let lastScrollY = window.scrollY;
-const header = document.getElementById('mainHeader');
-
-window.addEventListener('scroll', () => {
-    const currentScrollY = window.scrollY;
-    if (currentScrollY <= 50) {
-        header.style.transform = 'translateY(0)';
-    } else if (currentScrollY > lastScrollY) {
-        header.style.transform = 'translateY(-100%)';
-    } else {
-        header.style.transform = 'translateY(-100%)';
-    }
-    lastScrollY = currentScrollY;
-});
-
 // Firebase Setup
 const firebaseConfig = {
     apiKey: "AIzaSyCeOGW02mBVV5oQAWzh9scy1xULjwPg1Ek",
@@ -425,12 +249,16 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const provider = new firebase.auth.GoogleAuthProvider();
 
+// DOM Elements
 const authBtn = document.getElementById('authBtn');
 const authBtnText = document.getElementById('authBtnText');
+const logoutBtn = document.getElementById('logoutBtn');
 const userImg = document.getElementById('userImg');
 const userName = document.getElementById('userName');
 const userEmail = document.getElementById('userEmail');
+const apiSettingsBtn = document.getElementById('apiSettingsBtn');
 
+// Auth
 authBtn.onclick = () => {
     if (!auth.currentUser) {
         auth.signInWithPopup(provider).catch(err => console.error("Login failed:", err));
@@ -439,12 +267,18 @@ authBtn.onclick = () => {
     }
 };
 
+logoutBtn.onclick = () => {
+    auth.signOut();
+};
+
 auth.onAuthStateChanged(user => {
     if (user) {
         userImg.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + user.displayName;
         userName.innerText = user.displayName;
         userEmail.innerText = user.email;
-        authBtnText.innerText = "Logout";
+        authBtnText.innerText = "Sign in with different account";
+        authBtn.style.display = 'none';
+        logoutBtn.style.display = 'flex';
         
         window.activeUser = {
             name: user.displayName,
@@ -456,9 +290,42 @@ auth.onAuthStateChanged(user => {
         userImg.src = 'https://ui-avatars.com/api/?name=Guest&background=9333ea&color=fff';
         userName.innerText = "Guest User";
         userEmail.innerText = "Not signed in";
-        authBtnText.innerText = "Sign in with Gmail";
+        authBtnText.innerText = "Login with Google";
+        authBtn.style.display = 'flex';
+        logoutBtn.style.display = 'none';
         window.activeUser = null;
     }
+});
+
+// Profile Dropdown
+document.getElementById('profileBtn').onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById('userDropdown').classList.toggle('hidden');
+};
+
+window.onclick = () => document.getElementById('userDropdown').classList.add('hidden');
+
+// API Settings Button
+apiSettingsBtn.onclick = () => {
+    if (window.profileManager) {
+        window.profileManager.showApiKeyModal();
+    }
+};
+
+// Header Scroll
+let lastScrollY = window.scrollY;
+const header = document.getElementById('mainHeader');
+
+window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    if (currentScrollY <= 50) {
+        header.style.transform = 'translateY(0)';
+    } else if (currentScrollY > lastScrollY) {
+        header.style.transform = 'translateY(-100%)';
+    } else {
+        header.style.transform = 'translateY(-100%)';
+    }
+    lastScrollY = currentScrollY;
 });
 
 // Leaderboard Logic
@@ -475,13 +342,16 @@ const btnGlobal = document.getElementById('btn-global-results');
 let fetchedExamResults = [];
 let viewMode = 'personal'; 
 
-if (typeof subjectData !== 'undefined') {
-    subjectData.forEach(sub => {
-        let opt = document.createElement('option');
-        opt.value = sub.cat;
-        opt.innerText = sub.cat;
-        filterSubject.appendChild(opt);
-    });
+// Populate filter dropdowns
+function populateFilters() {
+    if (typeof subjectData !== 'undefined') {
+        subjectData.forEach(sub => {
+            let opt = document.createElement('option');
+            opt.value = sub.cat;
+            opt.innerText = sub.cat;
+            filterSubject.appendChild(opt);
+        });
+    }
 }
 
 filterSubject.addEventListener('change', (e) => {
@@ -606,6 +476,11 @@ function renderLeaderboard() {
         resultsList.appendChild(div);
     });
 }
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    populateFilters();
+});
 </script>
 </body>
 </html>
