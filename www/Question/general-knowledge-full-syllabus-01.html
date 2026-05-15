@@ -11,7 +11,6 @@ iframe { max-width: 100%; border-radius: 12px; }
 
 --></style>
 <script src='../assets/tailwindcss.js'></script>
-<script src='../assets/data.js'></script>
 <script src='../assets/profile-manager.js'></script>
 <link href='../assets/all.min.css' rel='stylesheet'/>
 <style>
@@ -392,8 +391,17 @@ General Knowledge: Full Syllabus 01
                 <i class="fa fa-camera text-3xl text-emerald-600 dark:text-emerald-400"></i>
             </div>
             <h3 class="text-2xl font-black mb-2 dark:text-white">Scan OMR Sheet</h3>
-            <p class="text-sm opacity-60 mb-6 px-2 dark:text-white">Take a clear photo of your filled OMR sheet.</p>
-            <label class="w-full flex items-center justify-center bg-emerald-600 text-white font-bold py-4 rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer">
+            <p class="text-sm opacity-60 mb-4 px-2 dark:text-white">Take a clear photo of your filled OMR sheet.</p>
+            <div id="no-api-warning" class="hidden mb-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-2xl p-4 text-left">
+                <p class="text-sm font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2 mb-1">
+                    <i class="fa fa-exclamation-triangle"></i> API Key Required
+                </p>
+                <p class="text-xs text-rose-500 dark:text-rose-400 mb-3">The AI scanner needs a Gemini API key. Set your key first, then come back to scan.</p>
+                <button onclick="document.getElementById('camera-modal').classList.add('hidden'); document.getElementById('entry-modal').classList.remove('hidden'); if(window.profileManager) window.profileManager.showApiKeyModal();" class="w-full bg-rose-500 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-rose-600 transition-colors">
+                    <i class="fa fa-key mr-2"></i> Set API Key Now
+                </button>
+            </div>
+            <label id="omr-upload-label" class="w-full flex items-center justify-center bg-emerald-600 text-white font-bold py-4 rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer">
                 <i class="fa fa-upload mr-2"></i> UPLOAD IMAGE
                 <input type="file" accept="image/*" capture="environment" class="hidden" onchange="processHardOMR(event)">
             </label>
@@ -406,8 +414,19 @@ General Knowledge: Full Syllabus 01
 window.GEMINI_API_KEY = localStorage.getItem('medicalExamApp_apiKey') || "__SECRET_KEY__"; 
 
 window.openHardOMRCamera = () => {
+    window.GEMINI_API_KEY = localStorage.getItem('medicalExamApp_apiKey') || "__SECRET_KEY__";
     document.getElementById('entry-modal').classList.add('hidden');
     document.getElementById('camera-modal').classList.remove('hidden');
+    document.getElementById('camera-modal').classList.add('flex');
+    const warning = document.getElementById('no-api-warning');
+    const uploadLabel = document.getElementById('omr-upload-label');
+    if (window.GEMINI_API_KEY === '__SECRET_KEY__') {
+        if (warning) warning.classList.remove('hidden');
+        if (uploadLabel) { uploadLabel.classList.add('opacity-40', 'pointer-events-none'); }
+    } else {
+        if (warning) warning.classList.add('hidden');
+        if (uploadLabel) { uploadLabel.classList.remove('opacity-40', 'pointer-events-none'); }
+    }
 };
 
 window.processHardOMR = (event) => {
