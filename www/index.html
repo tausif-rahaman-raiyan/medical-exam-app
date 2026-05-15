@@ -8,111 +8,122 @@
     <script src="assets/tailwindcss.js"></script>
     <link href="assets/all.min.css" rel="stylesheet"/>
 
+    <link href="assets/exam-theme.css" rel="stylesheet"/>
     <style>
-        /* Core Reset */
+        /* === RESET === */
         body { margin: 0; padding: 0; }
-        .post-body img { max-width: 100%; height: auto; border-radius: 12px; }
-        iframe { max-width: 100%; border-radius: 12px; }
 
-        /* --- GLOBAL RESPONSIVE & OVERFLOW FIXES --- */
-        .post-card { margin: 10px 5px !important; padding: 15px !important; }
-        .question-card { margin: 0 0 12px 0 !important; padding: 16px !important; border-radius: 15px !important; }
-
-        .question-card div.mt-4.p-5, 
-        .question-card div[class*="bg-emerald-500/5"], 
-        .question-card div[class*="bg-rose-500/5"],
-        .question-card div[class*="bg-zinc-800/30"] {
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-            white-space: normal !important;
-            display: block !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            overflow-x: hidden !important;
-        }
-
-        .math-tex {
-            display: inline-block !important;
-            max-width: 100% !important;
-            overflow-x: auto !important;
-            vertical-align: middle;
-        }
-
-        @media (min-width: 1024px) {
-            .post-card { margin: 20px auto !important; padding: 40px !important; max-width: 850px !important; }
-            .question-card { padding: 32px !important; border-radius: 30px !important; }
-        }
-
-        .opt-btn {
-            white-space: normal !important;
-            height: auto !important;
-            min-height: 50px !important;
-            display: flex !important;
-            align-items: center !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            text-align: left !important;
-        }
-
-        .opt-btn > span {
-            display: block !important;
-            flex: 1 !important;                
-            word-break: break-word !important;
-            padding-right: 10px !important;    
-        }
-
-        .opt-btn > div span {
-            display: inline-block !important;
-            flex: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-
+        /* === THEME VARIABLES === */
         :root {
-            --primary-accent: #334155;    
-            --light-bg: #0F172A;
-            --dark-bg: #0F172A;          
-            --card-light: #0F172A;
-            --card-dark: #0F172A;        
-            --text-main: #F1F5F9;
-            --text-dark: #F1F5F9;
+            --bg:           #F0F4FF;
+            --surface:      #FFFFFF;
+            --surface-2:    #F8FAFC;
+            --text:         #1E293B;
+            --muted:        #64748B;
+            --border:       #E2E8F0;
+            --primary:      #4F46E5;
+            --primary-dark: #3730A3;
+            --primary-bg:   #EEF2FF;
+            --success:      #059669;
+            --error:        #DC2626;
         }
 
+        /* === BODY === */
         body {
-            transition: background 0.4s, color 0.4s;
-            background-color: var(--light-bg);
-            background-attachment: fixed;
+            background-color: var(--bg);
             min-height: 100vh;
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif; 
+            color: var(--text);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .dark body { background-color: var(--dark-bg); color: var(--text-dark); }
+        /* === ACCORDION === */
+        .accordion-content { transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; max-height: 0; }
+        .accordion-content.open { max-height: 3000px; }
+        .chevron { transition: transform 0.3s ease; display: inline-block; }
+        .chevron.rotated { transform: rotate(180deg); }
 
-        .accordion-content { transition: max-height 0.5s cubic-bezier(0, 1, 0, 1); overflow: hidden; max-height: 0; }
-        .accordion-content.open { max-height: 2000px; }
+        /* === MODULE CARDS === */
+        .module-card {
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+            overflow: hidden;
+            margin-bottom: 10px;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .module-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.09); }
 
-        .post-card {
-            background: var(--card-light);
-            border-radius: 30px;
-            padding: 2.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        .module-header {
+            width: 100%; padding: 16px 20px;
+            font-weight: 700; font-size: 14px;
+            display: flex; justify-content: space-between; align-items: center;
+            color: var(--text); background: var(--surface);
+            border: none; cursor: pointer;
+            transition: background 0.15s;
+            text-align: left;
+        }
+        .module-header:hover { background: #FAFBFF; }
+
+        .subject-icon {
+            width: 34px; height: 34px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 12px; font-size: 15px; flex-shrink: 0;
         }
 
-        .dark .post-card, .dark #view-modules > div {
-            background: #0F172A !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        .topic-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 11px 20px; border-top: 1px solid var(--border);
+            transition: background 0.12s; gap: 12px;
+        }
+        .topic-row:hover { background: #F8FAFF; }
+
+        .btn-start {
+            background: var(--primary); color: white;
+            padding: 7px 16px; border-radius: 8px;
+            font-size: 11px; font-weight: 800;
+            letter-spacing: 0.5px; text-transform: uppercase;
+            text-decoration: none; white-space: nowrap;
+            transition: all 0.15s; flex-shrink: 0;
+        }
+        .btn-start:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79,70,229,0.3);
         }
 
-        .btn-glow { background-color: #F87171 !important; color: white !important; }
-        .btn-glow:hover { box-shadow: 0 0 20px rgba(248, 113, 113, 0.4); transform: translateY(-2px); }
+        /* === HEADER === */
+        header { background: rgba(255,255,255,0.97) !important; border-bottom: 1px solid var(--border) !important; box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important; }
 
-        .fa-book-medical, .fa-adjust, .fa-home { color: #E11D48 !important; }
+        /* === RESULTS / LEADERBOARD MODAL === */
+        #results-modal > div { background: var(--surface) !important; border: 1px solid var(--border) !important; }
+        #results-modal .bg-gradient-to-r { background: linear-gradient(135deg, #4F46E5, #6366F1) !important; }
+        #results-modal .bg-zinc-100 { background: var(--surface-2) !important; }
+        #results-modal .bg-zinc-800\/50 { background: var(--surface-2) !important; }
+        #results-modal .dark\:bg-zinc-700 { background: var(--border) !important; }
+        #results-modal select { background: var(--surface) !important; border-color: var(--border) !important; color: var(--text) !important; }
+        #results-modal .bg-zinc-50 { background: var(--surface-2) !important; border-color: var(--border) !important; }
+        .text-purple-700 { color: var(--primary) !important; }
+        .text-purple-400 { color: var(--primary) !important; }
 
-        .dark .text-purple-800 { color: #CBD5E1 !important; }
-        .dark .text-sm.opacity-60 { color: #94A3B8 !important; }
+        /* === PROFILE DROPDOWN === */
+        #userDropdown { background: rgba(255,255,255,0.99) !important; border: 1px solid var(--border) !important; box-shadow: 0 12px 40px rgba(0,0,0,0.1) !important; border-radius: 16px !important; }
+        #userDropdown .border-b { border-color: var(--border) !important; }
+        #userDropdown button, #userDropdown a { color: var(--text) !important; }
+        #userDropdown .hover\:bg-purple-50:hover { background: var(--primary-bg) !important; }
+        #userDropdown .text-purple-600 { color: var(--primary) !important; }
+
+        /* API key modal */
+        #api-key-modal > div { background: var(--surface) !important; border: 1px solid var(--border) !important; }
+        #api-key-modal input { background: var(--surface-2) !important; border-color: var(--border) !important; color: var(--text) !important; }
+
+        /* btn-glow override */
+        .btn-glow { background: var(--primary) !important; color: white !important; }
+        .btn-glow:hover { box-shadow: 0 4px 14px rgba(79,70,229,0.35); transform: translateY(-1px); }
+
+        /* Overflow & math fixes (keep) */
+        .math-tex { display: inline-block !important; max-width: 100% !important; overflow-x: auto !important; vertical-align: middle; }
     </style>
 </head>
 <script>
@@ -120,13 +131,13 @@
     // The GitHub Action will swap __SECRET_KEY__ for your real key during build
     window.GEMINI_API_KEY = "__SECRET_KEY__";
 </script>
-<body class="antialiased dark">
+<body class="antialiased">
 
-<header class="sticky top-0 z-50 bg-white/80 dark:bg-[#1a1227]/80 backdrop-blur-xl border-b border-purple-100 dark:border-purple-900/30 p-4 transition-transform duration-300" id="mainHeader">
+<header class="sticky top-0 z-50 p-3 transition-transform duration-300" id="mainHeader">
     <div class="max-w-5xl mx-auto flex justify-between items-center">
         <a class="flex items-center space-x-3" href="index.html">
-            <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-purple-500/20">BH</div>
-            <h1 class="text-sm md:text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-fuchsia-500 dark:from-purple-400 dark:to-fuchsia-300">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md" style="background: linear-gradient(135deg,#4F46E5,#7C3AED)">BH</div>
+            <h1 class="text-sm md:text-base font-black" style="background:linear-gradient(135deg,#4F46E5,#7C3AED);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
                 Medical Secret Files
             </h1>
         </a>
@@ -168,9 +179,12 @@
 </header>
 
 <main class="max-w-4xl mx-auto px-4 py-8">
-    <div class="text-center mb-10">
-        <h2 class="text-2xl font-black text-purple-800 dark:text-purple-300 uppercase tracking-widest">Learning Modules</h2>
-        <p class="text-sm opacity-60">Select a subject to view topics and start exams</p>
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style="background:#EEF2FF;color:#4F46E5;">
+            <i class="fa fa-graduation-cap"></i> Medical Exam Portal
+        </div>
+        <h2 class="text-2xl font-black uppercase tracking-widest mb-2" style="color:#1E293B;">Learning Modules</h2>
+        <p class="text-sm" style="color:#64748B;">Select a subject, pick a topic, and start practicing</p>
     </div>
     
     <div class="space-y-4" id="view-modules">

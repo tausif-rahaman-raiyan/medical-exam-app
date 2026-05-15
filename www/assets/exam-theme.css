@@ -1,0 +1,323 @@
+/* =====================================================
+   EXAM-THEME.CSS — Exam-Friendly UI for Question Pages
+   ===================================================== */
+
+/* === BASE VARIABLES === */
+:root {
+    --bg:             #F0F4FF;
+    --surface:        #FFFFFF;
+    --surface-2:      #F8FAFC;
+    --text:           #1E293B;
+    --muted:          #64748B;
+    --border:         #E2E8F0;
+    --primary:        #4F46E5;
+    --primary-dark:   #3730A3;
+    --primary-bg:     #EEF2FF;
+    --success:        #059669;
+    --success-bg:     #F0FDF4;
+    --success-border: #A7F3D0;
+    --error:          #DC2626;
+    --error-bg:       #FFF1F2;
+    --error-border:   #FECDD3;
+    --radius:         14px;
+    --radius-sm:      10px;
+    --shadow-sm:      0 1px 2px rgba(0,0,0,0.06);
+    --shadow:         0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md:      0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --shadow-lg:      0 10px 30px rgba(0,0,0,0.1);
+    /* Override dark palette vars used inline by exam JS */
+    --zinc-900: #FFFFFF;
+    --zinc-800: #F8FAFC;
+    --emerald:  #059669;
+    --rose:     #DC2626;
+}
+
+/* === BODY & PAGE === */
+body {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+}
+
+/* === HEADER === */
+header#mainHeader {
+    background: rgba(255,255,255,0.97) !important;
+    border-bottom: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-sm) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+
+header#mainHeader h1 {
+    background: linear-gradient(135deg, #4F46E5, #7C3AED) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* === POST CARD WRAPPER === */
+.post-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    max-width: 860px !important;
+}
+
+/* === STICKY EXAM PROGRESS HEADER === */
+#sticky-header {
+    background: rgba(255,255,255,0.97) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-md) !important;
+    border-radius: 18px !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    top: 6px !important;
+}
+
+#time-display {
+    color: var(--primary) !important;
+}
+
+#progress-bar {
+    background: linear-gradient(90deg, #4F46E5, #7C3AED) !important;
+    box-shadow: 0 0 10px rgba(79,70,229,0.3) !important;
+}
+
+#sticky-header button {
+    background: var(--primary) !important;
+    color: white !important;
+    border-radius: 12px !important;
+}
+
+#sticky-header button:hover {
+    background: var(--primary-dark) !important;
+}
+
+/* === QUESTION CARDS === */
+.question-card {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-left: 4px solid var(--primary) !important;
+    box-shadow: var(--shadow) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text) !important;
+}
+
+.question-card p,
+.question-card span:not([class*="status-"]):not([class*="opt-"]),
+.question-card h3,
+.question-card label {
+    color: var(--text) !important;
+}
+
+/* === OPTION BUTTONS === */
+.opt-btn {
+    background: var(--surface-2) !important;
+    border: 2px solid var(--border) !important;
+    color: var(--text) !important;
+    border-radius: var(--radius-sm) !important;
+    transition: all 0.15s ease !important;
+}
+
+.opt-btn:hover:not(:disabled) {
+    border-color: var(--primary) !important;
+    background: var(--primary-bg) !important;
+    color: var(--primary-dark) !important;
+    transform: translateX(2px) !important;
+}
+
+/* OMR selected */
+.opt-selected-omr {
+    border-color: var(--primary) !important;
+    background: var(--primary-bg) !important;
+    color: var(--primary-dark) !important;
+}
+
+/* Correct answer */
+.border-emerald-500,
+.opt-btn.border-emerald-500 {
+    background: var(--success-bg) !important;
+    border-color: var(--success-border) !important;
+    color: #065F46 !important;
+}
+
+/* Wrong answer */
+.border-rose-500,
+.opt-btn.border-rose-500 {
+    background: var(--error-bg) !important;
+    border-color: var(--error-border) !important;
+    color: #991B1B !important;
+}
+
+/* === STATUS BADGES === */
+.status-correct {
+    background: var(--success-bg) !important;
+    color: var(--success) !important;
+    border-color: var(--success-border) !important;
+}
+.status-wrong {
+    background: var(--error-bg) !important;
+    color: var(--error) !important;
+    border-color: var(--error-border) !important;
+}
+.status-skipped {
+    background: var(--surface-2) !important;
+    color: var(--muted) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* === EXPLANATION BOXES === */
+.question-card div.mt-4.p-5,
+.question-card div[class*="bg-zinc-800"] {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--text) !important;
+}
+.question-card div[class*="bg-emerald-500"] {
+    background: var(--success-bg) !important;
+    border: 1px solid var(--success-border) !important;
+    border-radius: var(--radius-sm) !important;
+    color: #065F46 !important;
+}
+.question-card div[class*="bg-rose-500"] {
+    background: var(--error-bg) !important;
+    border: 1px solid var(--error-border) !important;
+    border-radius: var(--radius-sm) !important;
+    color: #991B1B !important;
+}
+
+/* === RESULTS CARD === */
+#results-card {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-radius: 24px !important;
+}
+
+#results-card > div:first-child {
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%) !important;
+}
+
+/* Score stat boxes */
+#results-card .bg-emerald-50 { background: var(--success-bg) !important; border-color: var(--success-border) !important; }
+#results-card .bg-rose-50 { background: var(--error-bg) !important; border-color: var(--error-border) !important; }
+#results-card .bg-blue-50 { background: #EFF6FF !important; border-color: #BFDBFE !important; }
+#results-card .bg-purple-50 { background: var(--primary-bg) !important; border-color: #C4B5FD !important; }
+
+#res-correct { color: var(--success) !important; }
+#res-wrong { color: var(--error) !important; }
+#res-time { color: #2563EB !important; }
+#res-score { color: var(--primary) !important; }
+
+/* === ENTRY MODAL === */
+#entry-modal {
+    background: rgba(15,23,42,0.6) !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+#entry-modal > div {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.18) !important;
+    border-radius: 28px !important;
+}
+
+#entry-modal h3, #exam-title-header {
+    color: var(--text) !important;
+}
+
+#entry-modal .h-32 {
+    background: linear-gradient(135deg, #4F46E5, #7C3AED) !important;
+}
+
+/* Entry buttons */
+#entry-modal button[onclick*="startExam('omr')"] {
+    background: var(--primary) !important;
+}
+#entry-modal button[onclick*="startExam('omr')"]:hover {
+    background: var(--primary-dark) !important;
+}
+#entry-modal button[onclick*="startExam('sol')"] {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+}
+#entry-modal button[onclick*="startExam('sol')"]:hover {
+    background: var(--border) !important;
+}
+
+/* === CAMERA / OMR MODAL === */
+#camera-modal {
+    background: rgba(15,23,42,0.65) !important;
+    backdrop-filter: blur(8px) !important;
+}
+#camera-modal > div {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.18) !important;
+    border-radius: 24px !important;
+    color: var(--text) !important;
+}
+#camera-modal h3, #camera-modal p {
+    color: var(--text) !important;
+}
+
+/* === PROFILE DROPDOWN === */
+#userDropdown {
+    background: rgba(255,255,255,0.99) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12) !important;
+    border-radius: 16px !important;
+}
+#userDropdown p { color: var(--text) !important; }
+#userDropdown .border-b { border-color: var(--border) !important; }
+
+/* === SUBMIT CONTAINER === */
+#submit-container button {
+    background: var(--primary) !important;
+    box-shadow: 0 8px 25px rgba(79,70,229,0.35) !important;
+}
+#submit-container button:hover {
+    background: var(--primary-dark) !important;
+}
+
+/* === LEADERBOARD / RESULTS MODAL === */
+#results-modal > div {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+}
+#results-modal .bg-gradient-to-r {
+    background: linear-gradient(135deg, #4F46E5, #6366F1) !important;
+}
+#results-modal select {
+    background: var(--surface-2) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+#results-list > div {
+    background: var(--surface-2) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+
+/* === RETAKE / RELOAD BUTTON === */
+button[onclick="location.reload()"] {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+}
+button[onclick="location.reload()"]:hover {
+    background: var(--border) !important;
+}
+
+/* === DARK CLASS OVERRIDES (for inline dark: tailwind classes) === */
+.dark\:text-white { color: var(--text) !important; }
+.dark\:text-zinc-200 { color: var(--muted) !important; }
+.dark\:bg-zinc-800 { background: var(--surface-2) !important; }
+.dark\:bg-zinc-900 { background: var(--surface) !important; }
+.dark\:border-zinc-700 { border-color: var(--border) !important; }
+.dark\:border-zinc-800 { border-color: var(--border) !important; }
+.dark\:bg-\[#1a1227\]\/80 { background: rgba(255,255,255,0.97) !important; }
