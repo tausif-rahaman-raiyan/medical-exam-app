@@ -183,49 +183,27 @@ function buildModuleUI() {
     const modContainer = document.getElementById('view-modules');
     if (!modContainer) return;
 
-    const subjectMeta = {
-        'উদ্ভিদবিজ্ঞান':               { icon: 'fa-leaf',        bg: '#DCFCE7', color: '#16A34A' },
-        'প্রাণিবিজ্ঞান':                { icon: 'fa-paw',         bg: '#DBEAFE', color: '#2563EB' },
-        'পদার্থবিজ্ঞান প্রথম পত্র':    { icon: 'fa-atom',        bg: '#EDE9FE', color: '#7C3AED' },
-        'পদার্থবিজ্ঞান দ্বিতীয় পত্র': { icon: 'fa-bolt',        bg: '#FEF3C7', color: '#D97706' },
-        'রসায়ন প্রথম পত্র':            { icon: 'fa-flask',       bg: '#FCE7F3', color: '#DB2777' },
-        'রসায়ন দ্বিতীয় পত্র':         { icon: 'fa-vial',        bg: '#FFE4E6', color: '#E11D48' },
-        'সাধারণ জ্ঞান':                 { icon: 'fa-globe',       bg: '#E0F2FE', color: '#0284C7' },
-        'ইংরেজি':                       { icon: 'fa-language',    bg: '#F3F4F6', color: '#374151' },
-    };
-
     subjectData.forEach(subject => {
-        const meta = subjectMeta[subject.cat] || { icon: 'fa-book-medical', bg: '#EEF2FF', color: '#4F46E5' };
-
         const wrapper = document.createElement('div');
-        wrapper.className = 'module-card';
-
+        wrapper.className = "bg-[#0F172A] rounded-3xl border border-white/10 shadow-sm overflow-hidden mb-4";
+        
         wrapper.innerHTML = `
-            <button class="module-header" onclick="
-                const c = this.nextElementSibling;
-                c.classList.toggle('open');
-                this.querySelector('.chevron').classList.toggle('rotated');
-            ">
-                <span style="display:flex;align-items:center;">
-                    <span class="subject-icon" style="background:${meta.bg};color:${meta.color};">
-                        <i class="fa ${meta.icon}"></i>
-                    </span>
-                    <span>${subject.cat}</span>
-                </span>
-                <span class="chevron" style="color:#94A3B8;font-size:12px;">
-                    <i class="fa fa-chevron-down"></i>
-                </span>
+            <button onclick="this.nextElementSibling.classList.toggle('open')" class="w-full p-6 font-bold flex justify-between items-center text-white hover:bg-purple-900/10 transition-colors">
+                <span class="flex items-center"><i class="fa fa-book-medical mr-3 text-purple-600"></i> ${subject.cat}</span>
+                <i class="fa fa-chevron-down text-xs opacity-30"></i>
             </button>
             <div class="accordion-content">
-                ${subject.items.map(item => `
-                    <div class="topic-row">
-                        <div style="min-width:0;">
-                            <div style="font-size:13px;font-weight:600;color:#1E293B;">${item.t}</div>
-                            <div style="font-size:10px;font-weight:700;color:#6366F1;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">Code: ${item.c}</div>
+                <div class="p-2 space-y-1">
+                    ${subject.items.map(item => `
+                        <div class="flex justify-between items-center p-4 rounded-2xl hover:bg-white/5 transition-all">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-semibold text-zinc-200">${item.t}</span>
+                                <span class="text-[10px] text-purple-500 font-bold uppercase tracking-tighter">Code: ${item.c}</span>
+                            </div>
+                            <a href="${item.url}" class="bg-purple-600 text-white px-6 py-2 rounded-xl text-xs font-black btn-glow transition-all">START</a>
                         </div>
-                        <a href="${item.url}" class="btn-start">Start</a>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
             </div>
         `;
         modContainer.appendChild(wrapper);
