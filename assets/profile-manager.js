@@ -163,7 +163,11 @@ class ProfileManager {
         const statusText = this.isApiKeyValid() ? '✓ Active' : '✗ Not Set';
         const statusClass = `ml-auto text-[10px] font-bold uppercase ${this.isApiKeyValid() ? 'text-green-500' : 'text-rose-500'} px-2 py-1 rounded bg-black/5`;
 
-        // Check for the static button in index.html first (id="apiSettingsBtn")
+        // Always remove any stray dynamic button to prevent duplicates
+        const strayBtn = document.getElementById('api-settings-btn');
+        if (strayBtn) strayBtn.remove();
+
+        // Update the static button on index.html
         const staticBtn = document.getElementById('apiSettingsBtn');
         if (staticBtn) {
             const statusSpan = document.getElementById('apiStatus') || staticBtn.querySelector('span:last-child');
@@ -175,26 +179,13 @@ class ProfileManager {
             return;
         }
 
-        // For question pages: find or create a dynamic button
-        let apiBtn = document.getElementById('api-settings-btn');
-        if (!apiBtn) {
-            apiBtn = document.createElement('button');
-            apiBtn.id = 'api-settings-btn';
-            apiBtn.className = 'w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center text-blue-600 dark:text-blue-400 border-t border-zinc-200 dark:border-zinc-700';
-            apiBtn.innerHTML = `
-                <i class="fa fa-key mr-3"></i>
-                <span>API Key</span>
-                <span class="${statusClass}">${statusText}</span>
-            `;
-            apiBtn.onclick = () => this.showApiKeyModal();
-            userDropdown.appendChild(apiBtn);
-        } else {
-            const statusSpan = apiBtn.querySelector('span:last-child');
-            if (statusSpan) {
-                statusSpan.className = statusClass;
-                statusSpan.textContent = statusText;
-            }
-        }
+        // For question pages (no static button): create one
+        const apiBtn = document.createElement('button');
+        apiBtn.id = 'api-settings-btn';
+        apiBtn.className = 'w-full text-left px-5 py-3 text-sm hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center text-blue-600 dark:text-blue-400 border-t border-zinc-200 dark:border-zinc-700';
+        apiBtn.innerHTML = `<i class="fa fa-key mr-3"></i><span>API Key</span><span class="${statusClass}">${statusText}</span>`;
+        apiBtn.onclick = () => this.showApiKeyModal();
+        userDropdown.appendChild(apiBtn);
     }
 
     /**
