@@ -19,6 +19,7 @@ jobs:
           import os
           import glob
           
+          
           # Find ALL HTML files in www directory
           html_files = glob.glob('www/**/*.html', recursive=True)
           
