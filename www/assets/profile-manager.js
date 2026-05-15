@@ -94,7 +94,7 @@ class ProfileManager {
                     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                         <p class="text-[12px] text-blue-800 dark:text-blue-200">
                             <i class="fa fa-info-circle mr-2"></i>
-                            Your API key is stored locally in your browser and never sent to our servers.
+                            Your API key is stored locally on your device and never sent to our servers.
                         </p>
                     </div>
 
