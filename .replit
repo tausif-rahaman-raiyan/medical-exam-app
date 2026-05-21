@@ -18,6 +18,10 @@ author = "agent"
 task = "workflow.run"
 args = "Start application"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "OMR Scanner"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -30,9 +34,25 @@ task = "shell.exec"
 args = "serve www -p 5000 --no-clipboard"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "OMR Scanner"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+waitForPort = 8000
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
 
 [deployment]
 deploymentTarget = "static"
