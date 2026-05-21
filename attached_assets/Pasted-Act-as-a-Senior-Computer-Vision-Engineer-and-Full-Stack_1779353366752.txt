@@ -1,0 +1,39 @@
+Act as a Senior Computer Vision Engineer and Full-Stack Developer.
+Task: Create a robust OMR (Optical Mark Recognition) processing logic for a Medical Standard Exam. The system must process an uploaded image of a 100-question OMR sheet and return a detailed performance report.
+1. Image Processing Requirements (OpenCV/Python or JS):
+Alignment: Detect the four corner anchor points (timing marks). Use a Perspective Transform to deskew and flatten the image to a standard 840x1190 resolution.
+Grid Mapping: Divide the OMR into 100 question blocks. Each block contains 4 bubbles (A, B, C, D).
+Bubble Detection: Calculate the pixel density (black pixel ratio) of each bubble area.
+Thresholding: Implement an adaptive threshold. If a bubble is >50% filled compared to the paper background, mark it as "Detected."
+2. Scoring & Medical Exam Logic:
+For each question, compare the detected bubbles against an AnswerKey array. Apply the following rules:
+Correct: If exactly one bubble is detected and it matches the Answer Key. (Score: +1.0)
+Wrong: If exactly one bubble is detected but it does NOT match the Answer Key. (Score: -0.25)
+Invalid: If two or more bubbles are detected for a single question. (Score: 0, and mark status as "Invalid").
+Skipped: If zero bubbles are detected for the question. (Score: 0, and mark status as "Skipped").
+3. Data Output (JSON):
+Return a JSON object structured like this:
+code
+JSON
+{
+  "summary": {
+    "totalQuestions": 100,
+    "correct": 74,
+    "wrong": 16,
+    "invalid": 0,
+    "skipped": 10,
+    "rawScore": 74,
+    "negativeMarks": 4.0,
+    "finalScore": 70.0
+  },
+  "detailedResults": [
+    {"q": 1, "status": "correct", "user": "c", "key": "c"},
+    {"q": 2, "status": "wrong", "user": "a", "key": "b"},
+    {"q": 3, "status": "invalid", "user": "ab", "key": "c"}
+  ]
+}
+4. UI Integration:
+Using the output above, provide a JavaScript snippet to update my existing Tailwind CSS frontend. Specifically:
+Update the Answered, Skipped, and Invalid count boxes.
+Update the Score and Negative Marks rows in the Result Table.
+In the "OMR View" grid, apply bg-green-500 for correct, bg-red-500 for wrong, and bg-yellow-500 for invalid answers
