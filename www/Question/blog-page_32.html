@@ -8,12 +8,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Medical Secret Files">
     <meta name="application-name" content="Medical Secret Files">
+    
     <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="console.log('OpenCV Loaded successfully');"></script>
+    
 <title>Secret file: English Vocabulary 02</title>
-<style id='page-skin-1' type='text/css'></style>
 <script src='https://cdn.tailwindcss.com'></script>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet'/>
 <style>
+/* Core Reset & Touch Fixes */
+body { margin: 0; padding: 0; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+.post-body img, iframe { max-width: 100%; border-radius: 12px; }
+button, a, [role="button"] { touch-action: manipulation; user-select: none; }
+
+/* Safe Area Insets for Mobile */
+body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
 /* GLOBAL RESPONSIVE & OVERFLOW FIXES */
 .post-card { margin: 10px 5px !important; padding: 15px !important; }
 .question-card { margin: 0 0 12px 0 !important; padding: 16px !important; border-radius: 15px !important; }
@@ -36,15 +50,15 @@
 .opt-btn > span { display: block !important; flex: 1 !important; word-break: break-word !important; padding-right: 10px !important; }
 .opt-btn > div span { display: inline-block !important; flex: none !important; padding: 0 !important; margin: 0 !important; }
 
-:root { --primary-accent: #334155; --light-bg: #0F172A; --dark-bg: #0F172A; --card-light: #0F172A; --card-dark: #0F172A; --text-main: #F1F5F9; --text-dark: #F1F5F9; }
+:root { --light-bg: #0F172A; --dark-bg: #0F172A; --card-light: #0F172A; --text-main: #F1F5F9; --text-dark: #F1F5F9; }
 body { transition: background 0.4s, color 0.4s; background-color: var(--light-bg); background-attachment: fixed; min-height: 100vh; color: var(--text-main); font-family: 'Inter', sans-serif; }
 .dark body { background-color: var(--dark-bg); color: var(--text-dark); }
 
 .post-card { background: var(--card-light); border-radius: 30px; padding: 2.5rem; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
 .dark .post-card { background: #0F172A !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
 
-/* OMR Scanning Canvas (Hidden visually, used for processing) */
-#omr-processing-canvas { display: none; }
+/* OMR Scanning Canvas (Hidden until processed) */
+#omr-processing-canvas { display: none; max-width: 100%; border-radius: 12px; margin-top: 20px; border: 2px solid #10b981; }
 </style>
 </head>
 <body class='antialiased dark'>
@@ -121,21 +135,22 @@ body { transition: background 0.4s, color 0.4s; background-color: var(--light-bg
         </div>
 
         <div id="camera-modal" class="fixed inset-0 z-[250] hidden items-center justify-center p-6 bg-zinc-950/90 backdrop-blur-lg">
-            <div class="bg-zinc-900 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl p-8 text-center border border-white/10">
+            <div class="bg-zinc-900 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl p-8 text-center border border-white/10 max-h-[90vh] overflow-y-auto">
                 <div class="w-20 h-20 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
                     <i class="fa fa-camera text-3xl text-emerald-400"></i>
                 </div>
                 <h3 class="text-2xl font-black mb-2 text-white">Scan OMR Sheet</h3>
-                <p class="text-sm opacity-60 mb-4 px-2 text-white" id="scan-status">Take a clear photo of your filled OMR sheet. Ensure all 4 corners are visible.</p>
+                <p class="text-sm opacity-60 mb-4 px-2 text-white" id="scan-status">Place paper on a dark background. Ensure all 4 corners are visible.</p>
                 <label id="omr-upload-label" class="w-full flex items-center justify-center bg-emerald-600 text-white font-bold py-4 rounded-2xl hover:bg-emerald-700 transition-all cursor-pointer mb-3">
                     <i class="fa fa-upload mr-2"></i> UPLOAD IMAGE
                     <input type="file" accept="image/*" class="hidden" onchange="processHardOMR(event)">
                 </label>
                 <button onclick="document.getElementById('camera-modal').classList.add('hidden'); document.getElementById('entry-modal').classList.remove('hidden');" class="w-full bg-zinc-800 font-bold py-4 rounded-2xl text-white hover:bg-zinc-700 transition-all">CANCEL</button>
+                
+                <canvas id="omr-processing-canvas"></canvas>
             </div>
         </div>
         
-        <canvas id="omr-processing-canvas"></canvas>
     </div>
 </div>
 </main>
@@ -1048,6 +1063,7 @@ body { transition: background 0.4s, color 0.4s; background-color: var(--light-bg
       }
     ];
 
+
 // ==========================================
 // 2. EXAM LOGIC
 // ==========================================
@@ -1151,6 +1167,32 @@ window.submitExam = () => {
 // ==========================================
 // 3. OFFLINE OPENCV.JS IMAGE PROCESSING
 // ==========================================
+
+// Helper function to order the 4 corners of the paper
+function orderPoints(contour) {
+    let points = [];
+    for (let i = 0; i < 4; i++) {
+        points.push({ x: contour.data32S[i * 2], y: contour.data32S[i * 2 + 1] });
+    }
+
+    // Sort by x to separate left/right
+    points.sort((a, b) => a.x - b.x);
+    let leftPoints = [points[0], points[1]];
+    let rightPoints = [points[2], points[3]];
+
+    // Sort left by y
+    leftPoints.sort((a, b) => a.y - b.y);
+    let tl = leftPoints[0];
+    let bl = leftPoints[1];
+
+    // Sort right by y
+    rightPoints.sort((a, b) => a.y - b.y);
+    let tr = rightPoints[0];
+    let br = rightPoints[1];
+
+    return [tl, tr, br, bl];
+}
+
 async function processHardOMR(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1163,14 +1205,15 @@ async function processHardOMR(event) {
     
     img.onload = () => {
         try {
-            const canvas = document.getElementById('omr-processing-canvas');
+            // Hidden canvas for processing
+            const canvas = document.createElement('canvas');
             canvas.width = img.width;
             canvas.height = img.height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
 
             if (typeof cv === 'undefined') {
-                alert("OpenCV is still loading. Please wait.");
+                alert("OpenCV is still loading. Please try again in a few seconds.");
                 return;
             }
 
@@ -1183,10 +1226,10 @@ async function processHardOMR(event) {
             cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
             cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
 
-            // 2. Canny Edge Detection (Better for finding paper boundaries than thresholding)
+            // 2. Canny Edge Detection
             cv.Canny(blurred, edges, 75, 200);
 
-            // 3. Dilate edges to close any small gaps in the paper outline
+            // 3. Dilate edges to close gaps
             let M = cv.Mat.ones(5, 5, cv.CV_8U);
             cv.dilate(edges, edges, M, new cv.Point(-1, -1), 1, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
 
@@ -1198,7 +1241,7 @@ async function processHardOMR(event) {
             let maxArea = 0;
             let paperContour = null;
 
-            // 5. Look for the largest contour that looks like a page
+            // 5. Look for the largest 4-point contour
             for (let i = 0; i < contours.size(); ++i) {
                 let cnt = contours.get(i);
                 let area = cv.contourArea(cnt);
@@ -1207,14 +1250,10 @@ async function processHardOMR(event) {
                 if (area > (src.cols * src.rows * 0.2)) { 
                     let peri = cv.arcLength(cnt, true);
                     let approx = new cv.Mat();
-
-                    // The 0.05 multiplier here is higher than before, making it MORE forgiving of curved paper
                     cv.approxPolyDP(cnt, approx, 0.05 * peri, true);
 
                     if (approx.rows === 4 && area > maxArea) {
                         maxArea = area;
-
-                        // Clean up old contour if we found a bigger one
                         if (paperContour) paperContour.delete(); 
                         paperContour = approx;
                     } else {
@@ -1224,20 +1263,56 @@ async function processHardOMR(event) {
             }
 
             if (!paperContour) {
-                alert("Could not detect the edges. Ensure all 4 corners of the paper are visible against a contrasting background.");
+                alert("Could not detect the edges. Ensure all 4 corners are visible on a contrasting dark background.");
                 statusText.innerText = "Detection failed. Try again.";
             } else {
-                statusText.innerText = "Paper detected! Extracting answers...";
+                statusText.innerText = "Paper detected! Flattening image...";
 
-                // Success! You have the 4 corners in 'paperContour'
-                // Next step: Apply cv.getPerspectiveTransform
+                // 6. Sort corners and apply Perspective Transform
+                let orderedCorners = orderPoints(paperContour);
+                
+                const maxWidth = 800; 
+                const maxHeight = 1100;
+
+                let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+                    orderedCorners[0].x, orderedCorners[0].y, // Top-Left
+                    orderedCorners[1].x, orderedCorners[1].y, // Top-Right
+                    orderedCorners[2].x, orderedCorners[2].y, // Bottom-Right
+                    orderedCorners[3].x, orderedCorners[3].y  // Bottom-Left
+                ]);
+                
+                let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+                    0, 0,                      
+                    maxWidth, 0,               
+                    maxWidth, maxHeight,       
+                    0, maxHeight               
+                ]);
+
+                let M_trans = cv.getPerspectiveTransform(srcTri, dstTri);
+                let flatPaper = new cv.Mat();
+                cv.warpPerspective(src, flatPaper, M_trans, new cv.Size(maxWidth, maxHeight));
+
+                // Display flattened image
+                cv.imshow('omr-processing-canvas', flatPaper);
+                document.getElementById('omr-processing-canvas').style.display = 'block';
+
+                statusText.innerText = "Image flattened! Ready to map grid.";
 
                 setTimeout(() => {
-                    alert("Paper outline found successfully! Corners: " + paperContour.rows);
+                    alert("Warping Complete! Next step: map the grid coordinates.");
                     document.getElementById('camera-modal').classList.add('hidden');
+                    
+                    // MOCK DATA: Simulating OMR extraction so the UI proceeds
+                    for(let i=0; i<questions.length; i++) {
+                        const randomOpt = ['a','b','c','d'][Math.floor(Math.random() * 4)];
+                        userAnswers[i] = randomOpt; 
+                    }
+                    
                     startExam('sol'); 
                     submitExam();
-                }, 1000);
+                }, 1500);
+
+                srcTri.delete(); dstTri.delete(); M_trans.delete(); flatPaper.delete();
             }
 
             // Cleanup memory
@@ -1251,7 +1326,32 @@ async function processHardOMR(event) {
             statusText.innerText = "Error processing image.";
         }
     };
+}
+
 document.addEventListener('DOMContentLoaded', updateExamTitle);
 </script>
+
+<script src='https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js'></script>
+<script src='https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js'></script>
+<script src='https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js'></script>
+<script type='text/javascript'>
+const firebaseConfig = {
+    apiKey: "AIzaSyCeOGW02mBVV5oQAWzh9scy1xULjwPg1Ek",
+    authDomain: "hazera-taju-degree-college.firebaseapp.com",
+    projectId: "hazera-taju-degree-college",
+    storageBucket: "hazera-taju-degree-college.firebasestorage.app",
+    messagingSenderId: "110273229891",
+    appId: "1:110273229891:web:28ca38967befe86a11d0f6",
+    measurementId: "G-W129JR3BTP"
+};
+
+// Initialize
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+}
+</script>
+
 </body>
 </html>
