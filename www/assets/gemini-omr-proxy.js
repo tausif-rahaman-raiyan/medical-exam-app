@@ -2,9 +2,11 @@
 //  HARD OMR EXAM  —  Corner-adjust UI + Pure CV Scan
 //  No API Key  •  No Server  •  Works fully offline
 // ═══════════════════════════════════════════════════════════════════
+(function (global) {
+'use strict';
 
 // ── 1. Open the camera/upload modal ────────────────────────────────
-window.openHardOMRCamera = () => {
+global.openHardOMRCamera = () => {
     document.getElementById('entry-modal').classList.add('hidden');
     const cm = document.getElementById('camera-modal');
     cm.classList.remove('hidden');
@@ -12,7 +14,7 @@ window.openHardOMRCamera = () => {
 };
 
 // ── 2. User picks an image → show corner-adjustment overlay ────────
-window.processHardOMR = (event) => {
+global.processHardOMR = (event) => {
     const file = event.target.files[0];
     if (!file) return;
     event.target.value = '';   // reset so same file can be re-selected
@@ -122,10 +124,10 @@ function _showCornerUI(file) {
 
     // ── State ──────────────────────────────────────────────────────
     const state = {
-        corners: _DEFAULT_CORNERS.map(c => [...c]),  // deep copy
+        corners: _DEFAULT_CORNERS.map(function(c) { return c.slice(); }),
         dragging: null,
         layout: 'auto',
-        file,
+        file: file,
         objUrl: null
     };
 
@@ -135,11 +137,11 @@ function _showCornerUI(file) {
     // ── Load the image ─────────────────────────────────────────────
     const img    = ov.querySelector('#omr-ci-img');
     state.objUrl = URL.createObjectURL(file);
-    img.onload   = () => _initCanvas(ov, state);
+    img.onload   = function() { _initCanvas(ov, state); };
     img.src      = state.objUrl;
 
     // ── Cancel ────────────────────────────────────────────────────
-    ov.querySelector('#omr-ci-cancel').addEventListener('click', () => {
+    ov.querySelector('#omr-ci-cancel').addEventListener('click', function() {
         _closeOverlay(ov, state);
         const cm = document.getElementById('camera-modal');
         cm.classList.remove('hidden');
@@ -147,7 +149,7 @@ function _showCornerUI(file) {
     });
 
     // ── Auto-Detect button ────────────────────────────────────────
-    ov.querySelector('#omr-ci-auto').addEventListener('click', async () => {
+    ov.querySelector('#omr-ci-auto').addEventListener('click', async function() {
         const btn = ov.querySelector('#omr-ci-auto');
         btn.textContent = '…';
         btn.disabled    = true;
@@ -156,18 +158,20 @@ function _showCornerUI(file) {
             if (typeof OMRProcessor === 'undefined')
                 throw new Error('OMR engine not loaded');
 
-            const { corners, layout } = await OMRProcessor.detectCornersAndLayout(file);
+            const result = await OMRProcessor.detectCornersAndLayout(file);
+            const detectedCorners = result.corners;
+            const detectedLayout  = result.layout;
 
-            if (corners) {
-                state.corners = corners.map(c => [...c]);
+            if (detectedCorners) {
+                state.corners = detectedCorners.map(function(c) { return c.slice(); });
                 _redraw(ov, state);
             }
 
-            if (layout) {
-                state.layout = layout;
-                _applyLayoutStyles(ov, layout);
+            if (detectedLayout) {
+                state.layout = detectedLayout;
+                _applyLayoutStyles(ov, detectedLayout);
                 const badge = ov.querySelector('#omr-lt-badge');
-                badge.textContent = layout === '4col' ? '4×25 ✓' : '2×50 ✓';
+                badge.textContent = detectedLayout === '4col' ? '4×25 ✓' : '2×50 ✓';
                 badge.style.opacity = '1';
             }
         } catch (e) {
@@ -179,8 +183,8 @@ function _showCornerUI(file) {
     });
 
     // ── Layout toggle buttons ─────────────────────────────────────
-    ov.querySelectorAll('.omr-lt-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+    ov.querySelectorAll('.omr-lt-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
             state.layout = btn.dataset.layout;
             _applyLayoutStyles(ov, state.layout);
             const badge = ov.querySelector('#omr-lt-badge');
@@ -189,7 +193,7 @@ function _showCornerUI(file) {
     });
 
     // ── Scan ──────────────────────────────────────────────────────
-    ov.querySelector('#omr-ci-scan').addEventListener('click', () => {
+    ov.querySelector('#omr-ci-scan').addEventListener('click', function() {
         _closeOverlay(ov, state);
         _runScan(state.file, state.corners, state.layout);
     });
@@ -201,7 +205,7 @@ function _closeOverlay(ov, state) {
 }
 
 function _applyLayoutStyles(ov, active) {
-    ov.querySelectorAll('.omr-lt-btn').forEach(btn => {
+    ov.querySelectorAll('.omr-lt-btn').forEach(function(btn) {
         const on = btn.dataset.layout === active;
         btn.style.background = on ? '#7c3aed' : '#3f3f46';
         btn.style.color      = on ? '#fff'    : '#a1a1aa';
@@ -221,16 +225,20 @@ function _initCanvas(ov, state) {
 
     // ── Coordinate helpers ────────────────────────────────────────
     function imgBounds() {
-        const img   = ov.querySelector('#omr-ci-img');
-        const cW    = wrap.offsetWidth, cH = wrap.offsetHeight;
-        const iW    = img.naturalWidth, iH = img.naturalHeight;
-        const scale = Math.min(cW / iW, cH / iH);
-        const dW    = iW * scale, dH = iH * scale;
+        const img    = ov.querySelector('#omr-ci-img');
+        const cW     = wrap.offsetWidth;
+        const cH     = wrap.offsetHeight;
+        const iW     = img.naturalWidth;
+        const iH     = img.naturalHeight;
+        const scale  = Math.min(cW / iW, cH / iH);
+        const dW     = iW * scale;
+        const dH     = iH * scale;
         return { x: (cW - dW) / 2, y: (cH - dH) / 2, w: dW, h: dH };
     }
 
-    function fracToCanvas([fx, fy]) {
-        const b = imgBounds();
+    function fracToCanvas(frac) {
+        const fx = frac[0], fy = frac[1];
+        const b  = imgBounds();
         return [b.x + fx * b.w, b.y + fy * b.h];
     }
 
@@ -249,8 +257,9 @@ function _initCanvas(ov, state) {
     }
 
     function nearestCorner(pt) {
-        let best = -1, bestD = _HANDLE_R * 2.5;
-        state.corners.forEach((c, i) => {
+        let best  = -1;
+        let bestD = _HANDLE_R * 2.5;
+        state.corners.forEach(function(c, i) {
             const cp = fracToCanvas(c);
             const d  = Math.hypot(pt[0] - cp[0], pt[1] - cp[1]);
             if (d < bestD) { bestD = d; best = i; }
@@ -259,14 +268,14 @@ function _initCanvas(ov, state) {
     }
 
     // ── Pointer events (covers both mouse & touch) ────────────────
-    canvas.addEventListener('pointerdown', e => {
+    canvas.addEventListener('pointerdown', function(e) {
         e.preventDefault();
         const pt = evtPt(e);
         state.dragging = nearestCorner(pt);
         if (state.dragging >= 0) canvas.setPointerCapture(e.pointerId);
     });
 
-    canvas.addEventListener('pointermove', e => {
+    canvas.addEventListener('pointermove', function(e) {
         e.preventDefault();
         if (state.dragging === null || state.dragging < 0) return;
         const pt = evtPt(e);
@@ -274,12 +283,12 @@ function _initCanvas(ov, state) {
         _redraw(ov, state);
     });
 
-    canvas.addEventListener('pointerup', e => {
+    canvas.addEventListener('pointerup', function(e) {
         e.preventDefault();
         state.dragging = null;
     });
 
-    canvas.addEventListener('pointercancel', () => { state.dragging = null; });
+    canvas.addEventListener('pointercancel', function() { state.dragging = null; });
 }
 
 // ── Draw the corner overlay ─────────────────────────────────────────
@@ -289,30 +298,38 @@ function _redraw(ov, state) {
     if (!canvas) return;
 
     // Keep canvas resolution in sync (handles orientation changes)
-    if (canvas.width !== wrap.offsetWidth)  canvas.width  = wrap.offsetWidth;
+    if (canvas.width  !== wrap.offsetWidth)  canvas.width  = wrap.offsetWidth;
     if (canvas.height !== wrap.offsetHeight) canvas.height = wrap.offsetHeight;
 
-    const ctx = canvas.getContext('2d');
-    const W   = canvas.width, H = canvas.height;
-    ctx.clearRect(0, 0, W, H);
+    const ctx    = canvas.getContext('2d');
+    const canvW  = canvas.width;
+    const canvH  = canvas.height;
+    ctx.clearRect(0, 0, canvW, canvH);
 
-    const img   = ov.querySelector('#omr-ci-img');
-    const cW    = wrap.offsetWidth, cH = wrap.offsetHeight;
-    const scale = Math.min(cW / img.naturalWidth, cH / img.naturalHeight);
-    const dW    = img.naturalWidth * scale, dH = img.naturalHeight * scale;
-    const bx    = (cW - dW) / 2, by = (cH - dH) / 2;
+    const img    = ov.querySelector('#omr-ci-img');
+    const cW     = wrap.offsetWidth;
+    const cH     = wrap.offsetHeight;
+    const scale  = Math.min(cW / img.naturalWidth, cH / img.naturalHeight);
+    const dW     = img.naturalWidth  * scale;
+    const dH     = img.naturalHeight * scale;
+    const bx     = (cW - dW) / 2;
+    const by     = (cH - dH) / 2;
 
-    function cp([fx, fy]) { return [bx + fx * dW, by + fy * dH]; }
+    function cp(frac) { return [bx + frac[0] * dW, by + frac[1] * dH]; }
 
-    const [tl, tr, bl, br] = state.corners.map(cp);
+    const pts = state.corners.map(cp);
+    const tl = pts[0], tr = pts[1], bl = pts[2], br = pts[3];
 
     // ── Dark vignette outside the quad ────────────────────────────
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.60)';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, 0, canvW, canvH);
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.moveTo(...tl); ctx.lineTo(...tr); ctx.lineTo(...br); ctx.lineTo(...bl);
+    ctx.moveTo(tl[0], tl[1]);
+    ctx.lineTo(tr[0], tr[1]);
+    ctx.lineTo(br[0], br[1]);
+    ctx.lineTo(bl[0], bl[1]);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
@@ -325,13 +342,17 @@ function _redraw(ov, state) {
     ctx.shadowColor = '#34d399';
     ctx.shadowBlur  = 8;
     ctx.beginPath();
-    ctx.moveTo(...tl); ctx.lineTo(...tr); ctx.lineTo(...br); ctx.lineTo(...bl);
+    ctx.moveTo(tl[0], tl[1]);
+    ctx.lineTo(tr[0], tr[1]);
+    ctx.lineTo(br[0], br[1]);
+    ctx.lineTo(bl[0], bl[1]);
     ctx.closePath();
     ctx.stroke();
     ctx.restore();
 
     // ── Corner handles ────────────────────────────────────────────
-    state.corners.map(cp).forEach(([cx, cy], i) => {
+    pts.forEach(function(pnt, i) {
+        const cx       = pnt[0], cy = pnt[1];
         const col      = _HANDLE_COLS[i];
         const isActive = state.dragging === i;
         const r        = isActive ? _HANDLE_R + 5 : _HANDLE_R;
@@ -366,7 +387,7 @@ function _redraw(ov, state) {
         // Label
         ctx.save();
         ctx.fillStyle    = '#000';
-        ctx.font         = `bold ${Math.max(9, r * 0.55)}px -apple-system,sans-serif`;
+        ctx.font         = 'bold ' + Math.max(9, r * 0.55) + 'px -apple-system,sans-serif';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(_CORNER_LABELS[i], cx, cy);
@@ -374,15 +395,15 @@ function _redraw(ov, state) {
     });
 
     // ── Corner legend (bottom of quad) ────────────────────────────
-    const legY = Math.max(...[tl, tr, bl, br].map(p => p[1])) + 14;
-    if (legY < H - 10) {
-        const cx = (tl[0] + tr[0]) / 2;
+    const legY = Math.max(tl[1], tr[1], bl[1], br[1]) + 14;
+    if (legY < canvH - 10) {
+        const legCx = (tl[0] + tr[0]) / 2;
         ctx.save();
         ctx.fillStyle    = 'rgba(255,255,255,0.55)';
         ctx.font         = 'bold 11px -apple-system,sans-serif';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillText('Drag handles to sheet corners', cx, legY);
+        ctx.fillText('Drag handles to sheet corners', legCx, legY);
         ctx.restore();
     }
 }
@@ -412,10 +433,9 @@ async function _runScan(file, corners, layout) {
         <p style="font-size:13px;color:#71717a;margin:0 0 20px">
           Layout: ${layoutLabel} &nbsp;•&nbsp; No internet needed</p>
         <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
-          ${['Warp','Greyscale','Threshold','Grid','Score'].map(s =>
-            `<span style="padding:3px 10px;border-radius:99px;background:#27272a;
-                          color:#71717a;font-size:10px;font-weight:700">${s}</span>`
-          ).join('<span style="color:#3f3f46">→</span>')}
+          ${['Warp','Greyscale','Threshold','Grid','Score'].map(function(s) {
+            return '<span style="padding:3px 10px;border-radius:99px;background:#27272a;color:#71717a;font-size:10px;font-weight:700">' + s + '</span>';
+          }).join('<span style="color:#3f3f46">→</span>')}
         </div>
       </div>
       <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
@@ -424,13 +444,15 @@ async function _runScan(file, corners, layout) {
         if (typeof OMRProcessor === 'undefined')
             throw new Error('OMR engine not loaded — please refresh and try again.');
 
-        const answerKey = questions.map(q => q.ans);
-        const { summary, detailedResults, previewDataUrl, detectedLayout } =
-            await OMRProcessor.processImage(file, answerKey, { corners, layout });
+        const answerKey = questions.map(function(q) { return q.ans; });
+        const scanResult = await OMRProcessor.processImage(file, answerKey, { corners: corners, layout: layout });
+        const summary         = scanResult.summary;
+        const detailedResults = scanResult.detailedResults;
+        const detectedLayout  = scanResult.detectedLayout;
 
         // ── Populate userAnswers ──────────────────────────────────
-        Object.keys(userAnswers).forEach(k => delete userAnswers[k]);
-        detailedResults.forEach((r, i) => {
+        Object.keys(userAnswers).forEach(function(k) { delete userAnswers[k]; });
+        detailedResults.forEach(function(r, i) {
             if      (r.status === 'skipped') { /* leave undefined */ }
             else if (r.status === 'invalid') userAnswers[i] = '__invalid__';
             else                             userAnswers[i] = r.user;
@@ -442,37 +464,38 @@ async function _runScan(file, corners, layout) {
         document.getElementById('res-wrong').innerText   = totalPenalised;
         document.getElementById('res-time').innerText    =
             summary.invalid > 0
-                ? `⚠ ${summary.invalid} Invalid`
-                : `${summary.skipped} Skipped`;
+                ? '⚠ ' + summary.invalid + ' Invalid'
+                : summary.skipped + ' Skipped';
         document.getElementById('res-score').innerText =
-            `${summary.finalScore}/${summary.totalQuestions}`;
+            summary.finalScore + '/' + summary.totalQuestions;
 
         // Small breakdown under Wrong
         const wrongBox = document.getElementById('res-wrong').parentElement;
         if (wrongBox) {
-            wrongBox.querySelector('.omr-breakdown')?.remove();
+            const existingBp = wrongBox.querySelector('.omr-breakdown');
+            if (existingBp) existingBp.remove();
             const parts = [];
-            if (summary.wrong   > 0) parts.push(`${summary.wrong} wrong`);
-            if (summary.invalid > 0) parts.push(`${summary.invalid} invalid`);
-            if (summary.skipped > 0) parts.push(`${summary.skipped} skip`);
+            if (summary.wrong   > 0) parts.push(summary.wrong   + ' wrong');
+            if (summary.invalid > 0) parts.push(summary.invalid + ' invalid');
+            if (summary.skipped > 0) parts.push(summary.skipped + ' skip');
             if (parts.length > 1) {
-                const bp        = document.createElement('p');
-                bp.className    = 'omr-breakdown';
+                const bp         = document.createElement('p');
+                bp.className     = 'omr-breakdown';
                 bp.style.cssText = 'font-size:9px;text-transform:uppercase;font-weight:700;opacity:.5;margin-top:2px';
-                bp.textContent  = parts.join(' · ');
+                bp.textContent   = parts.join(' · ');
                 wrongBox.appendChild(bp);
             }
         }
 
-        // Layout badge in Speed box
+        // Layout badge in Speed/Time box
         const timeEl = document.getElementById('res-time');
         if (timeEl) {
-            const layoutBadge = timeEl.parentElement.querySelector('.omr-layout-badge');
-            if (!layoutBadge) {
-                const lb        = document.createElement('p');
-                lb.className    = 'omr-layout-badge';
+            const existingLb = timeEl.parentElement.querySelector('.omr-layout-badge');
+            if (!existingLb) {
+                const lb         = document.createElement('p');
+                lb.className     = 'omr-layout-badge';
                 lb.style.cssText = 'font-size:9px;text-transform:uppercase;font-weight:700;opacity:.5;margin-top:2px';
-                lb.textContent  = detectedLayout === '4col' ? 'Layout: 4×25' : 'Layout: 2×50';
+                lb.textContent   = detectedLayout === '4col' ? 'Layout: 4×25' : 'Layout: 2×50';
                 timeEl.parentElement.appendChild(lb);
             }
         }
@@ -483,9 +506,9 @@ async function _runScan(file, corners, layout) {
 
         // ── Yellow highlight for invalid answers ──────────────────
         if (summary.invalid > 0) {
-            requestAnimationFrame(() => {
+            requestAnimationFrame(function() {
                 const cards = document.querySelectorAll('#questions-list .question-card');
-                detailedResults.forEach((r, i) => {
+                detailedResults.forEach(function(r, i) {
                     if (r.status === 'invalid' && cards[i]) {
                         cards[i].style.cssText +=
                             ';border-left:4px solid #eab308!important;box-shadow:0 0 0 1px rgba(234,179,8,.2)';
@@ -494,14 +517,14 @@ async function _runScan(file, corners, layout) {
                             badge.style.background = 'rgba(234,179,8,.15)';
                             badge.style.color      = '#ca8a04';
                             badge.style.border     = '1px solid rgba(234,179,8,.3)';
-                            badge.textContent      = `Invalid (−0.25) — ${r.user.toUpperCase()}`;
+                            badge.textContent      = 'Invalid (−0.25) — ' + r.user.toUpperCase();
                         }
                     }
                 });
             });
         }
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        global.scrollTo({ top: 0, behavior: 'smooth' });
         saveResultToCloud(summary.finalScore, summary.correct, totalPenalised, 0);
 
     } catch (err) {
@@ -524,15 +547,15 @@ async function _runScan(file, corners, layout) {
 }
 
 // ── Legacy compatibility stub ──────────────────────────────────────
-window.gradeAIOMR = (scannedAnswers) => {
-    Object.keys(userAnswers).forEach(k => delete userAnswers[k]);
-    questions.forEach((q, i) => {
+global.gradeAIOMR = function(scannedAnswers) {
+    Object.keys(userAnswers).forEach(function(k) { delete userAnswers[k]; });
+    questions.forEach(function(q, i) {
         const a = scannedAnswers[(i + 1).toString()];
         if (a) userAnswers[i] = a.toLowerCase();
     });
 
     let correct = 0, wrong = 0;
-    questions.forEach((q, i) => {
+    questions.forEach(function(q, i) {
         if (userAnswers[i] === q.ans) correct++;
         else if (userAnswers[i] !== undefined) wrong++;
     });
@@ -541,10 +564,12 @@ window.gradeAIOMR = (scannedAnswers) => {
     document.getElementById('res-correct').innerText = correct;
     document.getElementById('res-wrong').innerText   = wrong;
     document.getElementById('res-time').innerText    = 'AI Scanned';
-    document.getElementById('res-score').innerText   = `${finalScore}/${questions.length}`;
+    document.getElementById('res-score').innerText   = finalScore + '/' + questions.length;
     document.getElementById('results-card').classList.remove('hidden');
     currentMode = 'sol';
     renderQuestions();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    global.scrollTo({ top: 0, behavior: 'smooth' });
     saveResultToCloud(finalScore, correct, wrong, 0);
 };
+
+})(window);
