@@ -1,0 +1,35 @@
+Registration Marks: Those black horizontal bars on the far left and far right margins are "anchor points." Your code can use these to align the image even if it is rotated or skewed.
+
+Grid Structure: The questions are in a very predictable grid.
+
+Contrast: The bubbles are clearly outlined.
+
+Recommended "Next Steps" & Prompts for Coding
+To build a professional-grade OMR, don't try to write one big script. Break it down into these four logical "modules." You can use the prompts below with an AI coding assistant (or use them to guide your own research):
+
+Module 1: The Alignment (Crucial)
+If the alignment is off, the detection will fail.
+
+Prompt: "Write a Python script using OpenCV to detect the four black corner registration marks on an OMR sheet and perform a perspective transform to warp the image into a perfect top-down rectangle. Use cv2.findContours and cv2.getPerspectiveTransform."
+
+Module 2: The Grid Extraction
+Once the image is a perfect rectangle, you need to "slice" it into individual bubble images.
+
+Prompt: "Given a pre-aligned OMR sheet, write a function that calculates the coordinates of each bubble based on a relative grid pattern. Assume the sheet has 4 columns and 25 rows of questions. Use simple math to calculate bubble positions and crop them out into a list of 100 images."
+
+Module 3: Bubble Classification
+This is where you handle the "low quality" or "faint pencil mark" problem.
+
+Prompt: "How can I calculate the 'pixel density' of a cropped bubble image to determine if it is filled or empty? Please provide a Python function that uses a threshold value (or Otsu's thresholding) to distinguish between a marked bubble and an empty one, even if the image has varying lighting conditions."
+
+Module 4: The "Secret Sauce" (Handling Error/Noise)
+Prompt: "I am getting false positives on my OMR reader due to dust or faint erasures. How can I implement a 'Relative Thresholding' algorithm where the system identifies a marked bubble by comparing it to the other bubbles in the same question row, rather than using a fixed pixel count?"
+
+Pro-Tips for 100% Accuracy
+Use the Anchor Points: Do not hardcode coordinates. Write your code to look for those black bars on the left/right and calculate the grid size dynamically. If the scan is stretched or squeezed, the grid will adjust automatically.
+
+Color Space: Convert your image to Grayscale first. If that isn't enough, try converting to LAB color space and extracting the 'L' (lightness) channel. This often helps normalize uneven lighting shadows across the paper.
+
+The "Erasure" Problem: To handle faint erasures, calculate the "darkness" of all four bubbles (A, B, C, D) in a single row. If two bubbles are marked, flag the one with the higher pixel density as the primary choice, but provide a warning for "Double Marking."
+
+Debugging: Create a "debug mode" in your code that saves an image showing green circles around detected marks and red circles around empty ones. This allows you to visually inspect exactly where the code is failing.

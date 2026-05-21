@@ -1,64 +1,62 @@
 import cv2
 import numpy as np
 import json
+from itertools import combinations
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  TUNABLE PARAMETERS
+#  TUNABLE PARAMETERS  — calibrated against the Medical Secret Files sheet
 # ─────────────────────────────────────────────────────────────────────────────
 
-WARP_WIDTH  = 1000   # width of the perspective-corrected output image
-WARP_HEIGHT = 1400   # height of the perspective-corrected output image
+WARP_WIDTH  = 1000   # output canvas width  (px) — match coordinate space
+WARP_HEIGHT = 1400   # output canvas height (px)
 
-# Grid geometry (all values are in pixels on the 1000×1400 warped image)
-GRID_TOP          = 480    # y of the first question row centre
-GRID_BOTTOM       = 1350   # y of the last  question row centre
-ROWS_PER_COLUMN   = 25     # questions per column block
-ROW_SPACING       = (GRID_BOTTOM - GRID_TOP) / (ROWS_PER_COLUMN - 1)  # ≈34.5 px
+# ── Grid geometry (all values are pixels on the 1000×1400 warped canvas) ─────
+GRID_TOP        = 65     # y-centre of question-1 row
+GRID_BOTTOM     = 1361   # y-centre of question-25 row  (65 + 24 × 54)
+ROWS_PER_COL    = 25     # questions per column block
+ROW_SPACING     = (GRID_BOTTOM - GRID_TOP) / (ROWS_PER_COL - 1)   # ≈ 54 px
 
-# Column block base x-coordinates (leftmost bubble A of each block)
+# Base x of the first bubble (option A) in each column block
 COLUMN_BASES = {
-    1:  135,   # Q  1–25
-    2:  365,   # Q 26–50
-    3:  595,   # Q 51–75
-    4:  825,   # Q 76–100
+    1:  109,   # Q  1–25
+    2:  357,   # Q 26–50
+    3:  605,   # Q 51–75
+    4:  853,   # Q 76–100
 }
+BUBBLE_SPACING = 40     # px between adjacent bubbles (A→B→C→D)
+BUBBLE_RADIUS  = 14     # px radius of the ROI mask around each bubble centre
 
-BUBBLE_SPACING   = 35    # horizontal pixels between A→B→C→D
-BUBBLE_RADIUS    = 12    # radius (px) of the circular ROI mask
+# Ignore bubbles whose centre falls above this y (skips column-header row)
+SCAN_Y_CUTOFF  = 50
 
-# Ignore everything above this y when scanning to skip barcodes / QR codes
-SCAN_Y_CUTOFF    = 450
-
-# Corner-square detection: squares must occupy at least this fraction of image
-CORNER_MIN_AREA_RATIO = 0.0003
+# Fraction of max-possible filled pixels a bubble must reach to be "answered"
+# (guards against all-empty questions / skipped rows)
+MIN_FILL_RATIO = 0.08
 
 OPTIONS = ["A", "B", "C", "D"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  COORDINATE GENERATOR  (replaces the hardcoded JSON template)
+#  COORDINATE GENERATOR
 # ─────────────────────────────────────────────────────────────────────────────
 
 def build_template() -> dict:
     """
-    Compute bubble (x, y) centres for all 100 questions from the grid formula:
+    Compute bubble (x, y) centres for all 100 questions.
 
-        y = GRID_TOP  + (row_index × ROW_SPACING)          row_index 0..24
-        x = COLUMN_BASE + (option_index × BUBBLE_SPACING)  option_index 0..3
-
-    Returns dict: {"question_1": {"A": [x,y], "B":..., "C":..., "D":...}, ...}
+        y = GRID_TOP  + row_index × ROW_SPACING        (row_index 0..24)
+        x = COLUMN_BASE + option_index × BUBBLE_SPACING (option_index 0..3)
     """
     template = {}
     for q in range(1, 101):
-        col_block  = ((q - 1) // ROWS_PER_COLUMN) + 1   # 1–4
-        row_index  = (q - 1) % ROWS_PER_COLUMN           # 0–24
-        base_x     = COLUMN_BASES[col_block]
-        cy         = int(round(GRID_TOP + row_index * ROW_SPACING))
-        options    = {}
+        col_block = ((q - 1) // ROWS_PER_COL) + 1    # 1–4
+        row_index = (q - 1) % ROWS_PER_COL             # 0–24
+        base_x    = COLUMN_BASES[col_block]
+        cy        = int(round(GRID_TOP + row_index * ROW_SPACING))
+        options   = {}
         for i, letter in enumerate(OPTIONS):
-            cx = base_x + i * BUBBLE_SPACING
-            options[letter] = [cx, cy]
+            options[letter] = [base_x + i * BUBBLE_SPACING, cy]
         template[f"question_{q}"] = options
     return template
 
@@ -67,14 +65,51 @@ TEMPLATE = build_template()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  PERSPECTIVE CORRECTION
+#  PREPROCESSING  — handles blurry, tilted, and low-light phone photos
+# ─────────────────────────────────────────────────────────────────────────────
+
+def preprocess(warped: np.ndarray) -> np.ndarray:
+    """
+    Convert a warped BGR image to a clean binary where filled bubbles = WHITE.
+
+    Pipeline
+    --------
+    1. Grayscale
+    2. CLAHE  — normalises uneven lighting across the sheet
+    3. Gaussian blur — suppresses grain / JPEG artefacts
+    4. Otsu's binarisation — automatic global threshold (adapts to scan quality)
+    5. Morphological close — fills tiny gaps in bubble marks
+    """
+    gray    = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+
+    # CLAHE: corrects shadows / hotspots from phone cameras
+    clahe   = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    gray    = clahe.apply(gray)
+
+    # Gaussian blur: reduces high-frequency noise from grainy/low-res shots
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Otsu's thresholding: auto-selects best threshold for the scan's histogram
+    _, binary = cv2.threshold(
+        blurred, 0, 255,
+        cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+    )
+
+    # Morphological close: joins broken bubble marks without merging bubbles
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+    return binary
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  PERSPECTIVE CORRECTION  — straightens tilted phone photos
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _order_points(pts: np.ndarray) -> np.ndarray:
-    """Sort four points into [TL, TR, BR, BL] order."""
+    """Sort four corner points into [TL, TR, BR, BL] order."""
     rect = np.zeros((4, 2), dtype="float32")
-    s    = pts.sum(axis=1)
-    diff = np.diff(pts, axis=1)
+    s, diff = pts.sum(axis=1), np.diff(pts, axis=1)
     rect[0] = pts[np.argmin(s)]
     rect[2] = pts[np.argmax(s)]
     rect[1] = pts[np.argmin(diff)]
@@ -85,68 +120,62 @@ def _order_points(pts: np.ndarray) -> np.ndarray:
 def _find_corner_squares(gray: np.ndarray) -> np.ndarray | None:
     """
     Locate the four black corner registration squares on the OMR sheet.
-    Returns ordered (4, 2) float32 array or None on failure.
+    Uses a two-pass approach:
+      Pass 1 — strict:  pure square contours with ~1:1 aspect
+      Pass 2 — relaxed: any compact dark blob near the image corners
+
+    Returns ordered (4, 2) float32 in [TL, TR, BR, BL] order, or None.
     """
-    _, thresh = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY_INV)
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    h, w    = gray.shape
+    img_area = h * w
 
-    img_area    = gray.shape[0] * gray.shape[1]
-    min_area    = img_area * CORNER_MIN_AREA_RATIO
-    max_area    = img_area * 0.01   # corner squares are small
+    # Low threshold to catch dark (but not pitch-black) marks on cream paper
+    _, thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY_INV)
 
-    squares = []
+    contours, _ = cv2.findContours(
+        thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    candidates = []
     for cnt in contours:
         area = cv2.contourArea(cnt)
-        if not (min_area < area < max_area):
+        if not (img_area * 0.00015 < area < img_area * 0.012):
             continue
-        peri   = cv2.arcLength(cnt, True)
-        approx = cv2.approxPolyDP(cnt, 0.04 * peri, True)
-        if len(approx) == 4:
-            x, y, w, h = cv2.boundingRect(approx)
-            aspect = w / float(h)
-            if 0.6 < aspect < 1.6:    # roughly square
-                cx = x + w // 2
-                cy = y + h // 2
-                squares.append([cx, cy])
+        x, y, bw, bh = cv2.boundingRect(cnt)
+        aspect = bw / float(bh)
+        if 0.45 < aspect < 2.2 and bw > 12 and bh > 12:
+            candidates.append((x + bw // 2, y + bh // 2, area))
 
-    if len(squares) < 4:
+    if len(candidates) < 4:
         return None
 
-    # Pick the four most corner-like points using convex hull
-    pts   = np.array(squares, dtype="float32")
-    hull  = cv2.convexHull(pts).reshape(-1, 2)
-    if len(hull) < 4:
-        return None
-
-    # Among hull points pick the 4 that span the largest area
-    from itertools import combinations
+    # Among all candidates pick the 4-point subset that spans the largest area
+    pts      = np.array([[c[0], c[1]] for c in candidates], dtype="float32")
     best_pts  = None
     best_area = 0
-    for combo in combinations(range(len(hull)), 4):
-        candidate = hull[list(combo)]
-        area      = cv2.contourArea(candidate)
-        if area > best_area:
-            best_area = area
-            best_pts  = candidate
+
+    limit = min(len(pts), 20)   # cap iterations for speed
+    for combo in combinations(range(limit), 4):
+        cand = pts[list(combo)]
+        a    = cv2.contourArea(cand)
+        if a > best_area:
+            best_area = a
+            best_pts  = cand
 
     return _order_points(best_pts) if best_pts is not None else None
 
 
-def _fallback_corners(gray: np.ndarray) -> np.ndarray:
-    """
-    Edge-based fallback: find the largest quadrilateral in the image
-    (the sheet boundary) when corner squares are not detected.
-    """
-    blurred  = cv2.GaussianBlur(gray, (5, 5), 0)
-    edged    = cv2.Canny(blurred, 75, 200)
-    contours, _ = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    contours     = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
-    for cnt in contours:
+def _edge_fallback(gray: np.ndarray) -> np.ndarray:
+    """Largest quadrilateral in the image (sheet boundary)."""
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    edged   = cv2.Canny(blurred, 75, 200)
+    cnts, _ = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    cnts    = sorted(cnts, key=cv2.contourArea, reverse=True)[:10]
+    for cnt in cnts:
         peri   = cv2.arcLength(cnt, True)
         approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
         if len(approx) == 4:
             return _order_points(approx.reshape(4, 2).astype("float32"))
-    # Last resort: use image corners
     h, w = gray.shape
     return np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype="float32")
 
@@ -158,23 +187,23 @@ def correct_skew(image: np.ndarray,
 
     Parameters
     ----------
-    image          : BGR image as returned by cv2.imread.
-    manual_corners : Optional (4, 2) float32 in [TL, TR, BR, BL] order.
-                     Overrides automatic detection when supplied.
+    image          : BGR image from cv2.imread.
+    manual_corners : Optional (4, 2) float32 [TL, TR, BR, BL] — overrides
+                     automatic detection.  Pass None for auto.
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     if manual_corners is not None:
-        src = _order_points(manual_corners)
+        src = _order_points(manual_corners.astype("float32"))
     else:
         src = _find_corner_squares(gray)
         if src is None:
-            print("[OMR] Corner squares not found — trying edge fallback.")
-            src = _fallback_corners(gray)
+            print("[OMR] Corner squares not found — using edge fallback.")
+            src = _edge_fallback(gray)
 
     dst = np.array([
-        [0,              0             ],
-        [WARP_WIDTH - 1, 0             ],
+        [0,              0              ],
+        [WARP_WIDTH - 1, 0              ],
         [WARP_WIDTH - 1, WARP_HEIGHT - 1],
         [0,              WARP_HEIGHT - 1],
     ], dtype="float32")
@@ -185,35 +214,13 @@ def correct_skew(image: np.ndarray,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  PREPROCESSING
+#  BUBBLE SCORING  — relative comparison: darkest bubble in a row wins
 # ─────────────────────────────────────────────────────────────────────────────
 
-def preprocess(warped: np.ndarray) -> np.ndarray:
-    """
-    Convert warped BGR image to a binary (black-and-white) image where
-    filled bubbles appear as WHITE regions.
-    """
-    gray    = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    binary  = cv2.adaptiveThreshold(
-        blurred,
-        maxValue=255,
-        adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        thresholdType=cv2.THRESH_BINARY_INV,   # filled = white
-        blockSize=11,
-        C=2
-    )
-    return binary
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  BUBBLE SCORING  (relative comparison — darkest bubble wins)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _count_filled_pixels(binary: np.ndarray, cx: int, cy: int, radius: int) -> int:
-    """Count white (filled) pixels inside a circle on the binary image."""
+def _pixel_count(binary: np.ndarray, cx: int, cy: int, r: int) -> int:
+    """Count white (filled-mark) pixels inside a circular ROI."""
     mask = np.zeros(binary.shape, dtype="uint8")
-    cv2.circle(mask, (cx, cy), radius, 255, -1)
+    cv2.circle(mask, (cx, cy), r, 255, -1)
     return int(cv2.countNonZero(cv2.bitwise_and(binary, binary, mask=mask)))
 
 
@@ -221,18 +228,17 @@ def score_question(binary: np.ndarray,
                    options: dict,
                    radius: int = BUBBLE_RADIUS) -> str | None:
     """
-    For a single question, return the letter of the most-filled bubble.
-    Uses relative comparison: whichever bubble has the most white pixels wins.
-    Returns None if no bubble exceeds 10 % of the maximum possible fill
-    (i.e. the question was skipped / all bubbles are empty).
+    Return the most-filled option letter for a single question.
+    Uses relative comparison — no fixed threshold to tune.
+    Returns None if the question appears unanswered.
     """
     max_possible = int(np.pi * radius * radius)
-    counts       = {}
+    counts = {}
 
     for letter, (cx, cy) in options.items():
         if cy < SCAN_Y_CUTOFF:
             continue
-        counts[letter] = _count_filled_pixels(binary, cx, cy, radius)
+        counts[letter] = _pixel_count(binary, cx, cy, radius)
 
     if not counts:
         return None
@@ -240,15 +246,14 @@ def score_question(binary: np.ndarray,
     best_letter = max(counts, key=counts.__getitem__)
     best_count  = counts[best_letter]
 
-    # Reject if even the "best" bubble is nearly empty
-    if best_count < max_possible * 0.10:
-        return None
+    if best_count < max_possible * MIN_FILL_RATIO:
+        return None    # no bubble was meaningfully marked
 
     return best_letter
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  MAIN ENTRY POINT
+#  MAIN PIPELINE
 # ─────────────────────────────────────────────────────────────────────────────
 
 def process_omr(image_path: str,
@@ -256,18 +261,18 @@ def process_omr(image_path: str,
                 manual_corners: np.ndarray | None = None,
                 bubble_radius: int = BUBBLE_RADIUS) -> dict:
     """
-    Full OMR pipeline: load → deskew → threshold → score → return answers.
+    Full OMR pipeline: load → deskew → preprocess → score.
 
     Parameters
     ----------
     image_path      : Path to the scanned / photographed image.
-    template        : Coordinate template dict.  Defaults to TEMPLATE (generated).
-    manual_corners  : Optional (4,2) float32 corner array for manual alignment.
+    template        : Bubble coordinate dict. Defaults to computed TEMPLATE.
+    manual_corners  : Optional (4, 2) float32 corner array for manual warp.
     bubble_radius   : Pixel radius of each bubble ROI.
 
     Returns
     -------
-    dict  {"question_1": "B", "question_2": "A", ..., "question_100": None, ...}
+    {"question_1": "B", "question_2": "A", ..., "question_100": None, ...}
     """
     if template is None:
         template = TEMPLATE
@@ -287,17 +292,12 @@ def process_omr(image_path: str,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  SCORING HELPER
+#  SCORING
 # ─────────────────────────────────────────────────────────────────────────────
 
 def score_omr(answers: dict, answer_key: dict) -> dict:
     """
-    Compare detected answers against an answer key.
-
-    Parameters
-    ----------
-    answers    : Output of process_omr().
-    answer_key : {"question_1": "B", "question_2": "D", ...}
+    Compare detected answers against a provided answer key.
 
     Returns
     -------
@@ -305,40 +305,42 @@ def score_omr(answers: dict, answer_key: dict) -> dict:
         "correct": int,
         "wrong":   int,
         "skipped": int,
-        "details": {"question_1": {"detected": "B", "correct": "B", "result": "correct"}, ...}
+        "details": {"question_1": {"detected": "B", "correct": "B",
+                                   "result": "correct"}, ...}
     }
     """
     correct = wrong = skipped = 0
     details = {}
-
-    for q, key_answer in answer_key.items():
+    for q, key_ans in answer_key.items():
         detected = answers.get(q)
         if detected is None:
-            skipped += 1
-            result   = "skipped"
-        elif detected == key_answer:
-            correct += 1
-            result   = "correct"
+            skipped += 1; result = "skipped"
+        elif detected == key_ans:
+            correct += 1; result = "correct"
         else:
-            wrong  += 1
-            result   = "wrong"
-        details[q] = {"detected": detected, "correct": key_answer, "result": result}
-
+            wrong   += 1; result = "wrong"
+        details[q] = {"detected": detected, "correct": key_ans, "result": result}
     return {"correct": correct, "wrong": wrong, "skipped": skipped, "details": details}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  DEBUG: draw bubble ROIs on the warped image
+#  DEBUG OVERLAY
 # ─────────────────────────────────────────────────────────────────────────────
 
 def debug_draw_bubbles(image_path: str,
                        answers: dict,
                        output_path: str = "debug_output.jpg",
                        template: dict | None = None,
-                       manual_corners: np.ndarray | None = None) -> str:
+                       manual_corners: np.ndarray | None = None,
+                       answer_key: dict | None = None) -> str:
     """
-    Save a annotated warped image:  green circle = selected, grey = not selected.
-    Useful for verifying coordinate alignment visually.
+    Save an annotated warped image for visual alignment verification.
+
+    Colour coding
+    -------------
+    Green  — detected answer (or correct when answer_key provided)
+    Red    — wrong answer
+    Grey   — not selected
     """
     if template is None:
         template = TEMPLATE
@@ -348,9 +350,17 @@ def debug_draw_bubbles(image_path: str,
 
     for question, options in template.items():
         chosen = answers.get(question)
+        key    = answer_key.get(question) if answer_key else None
         for letter, (cx, cy) in options.items():
-            colour    = (0, 220, 0) if letter == chosen else (80, 80, 80)
-            thickness = 2 if letter == chosen else 1
+            if letter == chosen:
+                if key is None:
+                    colour, thickness = (0, 220, 0), 2
+                elif chosen == key:
+                    colour, thickness = (0, 220, 0), 2   # correct
+                else:
+                    colour, thickness = (0, 60, 255), 2  # wrong
+            else:
+                colour, thickness = (80, 80, 80), 1
             cv2.circle(warped, (cx, cy), BUBBLE_RADIUS, colour, thickness)
             cv2.putText(warped, letter, (cx - 5, cy + 4),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.28, colour, 1)
@@ -361,17 +371,68 @@ def debug_draw_bubbles(image_path: str,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  QUICK CLI TEST
+#  CALIBRATION HELPER
+#  Run once with a blank (unanswered) sheet to verify coordinate alignment.
+#  It draws every bubble ROI circle on the warped image so you can check
+#  that each circle lands inside a printed bubble.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def calibrate(image_path: str,
+              output_path: str = "calibration.jpg",
+              manual_corners: np.ndarray | None = None) -> str:
+    """
+    Overlay the full bubble grid on the warped image — no scoring.
+    Use this to visually check / fine-tune COLUMN_BASES, GRID_TOP, ROW_SPACING.
+    """
+    image  = cv2.imread(image_path)
+    warped = correct_skew(image, manual_corners)
+
+    # Draw row centres (horizontal guide lines)
+    for row in range(ROWS_PER_COL):
+        cy = int(round(GRID_TOP + row * ROW_SPACING))
+        cv2.line(warped, (0, cy), (WARP_WIDTH, cy), (255, 200, 0), 1)
+
+    # Draw every bubble circle
+    for q in range(1, 101):
+        col_block = ((q - 1) // ROWS_PER_COL) + 1
+        row_index = (q - 1) % ROWS_PER_COL
+        base_x    = COLUMN_BASES[col_block]
+        cy        = int(round(GRID_TOP + row_index * ROW_SPACING))
+        for i, letter in enumerate(OPTIONS):
+            cx = base_x + i * BUBBLE_SPACING
+            cv2.circle(warped, (cx, cy), BUBBLE_RADIUS, (0, 255, 255), 1)
+            cv2.putText(warped, letter, (cx - 5, cy + 4),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.26, (0, 200, 255), 1)
+
+        # Question number label
+        q_x = COLUMN_BASES[col_block] - 32
+        cv2.putText(warped, str(q), (q_x, cy + 4),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.28, (255, 100, 0), 1)
+
+    cv2.imwrite(output_path, warped)
+    print(f"[OMR] Calibration image saved → {output_path}")
+    print(f"      Grid: TOP={GRID_TOP}  BOTTOM={GRID_BOTTOM}  SPACING={ROW_SPACING:.1f}")
+    print(f"      Columns: {COLUMN_BASES}  Bubble spacing: {BUBBLE_SPACING}")
+    return output_path
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import sys
 
-    path = sys.argv[1] if len(sys.argv) > 1 else "sheet.jpg"
-    print(f"[OMR] Processing: {path}")
+    mode = sys.argv[1] if len(sys.argv) > 1 else "scan"
+    path = sys.argv[2] if len(sys.argv) > 2 else "sheet.jpg"
 
-    answers = process_omr(path)
-    print(json.dumps(answers, indent=2))
-
-    debug_draw_bubbles(path, answers, "debug_output.jpg")
-    print("[OMR] Done. See debug_output.jpg for visual verification.")
+    if mode == "calibrate":
+        calibrate(path, "calibration.jpg")
+        print("[OMR] Open calibration.jpg and check circles land on bubbles.")
+        print("      Adjust GRID_TOP, ROW_SPACING, COLUMN_BASES, BUBBLE_SPACING if needed.")
+    else:
+        print(f"[OMR] Scanning: {path}")
+        answers = process_omr(path)
+        print(json.dumps(answers, indent=2))
+        debug_draw_bubbles(path, answers, "debug_output.jpg")
+        print("[OMR] See debug_output.jpg for visual verification.")

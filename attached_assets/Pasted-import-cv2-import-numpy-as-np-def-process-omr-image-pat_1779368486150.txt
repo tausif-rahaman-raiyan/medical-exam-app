@@ -1,0 +1,93 @@
+import cv2
+import numpy as np
+
+def process_omr(image_path):
+    # 1. Load Image
+    img = cv2.imread(image_path)
+    if img is None:
+        return "Error: Image not found. Check the file name."
+
+    # 2. Pre-processing
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    
+    # Adaptive threshold to handle shadows/lighting
+    thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                   cv2.THRESH_BINARY_INV, 11, 2)
+
+    # 3. Perspective Transform (Standardizing the sheet)
+    # Target size 1000x1400
+    width, height = 1000, 1400
+    
+    # Attempt to find the sheet boundary
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+    paper_found = False
+    for c in contours:
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+        if len(approx) == 4:
+            # Found the paper!
+            pts1 = np.float32([approx[0], approx[1], approx[2], approx[3]])
+            # Sort points to Top-Left, Top-Right, Bottom-Right, Bottom-Left
+            rect = np.zeros((4, 2), dtype="float32")
+            s = pts1.sum(axis=2)
+            rect[0] = pts1[np.argmin(s)]
+            rect[2] = pts1[np.argmax(s)]
+            diff = np.diff(pts1, axis=2)
+            rect[1] = pts1[np.argmin(diff)]
+            rect[3] = pts1[np.argmax(diff)]
+            
+            pts2 = np.float32([[0,0], [width,0], [width,height], [0,height]])
+            matrix = cv2.getPerspectiveTransform(rect, pts2)
+            warped = cv2.warpPerspective(gray, matrix, (width, height))
+            paper_found = True
+            break
+
+    if not paper_found:
+        print("Warning: Could not detect corners. Resizing manually...")
+        warped = cv2.resize(gray, (width, height))
+
+    # Final threshold for bubble counting
+    _, final_thresh = cv2.threshold(warped, 150, 255, cv2.THRESH_BINARY_INV)
+
+    # 4. Bubble Mapping Logic (Based on your specific image)
+    results = {}
+    col_x_starts = [135, 365, 595, 825] # X coordinates for Q1, Q26, Q51, Q76
+    y_start = 482
+    row_step = 34.7
+    col_step = 35
+
+    for col in range(4): # 4 columns
+        for row in range(25): # 25 rows per column
+            q_num = (col * 25) + row + 1
+            bubble_values = []
+            
+            y = int(y_start + (row * row_step))
+            
+            for opt in range(4): # A, B, C, D
+                x = int(col_x_starts[col] + (opt * col_step))
+                
+                # Create a small mask for each bubble
+                mask = np.zeros(final_thresh.shape, dtype="uint8")
+                cv2.circle(mask, (x, y), 10, 255, -1)
+                
+                # Count black pixels
+                mask_pixels = cv2.bitwise_and(final_thresh, final_thresh, mask=mask)
+                total_pixels = cv2.countNonZero(mask_pixels)
+                bubble_values.append(total_pixels)
+            
+            # Determine which bubble is filled (the one with the most pixels)
+            if max(bubble_values) > 50: # Threshold to ensure it's not an empty row
+                ans_idx = np.argmax(bubble_values)
+                results[q_num] = chr(65 + ans_idx) # Convert 0,1,2,3 to A,B,C,D
+            else:
+                results[q_num] = "Skipped"
+
+    return results
+
+# TEST THE CODE
+# Replace 'omr_sheet.jpg' with your actual filename
+results = process_omr('omr_sheet.jpg')
+print(results)
