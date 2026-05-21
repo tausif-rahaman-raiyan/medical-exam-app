@@ -1,81 +1,575 @@
-// --- SECURE GEMINI AI OMR SCANNER ---
-// Frontend no longer stores API key - all requests go through secure backend proxy
+// ═══════════════════════════════════════════════════════════════════
+//  HARD OMR EXAM  —  Corner-adjust UI + Pure CV Scan
+//  No API Key  •  No Server  •  Works fully offline
+// ═══════════════════════════════════════════════════════════════════
+(function (global) {
+'use strict';
 
-window.openHardOMRCamera = () => {
+// ── 1. Open the camera/upload modal ────────────────────────────────
+global.openHardOMRCamera = () => {
     document.getElementById('entry-modal').classList.add('hidden');
-    document.getElementById('camera-modal').classList.remove('hidden');
+    const cm = document.getElementById('camera-modal');
+    cm.classList.remove('hidden');
+    cm.classList.add('flex');
 };
 
-window.processHardOMR = (event) => {
+// ── 2. User picks an image → show corner-adjustment overlay ────────
+global.processHardOMR = (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    
-    document.getElementById('camera-modal').classList.add('hidden');
-    document.getElementById('sticky-header').classList.add('hidden');
-    const qList = document.getElementById('questions-list');
-    qList.innerHTML = '<div class="text-center py-32"><i class="fa fa-spinner fa-spin text-5xl text-emerald-500 mb-4"></i><h2 class="text-2xl font-black dark:text-white">AI is reading your OMR...</h2></div>';
+    event.target.value = '';   // reset so same file can be re-selected
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-        const base64Image = reader.result.split(',')[1];
-        const promptText = "You are an expert OMR grader for a Bangladesh Medical Admission Test. Look at this OMR sheet. There are 100 questions, each with options a, b, c, d. Identify which bubbles are filled and return ONLY valid JSON with question numbers as keys and answers (a/b/c/d) as values.";
+    const cm = document.getElementById('camera-modal');
+    cm.classList.add('hidden');
+    cm.classList.remove('flex');
 
-        try {
-            // Call secure backend proxy instead of direct Gemini API
-            const response = await fetch(
-                window.location.origin.includes('github.io') 
-                    ? 'https://medical-exam-api.vercel.app/api/scan-omr'
-                    : '/api/scan-omr',
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        image: base64Image,
-                        prompt: promptText
-                    })
-                }
-            );
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Backend error");
-
-            gradeAIOMR(data.result);
-
-        } catch (error) {
-            console.error("AI Scanning Failed:", error);
-            qList.innerHTML = '<div class="text-center py-32"><i class="fa fa-exclamation-triangle text-5xl text-rose-500 mb-4"></i><h2 class="text-2xl font-black dark:text-white">Scan Failed</h2><p class="text-red-400 mt-2">' + error.message + '</p></div>';
-        }
-    };
-    reader.readAsDataURL(file);
+    _showCornerUI(file);
 };
 
-window.gradeAIOMR = (scannedAnswers) => {
-    questions.forEach((q, i) => {
-        const qNum = (i + 1).toString();
-        if (scannedAnswers[qNum]) {
-            userAnswers[i] = scannedAnswers[qNum].toLowerCase();
-        }
+// ═══════════════════════════════════════════════════════════════════
+//  CORNER-DRAG OVERLAY
+// ═══════════════════════════════════════════════════════════════════
+
+// Default corners (fraction of image): TL, TR, BL, BR
+const _DEFAULT_CORNERS = [[0.02, 0.10], [0.98, 0.10], [0.02, 0.97], [0.98, 0.97]];
+const _HANDLE_R        = 22;   // circle radius (px) — comfortable touch target
+const _HANDLE_COLS     = ['#34d399', '#f59e0b', '#60a5fa', '#f472b6']; // TL TR BL BR
+const _CORNER_LABELS   = ['TL', 'TR', 'BL', 'BR'];
+
+function _showCornerUI(file) {
+    // ── Build overlay DOM ──────────────────────────────────────────
+    const ov = document.createElement('div');
+    ov.id = 'omr-corner-ov';
+    ov.style.cssText = [
+        'position:fixed;inset:0;z-index:9999;background:#0a0a0a',
+        'display:flex;flex-direction:column',
+        'font-family:-apple-system,BlinkMacSystemFont,sans-serif'
+    ].join(';');
+
+    ov.innerHTML = `
+      <!-- Header -->
+      <div style="background:#18181b;padding:11px 14px;display:flex;align-items:center;
+                  justify-content:space-between;border-bottom:1px solid #27272a;flex-shrink:0">
+        <button id="omr-ci-cancel"
+          style="color:#f87171;font-weight:700;font-size:14px;background:none;border:none;
+                 cursor:pointer;padding:6px 10px;border-radius:8px;
+                 -webkit-tap-highlight-color:transparent">✕ Cancel</button>
+
+        <span style="color:#fff;font-size:14px;font-weight:800;letter-spacing:.02em">
+          Adjust Corners</span>
+
+        <button id="omr-ci-auto"
+          style="color:#34d399;font-weight:700;font-size:12px;
+                 background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.35);
+                 cursor:pointer;padding:6px 11px;border-radius:8px;
+                 -webkit-tap-highlight-color:transparent">Auto-Detect</button>
+      </div>
+
+      <!-- Tip bar -->
+      <div style="background:#4c1d95;padding:5px 14px;text-align:center;flex-shrink:0">
+        <span style="color:#e9d5ff;font-size:11px;font-weight:700">
+          Drag the coloured handles to the 4 corners of your OMR sheet</span>
+      </div>
+
+      <!-- Image + canvas -->
+      <div id="omr-ci-wrap"
+        style="flex:1;position:relative;overflow:hidden;background:#111;touch-action:none">
+        <img id="omr-ci-img"
+          style="position:absolute;inset:0;width:100%;height:100%;
+                 object-fit:contain;display:block;pointer-events:none">
+        <canvas id="omr-ci-canvas"
+          style="position:absolute;inset:0;width:100%;height:100%;touch-action:none">
+        </canvas>
+      </div>
+
+      <!-- Footer controls -->
+      <div style="background:#18181b;padding:11px 14px 14px;border-top:1px solid #27272a;flex-shrink:0">
+
+        <!-- Layout row -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px">
+          <span style="color:#71717a;font-size:10px;font-weight:700;
+                       text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">
+            Layout:</span>
+
+          <button class="omr-lt-btn" data-layout="auto"
+            style="flex:1;padding:5px 0;border-radius:99px;font-size:11px;font-weight:700;
+                   cursor:pointer;border:none;-webkit-tap-highlight-color:transparent">Auto</button>
+
+          <button class="omr-lt-btn" data-layout="4col"
+            style="flex:1;padding:5px 0;border-radius:99px;font-size:11px;font-weight:700;
+                   cursor:pointer;border:none;-webkit-tap-highlight-color:transparent">4×25</button>
+
+          <button class="omr-lt-btn" data-layout="2col"
+            style="flex:1;padding:5px 0;border-radius:99px;font-size:11px;font-weight:700;
+                   cursor:pointer;border:none;-webkit-tap-highlight-color:transparent">2×50</button>
+
+          <span id="omr-lt-badge"
+            style="color:#34d399;font-size:10px;font-weight:700;min-width:44px;
+                   text-align:right;opacity:0;transition:opacity .3s"></span>
+        </div>
+
+        <!-- Scan button -->
+        <button id="omr-ci-scan"
+          style="width:100%;padding:15px;
+                 background:linear-gradient(135deg,#059669,#047857);
+                 color:#fff;font-size:16px;font-weight:800;
+                 border-radius:16px;border:none;cursor:pointer;
+                 letter-spacing:.04em;-webkit-tap-highlight-color:transparent;
+                 box-shadow:0 4px 20px rgba(5,150,105,.4)">
+          📷  SCAN OMR
+        </button>
+      </div>`;
+
+    document.body.appendChild(ov);
+
+    // ── State ──────────────────────────────────────────────────────
+    const state = {
+        corners: _DEFAULT_CORNERS.map(function(c) { return c.slice(); }),
+        dragging: null,
+        layout: 'auto',
+        file: file,
+        objUrl: null
+    };
+
+    // Apply initial layout button styles
+    _applyLayoutStyles(ov, 'auto');
+
+    // ── Load the image ─────────────────────────────────────────────
+    const img    = ov.querySelector('#omr-ci-img');
+    state.objUrl = URL.createObjectURL(file);
+    img.onload   = function() { _initCanvas(ov, state); };
+    img.src      = state.objUrl;
+
+    // ── Cancel ────────────────────────────────────────────────────
+    ov.querySelector('#omr-ci-cancel').addEventListener('click', function() {
+        _closeOverlay(ov, state);
+        const cm = document.getElementById('camera-modal');
+        cm.classList.remove('hidden');
+        cm.classList.add('flex');
     });
 
-    let correct = 0;
-    let wrong = 0;
-    questions.forEach((q, i) => {
+    // ── Auto-Detect button ────────────────────────────────────────
+    ov.querySelector('#omr-ci-auto').addEventListener('click', async function() {
+        const btn = ov.querySelector('#omr-ci-auto');
+        btn.textContent = '…';
+        btn.disabled    = true;
+
+        try {
+            if (typeof OMRProcessor === 'undefined')
+                throw new Error('OMR engine not loaded');
+
+            const result = await OMRProcessor.detectCornersAndLayout(file);
+            const detectedCorners = result.corners;
+            const detectedLayout  = result.layout;
+
+            if (detectedCorners) {
+                state.corners = detectedCorners.map(function(c) { return c.slice(); });
+                _redraw(ov, state);
+            }
+
+            if (detectedLayout) {
+                state.layout = detectedLayout;
+                _applyLayoutStyles(ov, detectedLayout);
+                const badge = ov.querySelector('#omr-lt-badge');
+                badge.textContent = detectedLayout === '4col' ? '4×25 ✓' : '2×50 ✓';
+                badge.style.opacity = '1';
+            }
+        } catch (e) {
+            console.warn('Auto-detect failed:', e);
+        }
+
+        btn.textContent = 'Auto-Detect';
+        btn.disabled    = false;
+    });
+
+    // ── Layout toggle buttons ─────────────────────────────────────
+    ov.querySelectorAll('.omr-lt-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            state.layout = btn.dataset.layout;
+            _applyLayoutStyles(ov, state.layout);
+            const badge = ov.querySelector('#omr-lt-badge');
+            badge.style.opacity = '0';
+        });
+    });
+
+    // ── Scan ──────────────────────────────────────────────────────
+    ov.querySelector('#omr-ci-scan').addEventListener('click', function() {
+        _closeOverlay(ov, state);
+        _runScan(state.file, state.corners, state.layout);
+    });
+}
+
+function _closeOverlay(ov, state) {
+    if (state.objUrl) URL.revokeObjectURL(state.objUrl);
+    ov.remove();
+}
+
+function _applyLayoutStyles(ov, active) {
+    ov.querySelectorAll('.omr-lt-btn').forEach(function(btn) {
+        const on = btn.dataset.layout === active;
+        btn.style.background = on ? '#7c3aed' : '#3f3f46';
+        btn.style.color      = on ? '#fff'    : '#a1a1aa';
+    });
+}
+
+// ── Canvas init + drag logic ────────────────────────────────────────
+function _initCanvas(ov, state) {
+    const wrap   = ov.querySelector('#omr-ci-wrap');
+    const canvas = ov.querySelector('#omr-ci-canvas');
+
+    // Size canvas to physical pixels
+    canvas.width  = wrap.offsetWidth;
+    canvas.height = wrap.offsetHeight;
+
+    _redraw(ov, state);
+
+    // ── Coordinate helpers ────────────────────────────────────────
+    function imgBounds() {
+        const img    = ov.querySelector('#omr-ci-img');
+        const cW     = wrap.offsetWidth;
+        const cH     = wrap.offsetHeight;
+        const iW     = img.naturalWidth;
+        const iH     = img.naturalHeight;
+        const scale  = Math.min(cW / iW, cH / iH);
+        const dW     = iW * scale;
+        const dH     = iH * scale;
+        return { x: (cW - dW) / 2, y: (cH - dH) / 2, w: dW, h: dH };
+    }
+
+    function fracToCanvas(frac) {
+        const fx = frac[0], fy = frac[1];
+        const b  = imgBounds();
+        return [b.x + fx * b.w, b.y + fy * b.h];
+    }
+
+    function canvasToFrac(cx, cy) {
+        const b = imgBounds();
+        return [
+            Math.max(0, Math.min(1, (cx - b.x) / b.w)),
+            Math.max(0, Math.min(1, (cy - b.y) / b.h))
+        ];
+    }
+
+    function evtPt(e) {
+        const r   = canvas.getBoundingClientRect();
+        const src = e.touches ? e.touches[0] : e;
+        return [src.clientX - r.left, src.clientY - r.top];
+    }
+
+    function nearestCorner(pt) {
+        let best  = -1;
+        let bestD = _HANDLE_R * 2.5;
+        state.corners.forEach(function(c, i) {
+            const cp = fracToCanvas(c);
+            const d  = Math.hypot(pt[0] - cp[0], pt[1] - cp[1]);
+            if (d < bestD) { bestD = d; best = i; }
+        });
+        return best;
+    }
+
+    // ── Pointer events (covers both mouse & touch) ────────────────
+    canvas.addEventListener('pointerdown', function(e) {
+        e.preventDefault();
+        const pt = evtPt(e);
+        state.dragging = nearestCorner(pt);
+        if (state.dragging >= 0) canvas.setPointerCapture(e.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', function(e) {
+        e.preventDefault();
+        if (state.dragging === null || state.dragging < 0) return;
+        const pt = evtPt(e);
+        state.corners[state.dragging] = canvasToFrac(pt[0], pt[1]);
+        _redraw(ov, state);
+    });
+
+    canvas.addEventListener('pointerup', function(e) {
+        e.preventDefault();
+        state.dragging = null;
+    });
+
+    canvas.addEventListener('pointercancel', function() { state.dragging = null; });
+}
+
+// ── Draw the corner overlay ─────────────────────────────────────────
+function _redraw(ov, state) {
+    const wrap   = ov.querySelector('#omr-ci-wrap');
+    const canvas = ov.querySelector('#omr-ci-canvas');
+    if (!canvas) return;
+
+    // Keep canvas resolution in sync (handles orientation changes)
+    if (canvas.width  !== wrap.offsetWidth)  canvas.width  = wrap.offsetWidth;
+    if (canvas.height !== wrap.offsetHeight) canvas.height = wrap.offsetHeight;
+
+    const ctx    = canvas.getContext('2d');
+    const canvW  = canvas.width;
+    const canvH  = canvas.height;
+    ctx.clearRect(0, 0, canvW, canvH);
+
+    const img    = ov.querySelector('#omr-ci-img');
+    const cW     = wrap.offsetWidth;
+    const cH     = wrap.offsetHeight;
+    const scale  = Math.min(cW / img.naturalWidth, cH / img.naturalHeight);
+    const dW     = img.naturalWidth  * scale;
+    const dH     = img.naturalHeight * scale;
+    const bx     = (cW - dW) / 2;
+    const by     = (cH - dH) / 2;
+
+    function cp(frac) { return [bx + frac[0] * dW, by + frac[1] * dH]; }
+
+    const pts = state.corners.map(cp);
+    const tl = pts[0], tr = pts[1], bl = pts[2], br = pts[3];
+
+    // ── Dark vignette outside the quad ────────────────────────────
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.60)';
+    ctx.fillRect(0, 0, canvW, canvH);
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.moveTo(tl[0], tl[1]);
+    ctx.lineTo(tr[0], tr[1]);
+    ctx.lineTo(br[0], br[1]);
+    ctx.lineTo(bl[0], bl[1]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // ── Quad border ───────────────────────────────────────────────
+    ctx.save();
+    ctx.strokeStyle = 'rgba(52,211,153,0.9)';
+    ctx.lineWidth   = 2.5;
+    ctx.setLineDash([9, 5]);
+    ctx.shadowColor = '#34d399';
+    ctx.shadowBlur  = 8;
+    ctx.beginPath();
+    ctx.moveTo(tl[0], tl[1]);
+    ctx.lineTo(tr[0], tr[1]);
+    ctx.lineTo(br[0], br[1]);
+    ctx.lineTo(bl[0], bl[1]);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+
+    // ── Corner handles ────────────────────────────────────────────
+    pts.forEach(function(pnt, i) {
+        const cx       = pnt[0], cy = pnt[1];
+        const col      = _HANDLE_COLS[i];
+        const isActive = state.dragging === i;
+        const r        = isActive ? _HANDLE_R + 5 : _HANDLE_R;
+
+        // Shadow ring
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fill();
+        ctx.restore();
+
+        // Filled circle
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle   = col;
+        ctx.shadowColor = col;
+        ctx.shadowBlur  = isActive ? 18 : 10;
+        ctx.fill();
+        ctx.restore();
+
+        // White border
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth   = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        // Label
+        ctx.save();
+        ctx.fillStyle    = '#000';
+        ctx.font         = 'bold ' + Math.max(9, r * 0.55) + 'px -apple-system,sans-serif';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(_CORNER_LABELS[i], cx, cy);
+        ctx.restore();
+    });
+
+    // ── Corner legend (bottom of quad) ────────────────────────────
+    const legY = Math.max(tl[1], tr[1], bl[1], br[1]) + 14;
+    if (legY < canvH - 10) {
+        const legCx = (tl[0] + tr[0]) / 2;
+        ctx.save();
+        ctx.fillStyle    = 'rgba(255,255,255,0.55)';
+        ctx.font         = 'bold 11px -apple-system,sans-serif';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Drag handles to sheet corners', legCx, legY);
+        ctx.restore();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  RUN SCAN  (called after user confirms corners)
+// ═══════════════════════════════════════════════════════════════════
+async function _runScan(file, corners, layout) {
+    document.getElementById('sticky-header').classList.add('hidden');
+    const qList = document.getElementById('questions-list');
+
+    // Layout label for spinner
+    const layoutLabel = layout === '4col' ? '4×25' : layout === '2col' ? '2×50' : 'Auto';
+
+    qList.innerHTML = `
+      <div style="text-align:center;padding:80px 24px">
+        <div style="width:88px;height:88px;margin:0 auto 20px;position:relative">
+          <svg style="animation:spin 1s linear infinite;width:100%;height:100%"
+               viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="44" stroke="#10b981" stroke-width="8"
+                    stroke-dasharray="80 200" stroke-linecap="round"/>
+          </svg>
+          <i class="fa fa-dot-circle" style="color:#10b981;font-size:28px;
+             position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></i>
+        </div>
+        <h2 style="font-size:22px;font-weight:900;color:#fff;margin:0 0 8px">Scanning OMR…</h2>
+        <p style="font-size:13px;color:#71717a;margin:0 0 20px">
+          Layout: ${layoutLabel} &nbsp;•&nbsp; No internet needed</p>
+        <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+          ${['Warp','Greyscale','Threshold','Grid','Score'].map(function(s) {
+            return '<span style="padding:3px 10px;border-radius:99px;background:#27272a;color:#71717a;font-size:10px;font-weight:700">' + s + '</span>';
+          }).join('<span style="color:#3f3f46">→</span>')}
+        </div>
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+
+    try {
+        if (typeof OMRProcessor === 'undefined')
+            throw new Error('OMR engine not loaded — please refresh and try again.');
+
+        const answerKey = questions.map(function(q) { return q.ans; });
+        const scanResult = await OMRProcessor.processImage(file, answerKey, { corners: corners, layout: layout });
+        const summary         = scanResult.summary;
+        const detailedResults = scanResult.detailedResults;
+        const detectedLayout  = scanResult.detectedLayout;
+
+        // ── Populate userAnswers ──────────────────────────────────
+        Object.keys(userAnswers).forEach(function(k) { delete userAnswers[k]; });
+        detailedResults.forEach(function(r, i) {
+            if      (r.status === 'skipped') { /* leave undefined */ }
+            else if (r.status === 'invalid') userAnswers[i] = '__invalid__';
+            else                             userAnswers[i] = r.user;
+        });
+
+        // ── Result stat boxes ─────────────────────────────────────
+        const totalPenalised = summary.wrong + summary.invalid;
+        document.getElementById('res-correct').innerText = summary.correct;
+        document.getElementById('res-wrong').innerText   = totalPenalised;
+        document.getElementById('res-time').innerText    =
+            summary.invalid > 0
+                ? '⚠ ' + summary.invalid + ' Invalid'
+                : summary.skipped + ' Skipped';
+        document.getElementById('res-score').innerText =
+            summary.finalScore + '/' + summary.totalQuestions;
+
+        // Small breakdown under Wrong
+        const wrongBox = document.getElementById('res-wrong').parentElement;
+        if (wrongBox) {
+            const existingBp = wrongBox.querySelector('.omr-breakdown');
+            if (existingBp) existingBp.remove();
+            const parts = [];
+            if (summary.wrong   > 0) parts.push(summary.wrong   + ' wrong');
+            if (summary.invalid > 0) parts.push(summary.invalid + ' invalid');
+            if (summary.skipped > 0) parts.push(summary.skipped + ' skip');
+            if (parts.length > 1) {
+                const bp         = document.createElement('p');
+                bp.className     = 'omr-breakdown';
+                bp.style.cssText = 'font-size:9px;text-transform:uppercase;font-weight:700;opacity:.5;margin-top:2px';
+                bp.textContent   = parts.join(' · ');
+                wrongBox.appendChild(bp);
+            }
+        }
+
+        // Layout badge in Speed/Time box
+        const timeEl = document.getElementById('res-time');
+        if (timeEl) {
+            const existingLb = timeEl.parentElement.querySelector('.omr-layout-badge');
+            if (!existingLb) {
+                const lb         = document.createElement('p');
+                lb.className     = 'omr-layout-badge';
+                lb.style.cssText = 'font-size:9px;text-transform:uppercase;font-weight:700;opacity:.5;margin-top:2px';
+                lb.textContent   = detectedLayout === '4col' ? 'Layout: 4×25' : 'Layout: 2×50';
+                timeEl.parentElement.appendChild(lb);
+            }
+        }
+
+        document.getElementById('results-card').classList.remove('hidden');
+        currentMode = 'sol';
+        renderQuestions();
+
+        // ── Yellow highlight for invalid answers ──────────────────
+        if (summary.invalid > 0) {
+            requestAnimationFrame(function() {
+                const cards = document.querySelectorAll('#questions-list .question-card');
+                detailedResults.forEach(function(r, i) {
+                    if (r.status === 'invalid' && cards[i]) {
+                        cards[i].style.cssText +=
+                            ';border-left:4px solid #eab308!important;box-shadow:0 0 0 1px rgba(234,179,8,.2)';
+                        const badge = cards[i].querySelector('.status-badge');
+                        if (badge) {
+                            badge.style.background = 'rgba(234,179,8,.15)';
+                            badge.style.color      = '#ca8a04';
+                            badge.style.border     = '1px solid rgba(234,179,8,.3)';
+                            badge.textContent      = 'Invalid (−0.25) — ' + r.user.toUpperCase();
+                        }
+                    }
+                });
+            });
+        }
+
+        global.scrollTo({ top: 0, behavior: 'smooth' });
+        saveResultToCloud(summary.finalScore, summary.correct, totalPenalised, 0);
+
+    } catch (err) {
+        console.error('OMR Scan Failed:', err);
+        qList.innerHTML = `
+          <div style="text-align:center;padding:80px 20px">
+            <i class="fa fa-exclamation-triangle"
+               style="font-size:52px;color:#f87171;display:block;margin-bottom:16px"></i>
+            <h2 style="font-size:22px;font-weight:900;color:#fff;margin:0 0 8px">Scan Failed</h2>
+            <p style="font-family:monospace;font-size:12px;color:#f87171;
+               background:rgba(248,113,113,.1);padding:12px 16px;border-radius:12px;
+               word-break:break-all;margin:12px 0;text-align:left">${err.message || err}</p>
+            <button onclick="location.reload()"
+              style="padding:12px 24px;font-weight:700;background:#ef4444;color:#fff;
+                     border:none;border-radius:14px;cursor:pointer;font-size:14px">
+              <i class="fa fa-redo" style="margin-right:6px"></i> Try Again
+            </button>
+          </div>`;
+    }
+}
+
+// ── Legacy compatibility stub ──────────────────────────────────────
+global.gradeAIOMR = function(scannedAnswers) {
+    Object.keys(userAnswers).forEach(function(k) { delete userAnswers[k]; });
+    questions.forEach(function(q, i) {
+        const a = scannedAnswers[(i + 1).toString()];
+        if (a) userAnswers[i] = a.toLowerCase();
+    });
+
+    let correct = 0, wrong = 0;
+    questions.forEach(function(q, i) {
         if (userAnswers[i] === q.ans) correct++;
         else if (userAnswers[i] !== undefined) wrong++;
     });
 
-    const finalScore = (correct - (wrong * 0.25)).toFixed(2);
-    
+    const finalScore = (correct - wrong * 0.25).toFixed(2);
     document.getElementById('res-correct').innerText = correct;
-    document.getElementById('res-wrong').innerText = wrong;
-    document.getElementById('res-time').innerText = "AI Scanned";
-    document.getElementById('res-score').innerText = finalScore + "/" + questions.length;
-    
+    document.getElementById('res-wrong').innerText   = wrong;
+    document.getElementById('res-time').innerText    = 'AI Scanned';
+    document.getElementById('res-score').innerText   = finalScore + '/' + questions.length;
     document.getElementById('results-card').classList.remove('hidden');
-    
-    currentMode = 'sol'; 
+    currentMode = 'sol';
     renderQuestions();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    saveResultToCloud(finalScore, correct, wrong, 0); 
+    global.scrollTo({ top: 0, behavior: 'smooth' });
+    saveResultToCloud(finalScore, correct, wrong, 0);
 };
+
+})(window);
