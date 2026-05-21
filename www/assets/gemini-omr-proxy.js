@@ -62,20 +62,27 @@ window.processHardOMR = async (event) => {
         });
 
         // ── Update result stats ──────────────────────────────────────────────
+        // wrong + invalid both carry −0.25; show combined in the Wrong box
+        const totalPenalised = summary.wrong + summary.invalid;
         document.getElementById('res-correct').innerText = summary.correct;
-        document.getElementById('res-wrong').innerText   = summary.wrong;
-        document.getElementById('res-time').innerText    = `⚠ ${summary.invalid} Invalid`;
+        document.getElementById('res-wrong').innerText   = totalPenalised;
+        document.getElementById('res-time').innerText    =
+            summary.invalid > 0 ? `⚠ ${summary.invalid} Invalid` : `${summary.skipped} Skipped`;
         document.getElementById('res-score').innerText   = `${summary.finalScore}/${summary.totalQuestions}`;
 
-        // Add skipped count next to wrong label if any
+        // Inject a small breakdown line under Wrong
         const wrongBox = document.getElementById('res-wrong').parentElement;
-        if (wrongBox && summary.skipped > 0) {
-            const skipEl = wrongBox.querySelector('.omr-skip-count');
-            if (!skipEl) {
-                const sp = document.createElement('p');
-                sp.className = 'omr-skip-count text-[9px] uppercase font-bold opacity-50 mt-0.5';
-                sp.textContent = `${summary.skipped} skipped`;
-                wrongBox.appendChild(sp);
+        if (wrongBox) {
+            wrongBox.querySelector('.omr-breakdown')?.remove();
+            if (summary.invalid > 0 || summary.skipped > 0) {
+                const bp = document.createElement('p');
+                bp.className = 'omr-breakdown text-[9px] uppercase font-bold opacity-50 mt-0.5 leading-tight';
+                const parts = [];
+                if (summary.wrong   > 0) parts.push(`${summary.wrong} wrong`);
+                if (summary.invalid > 0) parts.push(`${summary.invalid} invalid`);
+                if (summary.skipped > 0) parts.push(`${summary.skipped} skip`);
+                bp.textContent = parts.join(' · ');
+                wrongBox.appendChild(bp);
             }
         }
 
@@ -84,7 +91,7 @@ window.processHardOMR = async (event) => {
         currentMode = 'sol';
         renderQuestions();
 
-        // ── Apply colour-coding for invalid (yellow) ─────────────────────────
+        // ── Colour-code question cards for invalid (yellow) ─────────────────
         requestAnimationFrame(() => {
             const cards = document.querySelectorAll('#questions-list .question-card');
             detailedResults.forEach((r, i) => {
@@ -95,14 +102,15 @@ window.processHardOMR = async (event) => {
                         badge.style.background = 'rgba(234,179,8,0.15)';
                         badge.style.color      = '#ca8a04';
                         badge.style.border     = '1px solid rgba(234,179,8,0.3)';
-                        badge.textContent      = `Invalid (0.00) — ${r.user.toUpperCase()}`;
+                        badge.textContent      = `Invalid (−0.25) — ${r.user.toUpperCase()}`;
                     }
                 }
             });
         });
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        saveResultToCloud(summary.finalScore, summary.correct, summary.wrong, 0);
+        // Pass combined penalised count as "wrong" so cloud score stays accurate
+        saveResultToCloud(summary.finalScore, summary.correct, totalPenalised, 0);
 
     } catch (err) {
         console.error('OMR Scan Failed:', err);
