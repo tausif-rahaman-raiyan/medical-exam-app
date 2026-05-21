@@ -1163,7 +1163,6 @@ async function processHardOMR(event) {
     
     img.onload = () => {
         try {
-            // Draw image to hidden canvas
             const canvas = document.getElementById('omr-processing-canvas');
             canvas.width = img.width;
             canvas.height = img.height;
@@ -1171,39 +1170,52 @@ async function processHardOMR(event) {
             ctx.drawImage(img, 0, 0);
 
             if (typeof cv === 'undefined') {
-                alert("OpenCV is still loading. Please try again in a few seconds.");
+                alert("OpenCV is still loading. Please wait.");
                 return;
             }
 
-            // 1. Read Image into OpenCV Mat
             let src = cv.imread(canvas);
             let gray = new cv.Mat();
             let blurred = new cv.Mat();
-            let thresh = new cv.Mat();
+            let edges = new cv.Mat();
 
-            // 2. Pre-processing: Grayscale, Blur, and Adaptive Threshold
-            // Adaptive thresholding neutralizes the shadows in your photo
+            // 1. Grayscale and Blur
             cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
             cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
-            cv.adaptiveThreshold(blurred, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 11, 2);
 
-            // 3. Find Contours to locate the physical paper edge
+            // 2. Canny Edge Detection (Better for finding paper boundaries than thresholding)
+            cv.Canny(blurred, edges, 75, 200);
+
+            // 3. Dilate edges to close any small gaps in the paper outline
+            let M = cv.Mat.ones(5, 5, cv.CV_8U);
+            cv.dilate(edges, edges, M, new cv.Point(-1, -1), 1, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+
+            // 4. Find Contours
             let contours = new cv.MatVector();
             let hierarchy = new cv.Mat();
-            cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+            cv.findContours(edges, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
 
             let maxArea = 0;
             let paperContour = null;
 
+            // 5. Look for the largest contour that looks like a page
             for (let i = 0; i < contours.size(); ++i) {
                 let cnt = contours.get(i);
                 let area = cv.contourArea(cnt);
-                if (area > (src.cols * src.rows * 0.2)) { // Require paper to take up at least 20% of image
+
+                // Paper must be at least 20% of the image
+                if (area > (src.cols * src.rows * 0.2)) { 
                     let peri = cv.arcLength(cnt, true);
                     let approx = new cv.Mat();
-                    cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+
+                    // The 0.05 multiplier here is higher than before, making it MORE forgiving of curved paper
+                    cv.approxPolyDP(cnt, approx, 0.05 * peri, true);
+
                     if (approx.rows === 4 && area > maxArea) {
                         maxArea = area;
+
+                        // Clean up old contour if we found a bigger one
+                        if (paperContour) paperContour.delete(); 
                         paperContour = approx;
                     } else {
                         approx.delete();
@@ -1212,33 +1224,24 @@ async function processHardOMR(event) {
             }
 
             if (!paperContour) {
-                alert("Could not detect the edges of the OMR sheet. Please place it on a dark background and try again.");
+                alert("Could not detect the edges. Ensure all 4 corners of the paper are visible against a contrasting background.");
                 statusText.innerText = "Detection failed. Try again.";
             } else {
                 statusText.innerText = "Paper detected! Extracting answers...";
-                
-                // NOTE: Full perspective warping and grid mapping goes here.
-                // Because every physical printed OMR sheet has different pixel spacings,
-                // you will need to map the exact X/Y coordinates of your bubbles.
-                
-                // MOCK EXTRACTION (Replace with your specific coordinate logic)
+
+                // Success! You have the 4 corners in 'paperContour'
+                // Next step: Apply cv.getPerspectiveTransform
+
                 setTimeout(() => {
-                    alert("Image processed successfully! Ensure you configure your grid coordinates in the JavaScript.");
+                    alert("Paper outline found successfully! Corners: " + paperContour.rows);
                     document.getElementById('camera-modal').classList.add('hidden');
-                    
-                    // Populate mock answers for demo purposes
-                    for(let i=0; i<questions.length; i++) {
-                        const randomOpt = ['a','b','c','d'][Math.floor(Math.random() * 4)];
-                        userAnswers[i] = randomOpt; 
-                    }
-                    
-                    startExam('sol'); // Jump straight to solutions
+                    startExam('sol'); 
                     submitExam();
                 }, 1000);
             }
 
-            // Cleanup OpenCV memory
-            src.delete(); gray.delete(); blurred.delete(); thresh.delete();
+            // Cleanup memory
+            src.delete(); gray.delete(); blurred.delete(); edges.delete(); M.delete();
             contours.delete(); hierarchy.delete();
             if (paperContour) paperContour.delete();
 
@@ -1248,8 +1251,6 @@ async function processHardOMR(event) {
             statusText.innerText = "Error processing image.";
         }
     };
-}
-
 document.addEventListener('DOMContentLoaded', updateExamTitle);
 </script>
 </body>
