@@ -19,9 +19,10 @@ FILL_THRESHOLD = 120
 BUBBLE_RADIUS = 12
 
 # Output size of the perspective-corrected image.
-# Change to match your OMR sheet's aspect ratio at whatever resolution you want.
-WARP_WIDTH  = 1050
-WARP_HEIGHT = 1600
+# Must match the canvas size used to define the bubble coordinates.
+# Your JavaScript OMR system uses an 840×1190 canvas — keep these in sync.
+WARP_WIDTH  = 840
+WARP_HEIGHT = 1190
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,134 @@
+1. The Coordinate "Anchor" (The Crop Step)
+In the HTML, there is a <canvas> element and a button labeled "Crop Image". This is the most critical part of the coordinate identification.
+Normalization: By forcing the user to crop the image, the software ensures that the corners of the OMR sheet align exactly with the corners of the canvas (which is set to width="840" height="1190").
+Fixed Grid: Once the image is cropped to these exact dimensions, the 
+(
+x
+,
+y
+)
+(x,y)
+ coordinate for Question 1, Option A is no longer a "guess"—it becomes a fixed pixel offset (e.g., 
+x
+=
+120
+,
+y
+=
+350
+x=120,y=350
+).
+2. The Canvas Pixel Grid
+The code uses the HTML5 Canvas API. When an image is uploaded and cropped:
+The image is drawn to the canvas.
+The script uses context.getImageData(x, y, width, height).
+It targets specific 
+(
+x
+,
+y
+)
+(x,y)
+ regions defined by a Template Map.
+3. Template Mapping (The Math)
+Inside the JavaScript (the publicExamData object in your code hint), the system knows it is looking for 100 MCQ. A hidden JSON template defines the grid. The calculation for any specific bubble coordinate typically looks like this:
+Row Calculation: y = StartOffset_Y + (QuestionNumber * RowSpacing)
+Column Calculation: x = StartOffset_X + (OptionIndex * ColumnSpacing)
+Because the canvas is a fixed 
+840
+×
+1190
+840×1190
+ pixels, the code simply loops through a pre-defined array of coordinates.
+4. Bubble Detection (Darkness Thresholding)
+Once the code identifies the 
+(
+x
+,
+y
+)
+(x,y)
+ center of a bubble:
+Sampling: It examines a small square of pixels around that 
+(
+x
+,
+y
+)
+(x,y)
+ point (e.g., a 
+10
+×
+10
+10×10
+ pixel area).
+Luminance Check: It converts the RGB values to Grayscale.
+Thresholding:
+If the average "darkness" of that 
+(
+x
+,
+y
+)
+(x,y)
+ area is below a certain value (closer to 
+0
+0
+ or Black), it marks the bubble as "Filled".
+If the area is mostly White (closer to 
+255
+255
+), it marks it as "Skipped".
+Comparison: It compares the detected "Filled" index with the correctAnswer provided in the courses data object found in your file.
+5. Data Feedback Loop
+In your provided file, under the self.__next_f.push section, there is a list of results:
+Correct: 24
+Wrong: 66
+Skipped: 10
+This proves that the identify function is running a loop from 
+i
+=
+1
+i=1
+ to 
+100
+100
+. For each 
+i
+i
+, it jumps to the calculated 
+(
+x
+,
+y
+)
+(x,y)
+ on the canvas, checks the pixel density, and stores the result in a state object before sending it to the "Submit" function.
+Summary of the Flow:
+Upload: Image is converted to a Base64 string (seen in your <img> src).
+Align: User crops the image to fit the 
+840
+×
+1190
+840×1190
+ coordinate system.
+Iterate: A for loop runs through 
+100
+100
+ sets of 
+(
+x
+,
+y
+)
+(x,y)
+ coordinates.
+Scan: getImageData checks for black pixels at those 
+(
+x
+,
+y
+)
+(x,y)
+ spots.
+Render: The results are mapped back to the UI grid you see at the bottom of the file.
