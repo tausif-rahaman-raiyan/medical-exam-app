@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "NRVloIrdmo_-GovFJN2u2"
+uri = "file://uploads/detect_preview.jpg"
+type = "image"
+title = "OMR Sheet — Region Map (auto-detected)"

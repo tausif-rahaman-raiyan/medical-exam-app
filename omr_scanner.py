@@ -139,37 +139,110 @@ def _order_points(pts: np.ndarray) -> np.ndarray:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _find_corner_squares(gray: np.ndarray) -> np.ndarray | None:
-    h, w    = gray.shape
+    """
+    Quadrant-based corner detection.
+
+    Strategy
+    --------
+    1. Scan with multiple thresholds; keep candidates that are near BOTH a
+       horizontal edge (left/right) AND a vertical edge (top/bottom) so that
+       SET-CODE boxes in the centre of the sheet are ignored.
+    2. For the top quadrants, exclude candidates in the very top 15 % of the
+       image – those are stray page marks, not answer-grid corners.
+    3. Within each quadrant pick the candidate closest to the image corner.
+    4. If exactly one quadrant is empty (common when a corner is cropped or
+       too faint), reconstruct it with the parallelogram rule.
+    5. Return corners in [TL, TR, BR, BL] order (matches _order_points output).
+    """
+    h, w     = gray.shape
     img_area = h * w
+    mid_x    = w // 2
+    mid_y    = h // 2
 
-    _, thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY_INV)
-    cnts, _   = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
-                                  cv2.CHAIN_APPROX_SIMPLE)
-    candidates = []
-    for cnt in cnts:
-        area = cv2.contourArea(cnt)
-        if not (img_area * 0.00015 < area < img_area * 0.012):
-            continue
-        x, y, bw, bh = cv2.boundingRect(cnt)
-        aspect = bw / float(bh) if bh else 0
-        if 0.45 < aspect < 2.2 and bw > 12 and bh > 12:
-            candidates.append((x + bw // 2, y + bh // 2, area))
+    # Horizontal / vertical "near-edge" thresholds (fraction of image dim)
+    # Corner squares sit very close to the sheet edges (<15 % in), so a tight
+    # horizontal margin cleanly rejects SET-CODE / header boxes in the middle.
+    NEAR_H    = 0.15    # must be within 15 % of left or right edge
+    NEAR_V    = 0.42    # must be within 42 % of top or bottom edge
+    # Exclude stray marks in the very top of the sheet (header / title area)
+    TOP_MIN_V = h * 0.15    # TL/TR candidates must have cy > this
 
-    if len(candidates) < 4:
+    corner_targets = {
+        'TL': np.array([0, 0],    dtype=float),
+        'TR': np.array([w, 0],    dtype=float),
+        'BR': np.array([w, h],    dtype=float),
+        'BL': np.array([0, h],    dtype=float),
+    }
+    quadrant_best: dict = {'TL': None, 'TR': None, 'BR': None, 'BL': None}
+
+    for thresh_val in [60, 80, 100, 120]:
+        _, thresh = cv2.threshold(gray, thresh_val, 255, cv2.THRESH_BINARY_INV)
+        cnts, _   = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
+                                      cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in cnts:
+            area = cv2.contourArea(cnt)
+            # Very loose area filter – catches even partially-visible squares
+            if not (img_area * 0.00004 < area < img_area * 0.015):
+                continue
+            x, y, bw, bh = cv2.boundingRect(cnt)
+            min_side = min(bw, bh)
+            max_side = max(bw, bh)
+            # Allow wider aspect for partially-cropped marks
+            if min_side < 5 or max_side / float(min_side) > 5.5:
+                continue
+
+            cx = x + bw // 2
+            cy = y + bh // 2
+
+            # Must be near BOTH a horizontal AND a vertical edge
+            near_h = (cx < w * NEAR_H) or (cx > w * (1 - NEAR_H))
+            near_v = (cy < h * NEAR_V) or (cy > h * (1 - NEAR_V))
+            if not (near_h and near_v):
+                continue
+
+            # Assign to quadrant
+            q = ('T' if cy < mid_y else 'B') + ('L' if cx < mid_x else 'R')
+
+            # Exclude stray top-of-page marks in the top quadrants
+            if q in ('TL', 'TR') and cy < TOP_MIN_V:
+                continue
+
+            # Score: Euclidean distance to the ideal image corner (smaller=better)
+            target = corner_targets[q]
+            dist   = float(np.hypot(cx - target[0], cy - target[1]))
+
+            prev = quadrant_best[q]
+            if prev is None or dist < prev[2]:
+                quadrant_best[q] = (cx, cy, dist)
+
+    found = {q: v for q, v in quadrant_best.items() if v is not None}
+
+    if len(found) < 3:
         return None
 
-    pts      = np.array([[c[0], c[1]] for c in candidates], dtype="float32")
-    best_pts  = None
-    best_area = 0
-    limit     = min(len(pts), 20)
-    for combo in combinations(range(limit), 4):
-        cand = pts[list(combo)]
-        a    = cv2.contourArea(cand)
-        if a > best_area:
-            best_area = a
-            best_pts  = cand
+    # Reconstruct one missing corner via the parallelogram rule
+    if len(found) == 3:
+        missing = next(q for q in ['TL', 'TR', 'BR', 'BL'] if q not in found)
+        p = {q: np.array([v[0], v[1]], dtype=float) for q, v in found.items()}
+        # Parallelogram: missing = opposite_adjacent_1 + opposite_adjacent_2 - diagonal
+        rules = {
+            'TL': ('TR', 'BL', 'BR'),
+            'TR': ('TL', 'BR', 'BL'),
+            'BR': ('TR', 'BL', 'TL'),
+            'BL': ('TL', 'BR', 'TR'),
+        }
+        a, b, opp = rules[missing]
+        est = p[a] + p[b] - p[opp]
+        found[missing] = (int(est[0]), int(est[1]), 0.0)
+        print(f"[OMR] {missing} corner estimated: {found[missing][:2]}")
 
-    return _order_points(best_pts) if best_pts is not None else None
+    # Return in TL→TR→BR→BL order
+    return np.array([
+        [found['TL'][0], found['TL'][1]],
+        [found['TR'][0], found['TR'][1]],
+        [found['BR'][0], found['BR'][1]],
+        [found['BL'][0], found['BL'][1]],
+    ], dtype="float32")
 
 
 def _edge_fallback(gray: np.ndarray) -> np.ndarray:

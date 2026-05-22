@@ -545,6 +545,34 @@ def serve_static(path):
 
 # ─── Corner Detection API ──────────────────────────────────────────────────────
 
+def _draw_filled_rect(canvas, x1, y1, x2, y2, color_bgr, alpha=0.35, label=None,
+                      label_color=(255, 255, 255), font_scale=0.7, thickness=2):
+    """Draw a semi-transparent filled rectangle with optional label."""
+    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+    roi = canvas[y1:y2, x1:x2]
+    if roi.size == 0:
+        return
+    filled = np.full_like(roi, color_bgr)
+    cv2.addWeighted(filled, alpha, roi, 1 - alpha, 0, roi)
+    canvas[y1:y2, x1:x2] = roi
+    cv2.rectangle(canvas, (x1, y1), (x2, y2), color_bgr, thickness)
+    if label:
+        fs = font_scale
+        (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, fs, 2)
+        tx = x1 + (x2 - x1 - tw) // 2
+        ty = y1 + (y2 - y1 + th) // 2
+        cv2.putText(canvas, label, (tx, ty),
+                    cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 0, 0), 4)
+        cv2.putText(canvas, label, (tx, ty),
+                    cv2.FONT_HERSHEY_SIMPLEX, fs, label_color, 2)
+
+
+def _lerp_point(p1, p2, t):
+    """Linearly interpolate between two (x,y) points."""
+    return (int(p1[0] + t * (p2[0] - p1[0])),
+            int(p1[1] + t * (p2[1] - p1[1])))
+
+
 @app.route('/api/detect', methods=['POST'])
 def detect_corners():
     file = request.files.get('image')
@@ -559,36 +587,157 @@ def detect_corners():
     if image is None:
         return jsonify({'error': 'Could not decode image'}), 400
 
-    gray    = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    corners = _find_corner_squares(gray)
+    img_h, img_w = image.shape[:2]
+    gray     = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    corners  = _find_corner_squares(gray)
     detected = corners is not None
     if corners is None:
         corners = _edge_fallback(gray)
 
-    # Draw detection overlay on image
+    # corners order after _order_points: TL, TR, BR, BL
+    tl = corners[0].astype(int)
+    tr = corners[1].astype(int)
+    br = corners[2].astype(int)
+    bl = corners[3].astype(int)
+
+    # ── Derived measurements ──────────────────────────────────────────
+    grid_top    = int(min(tl[1], tr[1]))
+    grid_left   = int(min(tl[0], bl[0]))
+    grid_right  = int(max(tr[0], br[0]))
+    grid_width  = grid_right - grid_left
+    header_h    = grid_top          # height of header above the answer grid
+
+    # Roll No.: top-left of header (approx 23% of grid width, same left edge)
+    roll_x1 = grid_left
+    roll_x2 = grid_left + int(grid_width * 0.23)
+    roll_y1 = max(0, int(header_h * 0.05))
+    roll_y2 = int(header_h * 0.80)
+
+    # Reg No.: top-right of header (symmetric)
+    reg_x2  = grid_right
+    reg_x1  = grid_right - int(grid_width * 0.23)
+    reg_y1  = roll_y1
+    reg_y2  = roll_y2
+
+    # ── Build overlay ─────────────────────────────────────────────────
     overlay = image.copy()
-    pts     = corners.astype(int)
 
-    # Draw the quadrilateral outline (bright green)
-    cv2.polylines(overlay, [pts.reshape((-1, 1, 2))], True, (0, 255, 80), 3)
+    # 1. Roll No. region — blue
+    _draw_filled_rect(overlay, roll_x1, roll_y1, roll_x2, roll_y2,
+                      (180, 80, 0), alpha=0.40, label='ROLL NO.',
+                      font_scale=max(0.5, grid_width / 1800))
 
-    # Corner labels & circles: TL=red, TR=green, BR=blue, BL=yellow
-    COLORS = [(0, 50, 220), (0, 200, 0), (200, 80, 0), (0, 140, 255)]
-    LABELS = ['TL', 'TR', 'BR', 'BL']
-    for i, (x, y) in enumerate(pts):
-        cv2.circle(overlay, (int(x), int(y)), 22, COLORS[i], -1)
-        cv2.circle(overlay, (int(x), int(y)), 22, (255, 255, 255), 2)
-        cv2.putText(overlay, LABELS[i], (int(x) - 14, int(y) + 6),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
+    # 2. Reg No. region — orange/amber
+    _draw_filled_rect(overlay, reg_x1, reg_y1, reg_x2, reg_y2,
+                      (0, 140, 220), alpha=0.40, label='REG NO.',
+                      font_scale=max(0.5, grid_width / 1800))
 
-    # Encode preview
-    _, buf     = cv2.imencode('.jpg', overlay, [cv2.IMWRITE_JPEG_QUALITY, 88])
+    # 3. Answer grid outline — bright green quad
+    pts_draw = np.array([tl, tr, br, bl], dtype=np.int32)
+    cv2.polylines(overlay, [pts_draw.reshape(-1, 1, 2)], True, (0, 230, 60), 3)
+
+    # 4. Column dividers inside the answer grid using perspective-correct lerp
+    #    WARP column boundaries (0-1000 scale): edges between blocks
+    #    COLUMN_BASES: {1:109, 2:357, 3:605, 4:853}; BUBBLE_SPACING=40; 4 bubbles
+    col_info = [
+        ('Q 1–25',   109,  109 + 3*40),   # base_x, base_x + 3*spacing
+        ('Q 26–50',  357,  357 + 3*40),
+        ('Q 51–75',  605,  605 + 3*40),
+        ('Q 76–100', 853,  853 + 3*40),
+    ]
+    col_colors = [
+        (60, 180, 60),    # green
+        (60, 120, 220),   # blue
+        (200, 100, 20),   # orange
+        (160, 40, 200),   # purple
+    ]
+
+    for i, (label, bx_left, bx_right) in enumerate(col_info):
+        # Normalise warp x to 0-1 fraction within the answer grid width
+        t_left  = bx_left  / 1000.0
+        t_right = bx_right / 1000.0
+        pad     = (t_right - t_left) * 0.3   # small outward pad
+        t_left  = max(0, t_left - pad)
+        t_right = min(1, t_right + pad)
+
+        # Perspective-correct top & bottom points for this column
+        top_l = _lerp_point(tl, tr, t_left)
+        top_r = _lerp_point(tl, tr, t_right)
+        bot_l = _lerp_point(bl, br, t_left)
+        bot_r = _lerp_point(bl, br, t_right)
+
+        col_quad = np.array([top_l, top_r, bot_r, bot_l], dtype=np.int32)
+        color    = col_colors[i]
+
+        # Semi-transparent fill
+        mask_layer = overlay.copy()
+        cv2.fillPoly(mask_layer, [col_quad], color)
+        cv2.addWeighted(mask_layer, 0.18, overlay, 0.82, 0, overlay)
+
+        # Outline
+        cv2.polylines(overlay, [col_quad.reshape(-1, 1, 2)], True, color, 2)
+
+        # Label at top of column
+        mid_x = (top_l[0] + top_r[0]) // 2
+        mid_y = top_l[1] + int((bot_l[1] - top_l[1]) * 0.05)
+        fs    = max(0.38, grid_width / 3200)
+        (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, fs, 2)
+        cv2.putText(overlay, label, (mid_x - tw // 2, mid_y + th),
+                    cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 0, 0), 3)
+        cv2.putText(overlay, label, (mid_x - tw // 2, mid_y + th),
+                    cv2.FONT_HERSHEY_SIMPLEX, fs, (255, 255, 255), 1)
+
+    # 5. Corner squares: coloured dots on the black registration marks
+    CORNER_COLORS = [(0, 50, 230), (0, 210, 0), (210, 60, 0), (0, 120, 255)]
+    CORNER_LABELS = ['TL', 'TR', 'BR', 'BL']
+    for i, (px, py) in enumerate([tl, tr, br, bl]):
+        r = max(14, int(grid_width * 0.018))
+        cv2.circle(overlay, (px, py), r, CORNER_COLORS[i], -1)
+        cv2.circle(overlay, (px, py), r, (255, 255, 255), 2)
+        fs = max(0.4, grid_width / 2800)
+        (tw, th), _ = cv2.getTextSize(CORNER_LABELS[i],
+                                       cv2.FONT_HERSHEY_SIMPLEX, fs, 2)
+        cv2.putText(overlay, CORNER_LABELS[i],
+                    (px - tw // 2, py + th // 2),
+                    cv2.FONT_HERSHEY_SIMPLEX, fs, (255, 255, 255), 2)
+
+    # 6. Legend bar at the very top of the image
+    legend_h = max(32, int(img_h * 0.025))
+    cv2.rectangle(overlay, (0, 0), (img_w, legend_h), (20, 20, 30), -1)
+    items = [
+        ('■ ROLL NO.', (180, 80, 0)),
+        ('■ REG NO.',  (0, 140, 220)),
+        ('■ Q1-25',   (60, 180, 60)),
+        ('■ Q26-50',  (60, 120, 220)),
+        ('■ Q51-75',  (200, 100, 20)),
+        ('■ Q76-100', (160, 40, 200)),
+    ]
+    lfs = max(0.3, img_w / 4000)
+    lx  = 6
+    for text, color in items:
+        (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, lfs, 1)
+        if lx + tw > img_w - 4:
+            break
+        cv2.putText(overlay, text, (lx, legend_h - 8),
+                    cv2.FONT_HERSHEY_SIMPLEX, lfs, color, 1)
+        lx += tw + 10
+
+    # ── Encode preview ────────────────────────────────────────────────
+    _, buf      = cv2.imencode('.jpg', overlay, [cv2.IMWRITE_JPEG_QUALITY, 90])
     preview_b64 = 'data:image/jpeg;base64,' + base64.b64encode(buf).decode()
+
+    regions = {
+        'answer_grid': {'tl': tl.tolist(), 'tr': tr.tolist(),
+                        'br': br.tolist(), 'bl': bl.tolist()},
+        'roll_no':  [roll_x1, roll_y1, roll_x2, roll_y2],
+        'reg_no':   [reg_x1,  reg_y1,  reg_x2,  reg_y2],
+    }
 
     return jsonify({
         'preview':  preview_b64,
         'corners':  corners.tolist(),
         'detected': detected,
+        'regions':  regions,
     })
 
 

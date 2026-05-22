@@ -1,0 +1,52 @@
+Before reading any bubbles, your code must "flatten" the image to account for camera tilt or rotation.
+Edge Detection: Convert the image to grayscale and use a Canny edge detector.
+Find the Outline: Find the largest 4-sided contour (the border of the paper).
+Perspective Transform: Use cv2.getPerspectiveTransform and cv2.warpPerspective to warp the image into a perfect top-down rectangle of a fixed size (e.g., 1000x1400 pixels).
+This is crucial because it ensures that Question #1 is always at the same X,Y coordinates every time.
+Phase 2: Defining the Regions of Interest (ROIs)
+Once the image is aligned, you "tell" your code where the specific boxes are based on percentages or fixed pixel coordinates.
+1. The Header Box (Roll, Reg, Set Code)
+Roll No. Area: Top left. It consists of a grid of bubbles. You need to divide this area into columns (the digits) and rows (0-9).
+Reg No. Area: Top right. Same logic as Roll No.
+Set Code: The handwritten boxes in the center.
+Note: Since these are handwritten digits and not bubbles, simple OMR logic won't work. You will need to use an OCR (Optical Character Recognition) tool like Tesseract or a trained MNIST model to read these numbers.
+2. The Question Blocks (4 Columns)
+The sheet is divided into four main vertical blocks:
+Block 1: Questions 1–25
+Block 2: Questions 26–50
+Block 3: Questions 51–75
+Block 4: Questions 76–100
+Phase 3: The Bubble Detection Logic
+For each of the four answer blocks, you should follow this logic:
+Crop the Block: Isolate just one column (e.g., Questions 1-25).
+Find Contours: Look for circular shapes. Filter them by size so you don't pick up the text numbers.
+Sort the Circles:
+Sort the detected circles from top to bottom. This gives you the rows (Questions).
+For each row, sort the 4 circles from left to right. This gives you options A, B, C, and D.
+Detect the "Fill":
+Apply a threshold to make the image strictly black and white.
+For each bubble, count the number of black pixels inside it.
+The bubble with the highest density of black pixels is the one the student marked.
+Thresholding Tip: If the density of the "darkest" bubble is below a certain minimum, mark the question as "Unanswered." If two bubbles are very close in density, mark it as "Double Marked/Invalid."
+Summary of what to "tell" your code (Conceptual Python Logic):
+code
+Python
+# 1. Define the regions (after perspective warp)
+regions = {
+    "roll_no": (x1, y1, x2, y2),
+    "reg_no":  (x3, y3, x4, y4),
+    "col_1":   (x5, y5, x6, y6), # Q 1-25
+    "col_2":   (x7, y7, x8, y8), # Q 26-50
+    # ... etc
+}
+
+# 2. Logic for an Answer Block:
+def process_answer_block(image_crop, total_questions):
+    # Find all circles
+    # Group them into rows of 4
+    # For each row:
+    #    check pixel density of A, B, C, D
+    #    return the index (0, 1, 2, or 3) of the darkest one
+    pass
+Recommendation for Implementation
+If you are looking for an existing tool to help, look into "OMRChecker" (an open-source Python project on GitHub). It allows you to create a "JSON Template" where you define the coordinates of every bubble on this specific sheet, and it handles the alignment and marking automatically.
