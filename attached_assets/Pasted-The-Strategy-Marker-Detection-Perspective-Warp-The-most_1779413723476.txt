@@ -1,0 +1,84 @@
+The Strategy: Marker Detection & Perspective Warp
+The most important part of your image are the red/white square markers on the far left and right edges. Your code should use these to "straighten" the image.
+Logic: Detect the red squares using color masking. Find the outermost top-left (TL), top-right (TR), bottom-left (BL), and bottom-right (BR) squares.
+Action: Use cv2.getPerspectiveTransform to turn the tilted paper into a perfect rectangle.
+2. Defining the "Regions of Interest" (ROIs)
+Once the image is straightened and resized to a standard size (e.g., 1000x1500 pixels), you can define your boxes using fixed coordinates.
+Based on your colors:
+Roll No (Blue Box): Top Left corner.
+Reg No (Orange Box): Top Right corner.
+Q1-25 (Green): First vertical column of answers.
+Q26-50 (Tan/Orange): Second vertical column.
+Q51-75 (Light Blue): Third vertical column.
+Q76-100 (Pink): Fourth vertical column.
+3. Example Code Structure (Python)
+You can copy this logic into your Replit script. This script assumes you have already performed the perspective warp.
+code
+Python
+import cv2
+import numpy as np
+
+# Load your warped/straightened image
+img = cv2.imread('warped_omr.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# 1. Define ROIs (Values are examples, adjust based on your warped image size)
+# Format: [y_start : y_end, x_start : x_end]
+rois = {
+    "roll_no": img[100:600, 50:250],
+    "reg_no":  img[100:600, 750:950],
+    "col_1":   img[700:1450, 110:270],  # Q1-25
+    "col_2":   img[700:1450, 280:440],  # Q26-50
+    "col_3":   img[700:1450, 480:640],  # Q51-75
+    "col_4":   img[700:1450, 700:860]   # Q76-100
+}
+
+# 2. Logic to process a column (e.g., col_1)
+def get_answers_from_column(column_img, num_questions=25):
+    # Threshold to find black bubbles
+    thresh = cv2.threshold(column_img, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+    
+    # Split the column into 25 equal horizontal rows
+    height, width = thresh.shape
+    row_height = height // num_questions
+    
+    results = []
+    for i in range(num_questions):
+        row = thresh[i*row_height : (i+1)*row_height, :]
+        
+        # Split row into 4 equal parts (A, B, C, D)
+        option_width = width // 4
+        bubbles = [
+            row[:, 0:option_width],             # A
+            row[:, option_width:option_width*2], # B
+            row[:, option_width*2:option_width*3], # C
+            row[:, option_width*3:width]        # D
+        ]
+        
+        # Find which bubble has the most white pixels (the marked one)
+        pixel_counts = [cv2.countNonZero(b) for b in bubbles]
+        marked_index = np.argmax(pixel_counts)
+        
+        # Basic validation: if count is too low, it's empty
+        if pixel_counts[marked_index] < 50: 
+            results.append(None)
+        else:
+            results.append(['A', 'B', 'C', 'D'][marked_index])
+            
+    return results
+
+# Process Column 1
+answers_1_25 = get_answers_from_column(cv2.cvtColor(rois["col_1"], cv2.COLOR_BGR2GRAY))
+print(f"Questions 1-25: {answers_1_25}")
+4. How to handle the Auto-Alignment
+Since your image has those red ticker-tape markers on the left and right:
+Color Filtering: Use cv2.inRange to find only the red pixels.
+Corner Points:
+The highest-left red pixel is your Top-Left (TL).
+The highest-right red pixel is your Top-Right (TR).
+The lowest-left red pixel is your Bottom-Left (BL).
+The lowest-right red pixel is your Bottom-Right (BR).
+Warp: Feed these four points into cv2.getPerspectiveTransform to get a perfectly flat scan.
+Key Tips for Replit:
+Standardize Size: Always resize your "warped" image to a fixed size (like 1000 pixels wide) before cropping. This ensures your [y1:y2, x1:x2] coordinates always land in the right spot regardless of the original photo's resolution.
+Debugging: Use cv2.imwrite('debug_col1.jpg', rois["col_1"]) frequently to see if your code is "looking" at the correct area of the paper.
