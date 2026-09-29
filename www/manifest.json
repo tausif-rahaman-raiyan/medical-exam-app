@@ -1,0 +1,24 @@
+{
+  "name": "Medical Secret Files",
+  "short_name": "MedSecrets",
+  "description": "Bangladesh Medical Admission Exam Practice App",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?name=BH&size=192&background=7c3aed&color=fff&bold=true&format=png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?name=BH&size=512&background=7c3aed&color=fff&bold=true&format=png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
