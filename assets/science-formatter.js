@@ -8,8 +8,8 @@
 
   function decodeHTMLEntities(str) {
     if (!str) return '';
-    return str
-      .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec))
+    let decoded = str
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
       .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
       .replace(/&quot;/g, '"')
       .replace(/&apos;/g, "'")
@@ -17,17 +17,28 @@
       .replace(/&gt;/g, '>')
       .replace(/&amp;/g, '&')
       .replace(/&nbsp;/g, ' ');
+
+    try {
+      // Normalize Unicode (NFC) for proper Bengali ligatures and vowel sign combinations
+      decoded = decoded.normalize('NFC');
+    } catch {}
+
+    // Fix decomposed Bengali vowel marks (e.g. e-kar + aa-kar -> o-kar)
+    decoded = decoded
+      .replace(/\u09C7\u09BE/g, '\u09CB') // ে + া -> ো
+      .replace(/\u09C7\u09D7/g, '\u09CC') // ে + ৗ -> ৌ
+      .replace(/&#2507;/g, 'ো')
+      .replace(/&#2494;/g, 'া');
+
+    return decoded;
   }
 
   function cleanAndFormatScience(input) {
     if (!input) return '';
     let s = String(input).trim();
 
-    // Decode HTML entities
+    // Decode HTML entities & normalize Bengali glyphs
     s = decodeHTMLEntities(s);
-
-    // Bengali Mojibake & Encoding normalization
-    s = s.replace(/&#2507;/g, 'ো').replace(/&#2494;/g, 'া');
 
     // 1. MathML Multi-scripts & Nuclear Physics Isotopes
     s = s.replace(/<mmultiscripts>([\s\S]*?)<\/mmultiscripts>/gi, (match, inner) => {

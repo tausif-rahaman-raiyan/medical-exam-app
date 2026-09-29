@@ -11,10 +11,10 @@
     <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
     <link rel="manifest" href="manifest.json">
 
-    <!-- Fonts -->
+    <!-- Fonts with Full Bengali Typography and Ligature Support -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Icons & Styling -->
     <link rel="stylesheet" href="assets/all.min.css">
@@ -25,8 +25,8 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', '"Hind Siliguri"', 'sans-serif'],
-                        siliguri: ['"Hind Siliguri"', '"Plus Jakarta Sans"', 'sans-serif'],
+                        sans: ['"Hind Siliguri"', '"Noto Sans Bengali"', '"Plus Jakarta Sans"', 'sans-serif'],
+                        siliguri: ['"Hind Siliguri"', '"Noto Sans Bengali"', '"SolaimanLipi"', '"Kalpurush"', 'sans-serif'],
                         mono: ['"JetBrains Mono"', 'monospace']
                     },
                     colors: {
@@ -55,8 +55,12 @@
         body {
             background-color: #0F172A;
             color: #F1F5F9;
-            font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
+            font-family: 'Hind Siliguri', 'Noto Sans Bengali', 'SolaimanLipi', 'Kalpurush', 'Plus Jakarta Sans', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            font-feature-settings: "liga" 1, "dlig" 1, "kern" 1;
             min-height: 100vh;
             overflow-x: hidden;
         }
@@ -93,6 +97,20 @@
         }
         .accordion-content.open {
             max-height: 4000px;
+        }
+
+        /* High-Definition Typography for Questions & Options (Desktop & Web) */
+        .question-card p.font-siliguri,
+        .font-siliguri {
+            font-family: 'Hind Siliguri', 'Kalpurush', -apple-system, sans-serif !important;
+            font-size: clamp(1.22rem, 1.9vw, 1.5rem) !important;
+            line-height: 1.75 !important;
+            letter-spacing: 0.01em !important;
+        }
+
+        .question-card button span.font-siliguri {
+            font-size: clamp(1.05rem, 1.4vw, 1.22rem) !important;
+            line-height: 1.6 !important;
         }
     </style>
 </head>
@@ -747,11 +765,13 @@ Ans: A" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-w
             return;
         }
 
-        // Render EXACT Card Structure with Candidate Name and Rank
+        // Render EXACT Card Structure with Candidate Name, Google Avatar, and Attempt Number
         list.innerHTML = filtered.map((item, idx) => {
             const isNegative = item.score < 0;
             const rankNumber = idx + 1;
             const isGlobal = currentResultsTab === 'global';
+            const attemptDisplay = item.attemptNumber ? `Attempt #${item.attemptNumber}` : `Attempt #${filtered.length - idx}`;
+            const avatarSrc = item.userPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.userName || 'Candidate')}&background=0F172A&color=c084fc&bold=true`;
 
             let rankBadgeClass = 'bg-slate-800 text-slate-300';
             if (rankNumber === 1) rankBadgeClass = 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30';
@@ -761,19 +781,26 @@ Ans: A" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-w
 
             return `
                 <div class="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-white/10 hover:border-purple-500/40 transition-all shadow-md">
-                    <!-- Top Row: Rank/Attempt #, Candidate Name (if global), Subject, Code, Date -->
+                    <!-- Top Row: Rank & Attempt #, Google Avatar & Name, Subject, Code, Date -->
                     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-2.5 mb-2.5">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="px-2.5 py-0.5 rounded-md font-black text-xs ${rankBadgeClass}">
-                                ${isGlobal ? `Rank #${rankNumber}` : `Attempt #${rankNumber}`}
-                            </span>
-                            ${isGlobal && item.userName ? `
-                                <span class="px-2.5 py-0.5 rounded-md bg-indigo-950/90 border border-indigo-500/40 text-indigo-200 text-xs font-bold flex items-center gap-1">
-                                    <i class="fa fa-user-graduate text-[10px] text-indigo-400"></i> ${item.userName}
+                            ${isGlobal ? `
+                                <span class="px-2.5 py-0.5 rounded-md font-black text-xs ${rankBadgeClass}">
+                                    Rank #${rankNumber}
                                 </span>
                             ` : ''}
-                            <span class="px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-500/40 text-purple-300 font-bold text-xs">
-                                ${item.category || 'উদ্ভিদবিজ্ঞান'}
+                            <span class="px-2.5 py-0.5 rounded-md font-bold text-xs bg-purple-950/80 border border-purple-500/40 text-purple-300">
+                                ${attemptDisplay}
+                            </span>
+                            
+                            <!-- Candidate Google Avatar & Name -->
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-950/80 border border-indigo-500/40 text-indigo-100 text-xs font-bold">
+                                <img src="${avatarSrc}" class="w-4 h-4 rounded-full object-cover border border-purple-400/50" alt="Avatar" />
+                                <span class="truncate max-w-[140px] sm:max-w-[180px]">${item.userName || 'Medical Candidate'}</span>
+                            </div>
+
+                            <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-bold text-xs">
+                                ${item.category || 'মেডিকেল প্রশ্নব্যাংক'}
                             </span>
                             <span class="text-xs text-slate-400 font-mono font-semibold">
                                 Code: ${item.examCode || item.examId || '1020325008'}
@@ -810,7 +837,7 @@ Ans: A" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-w
                             Wrong: <strong class="text-rose-300 font-bold">${item.wrongCount || 0} (-${(item.wrongCount ? (item.wrongCount * 0.25).toFixed(2) : '0.00')})</strong>
                         </div>
                         <div class="text-slate-400">
-                            Skipped: <strong class="text-slate-300 font-bold">${item.skippedCount !== undefined ? item.skippedCount : 99}</strong>
+                            Skipped: <strong class="text-slate-300 font-bold">${item.skippedCount !== undefined ? item.skippedCount : 0}</strong>
                         </div>
                         <div class="text-purple-300">
                             Accuracy: <strong class="text-purple-200 font-bold">${item.accuracy || '0.0%'}</strong>
@@ -840,6 +867,12 @@ Ans: A" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-w
 
     const authBtn = document.getElementById('authBtn');
     authBtn?.addEventListener('click', async () => {
+        const isDesktop = window.navigator.userAgent.includes('Electron') || window.location.protocol === 'file:';
+        if (isDesktop && window.AppSync) {
+            window.AppSync.openSyncModal();
+            return;
+        }
+
         try {
             if (window.firebaseAuth && window.googleProvider) {
                 const res = await window.firebaseAuth.signInWithPopup(window.googleProvider);
@@ -861,19 +894,24 @@ Ans: A" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-w
     });
 
     function handleLogout() {
-        if (window.firebaseAuth) {
-            window.firebaseAuth.signOut().catch(() => {});
+        if (window.AppSync) {
+            window.AppSync.clearUserProfile();
+        } else {
+            if (window.firebaseAuth) {
+                window.firebaseAuth.signOut().catch(() => {});
+            }
+            try {
+                localStorage.removeItem('msf_user_profile');
+            } catch {}
+            document.getElementById('userName').textContent = 'Guest Candidate';
+            document.getElementById('userEmail').textContent = 'Not signed in';
+            document.getElementById('userImg').src = 'https://ui-avatars.com/api/?name=Candidate&background=0F172A&color=c084fc&bold=true';
+            document.getElementById('leaderboardUserName').textContent = 'Guest Candidate';
+            document.getElementById('leaderboardUserSub').textContent = 'Sign in with Gmail to save & rank';
+            document.getElementById('leaderboardAvatar').textContent = 'S';
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('authBtnText').textContent = 'Sign In with Google';
         }
-        try {
-            localStorage.removeItem('msf_user_profile');
-        } catch {}
-        document.getElementById('userName').textContent = 'Guest Candidate';
-        document.getElementById('userEmail').textContent = 'Not signed in';
-        document.getElementById('leaderboardUserName').textContent = 'Guest Candidate';
-        document.getElementById('leaderboardUserSub').textContent = 'Sign in with Gmail to save & rank';
-        document.getElementById('leaderboardAvatar').textContent = 'S';
-        document.getElementById('logoutBtn').style.display = 'none';
-        document.getElementById('authBtnText').textContent = 'Sign In with Google';
     }
 
     const searchInput = document.getElementById('searchInput');
