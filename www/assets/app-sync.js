@@ -168,8 +168,19 @@
    * Open the Web Sync Page (for Desktop App user)
    */
   function openWebSyncPage(code) {
-    const syncUrl = `https://ais-dev-fads2pjamkcowzqe2kmxoz-387656210965.asia-east1.run.app/sync.html?pair=${encodeURIComponent(code || currentPairCode || '')}`;
-    window.open(syncUrl, '_blank');
+    const pairParam = encodeURIComponent(code || currentPairCode || '');
+    let baseUrl = 'https://tausif-rahaman-raiyan.github.io/medical-exam-app/sync.html';
+    
+    // If running in a standard web browser on a live origin, use the current host sync.html
+    if (window.location && window.location.protocol.startsWith('http') && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+      const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+      baseUrl = `${window.location.origin}${currentPath}sync.html`;
+    }
+
+    const syncUrl = `${baseUrl}?pair=${pairParam}`;
+    if (typeof window !== 'undefined') {
+      window.open(syncUrl, '_blank');
+    }
   }
 
   /**
