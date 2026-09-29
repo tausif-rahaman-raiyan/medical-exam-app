@@ -144,10 +144,15 @@
                         <i class="fa-brands fa-google text-purple-400"></i>
                         <span id="authBtnText">Sign In with Google</span>
                     </button>
-                    
+
                     <button onclick="openResultsModal()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-purple-950/50 text-xs font-bold text-slate-300 flex items-center space-x-2 transition-all">
                         <i class="fa fa-chart-line text-emerald-400"></i>
                         <span>My Exam Attempts</span>
+                    </button>
+                    
+                    <button onclick="window.AppSync ? window.AppSync.openSyncModal() : null" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-950/50 text-xs font-bold text-indigo-300 flex items-center space-x-2 transition-all">
+                        <i class="fa fa-rotate text-indigo-400"></i>
+                        <span>Sync with Windows App</span>
                     </button>
 
                     <button id="logoutBtn" style="display:none;" onclick="handleLogout()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-950/50 text-xs font-bold text-rose-400 flex items-center space-x-2 transition-all mt-1">
@@ -421,6 +426,7 @@ Ans: A" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-w
 <script src="assets/firebase-config.js"></script>
 <script src="assets/data.js"></script>
 <script src="assets/exam-engine.js"></script>
+<script src="assets/app-sync.js"></script>
 
 <script>
     // Initial UI Initialization
@@ -815,26 +821,38 @@ Ans: A" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-w
         }).join('');
     }
 
-    // Google Sign-In Trigger
+    // Google Sign-In Trigger & Auth State Observer
+    if (window.firebaseAuth) {
+        window.firebaseAuth.onAuthStateChanged((user) => {
+            if (user) {
+                const profile = {
+                    uid: user.uid,
+                    name: user.displayName || 'Medical Aspirant',
+                    email: user.email || '',
+                    photoURL: user.photoURL || ''
+                };
+                if (window.AppSync) {
+                    window.AppSync.applyUserProfile(profile, false);
+                }
+            }
+        });
+    }
+
     const authBtn = document.getElementById('authBtn');
     authBtn?.addEventListener('click', async () => {
         try {
             if (window.firebaseAuth && window.googleProvider) {
                 const res = await window.firebaseAuth.signInWithPopup(window.googleProvider);
                 if (res.user) {
-                    const name = res.user.displayName || 'Medical Aspirant';
-                    const email = res.user.email || '';
-                    document.getElementById('userName').textContent = name;
-                    document.getElementById('userEmail').textContent = email;
-                    document.getElementById('leaderboardUserName').textContent = name;
-                    document.getElementById('leaderboardUserSub').textContent = email;
-                    document.getElementById('leaderboardAvatar').textContent = name.charAt(0).toUpperCase();
-
-                    if (res.user.photoURL) {
-                        document.getElementById('userImg').src = res.user.photoURL;
+                    const profile = {
+                        uid: res.user.uid,
+                        name: res.user.displayName || 'Medical Aspirant',
+                        email: res.user.email || '',
+                        photoURL: res.user.photoURL || ''
+                    };
+                    if (window.AppSync) {
+                        window.AppSync.applyUserProfile(profile, true);
                     }
-                    document.getElementById('logoutBtn').style.display = 'block';
-                    document.getElementById('authBtnText').textContent = 'Signed in';
                 }
             }
         } catch (e) {
@@ -846,6 +864,9 @@ Ans: A" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-w
         if (window.firebaseAuth) {
             window.firebaseAuth.signOut().catch(() => {});
         }
+        try {
+            localStorage.removeItem('msf_user_profile');
+        } catch {}
         document.getElementById('userName').textContent = 'Guest Candidate';
         document.getElementById('userEmail').textContent = 'Not signed in';
         document.getElementById('leaderboardUserName').textContent = 'Guest Candidate';

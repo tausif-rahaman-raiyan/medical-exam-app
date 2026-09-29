@@ -278,14 +278,14 @@
               </span>
             </div>
 
-            <!-- Standard Large Crisp Question Typography -->
-            <p class="text-base sm:text-lg md:text-xl font-bold text-slate-100 leading-relaxed mb-5 font-siliguri">${q.q}</p>
+            <!-- Standard Large Crisp Question Typography with enhanced spacing -->
+            <p class="text-lg sm:text-xl md:text-2xl font-bold text-slate-100 leading-relaxed mb-6 sm:mb-8 font-siliguri">${q.q}</p>
 
-            <!-- 2-Line 2-Column Options Grid (A & B on line 1, C & D on line 2) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- 2-Line 2-Column Options Grid (A & B on line 1, C & D on line 2) with expanded gap -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
               ${['a', 'b', 'c', 'd'].map(opt => {
                 const isSelected = selected === opt;
-                let btnStyle = 'bg-slate-900/80 border-white/10 text-slate-200 hover:border-purple-500/50 hover:bg-slate-900 cursor-pointer';
+                let btnStyle = 'bg-slate-900/80 border-white/10 text-slate-200 hover:border-purple-500/50 hover:bg-slate-900 cursor-pointer shadow-sm';
 
                 if (isLocked) {
                   if (isSelected) {
@@ -296,14 +296,14 @@
                 }
 
                 return `
-                  <button ${isLocked ? 'disabled' : `onclick="window.ExamEngine.selectOption(${idx}, '${opt}')"`} class="w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all flex items-center justify-between ${btnStyle}">
-                    <div class="flex items-center gap-3 min-w-0 flex-1">
-                      <span class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${isSelected ? 'bg-purple-600 text-white font-black shadow-md' : 'bg-slate-800 text-slate-400'}">
+                  <button ${isLocked ? 'disabled' : `onclick="window.ExamEngine.selectOption(${idx}, '${opt}')"`} class="w-full text-left p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between ${btnStyle}">
+                    <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                      <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-sm sm:text-base flex-shrink-0 ${isSelected ? 'bg-purple-600 text-white shadow-md' : 'bg-slate-800 text-slate-400'}">
                         ${opt.toUpperCase()}
                       </span>
-                      <span class="text-sm sm:text-base font-medium break-words leading-relaxed text-slate-100 font-siliguri">${q[opt]}</span>
+                      <span class="text-base sm:text-lg font-semibold break-words leading-relaxed text-slate-100 font-siliguri">${q[opt]}</span>
                     </div>
-                    ${isSelected ? '<i class="fa fa-circle-check text-purple-400 text-base ml-2 flex-shrink-0"></i>' : '<i class="fa fa-circle text-slate-700 text-xs ml-2 flex-shrink-0"></i>'}
+                    ${isSelected ? '<i class="fa fa-circle-check text-purple-400 text-lg ml-2 flex-shrink-0"></i>' : '<i class="fa fa-circle text-slate-700 text-xs ml-2 flex-shrink-0"></i>'}
                   </button>
                 `;
               }).join('')}
@@ -319,14 +319,14 @@
                 ${q.id}
               </span>
               <div class="flex-1 min-w-0">
-                <p class="text-base sm:text-lg font-bold text-slate-100 leading-relaxed mb-3.5 font-siliguri">${q.q}</p>
+                <p class="text-lg sm:text-xl md:text-2xl font-bold text-slate-100 leading-relaxed mb-5 sm:mb-6 font-siliguri">${q.q}</p>
                 
-                <!-- 2-Line 2-Column Options Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4 text-sm sm:text-base text-slate-200">
-                  <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5"><span class="font-black text-purple-400 mr-2">(A)</span> ${q.a}</div>
-                  <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5"><span class="font-black text-purple-400 mr-2">(B)</span> ${q.b}</div>
-                  <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5"><span class="font-black text-purple-400 mr-2">(C)</span> ${q.c}</div>
-                  <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5"><span class="font-black text-purple-400 mr-2">(D)</span> ${q.d}</div>
+                <!-- 2-Line 2-Column Options Grid with enhanced spacing -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-5 text-base sm:text-lg text-slate-200">
+                  <div class="p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-white/5 font-siliguri leading-relaxed"><span class="font-black text-purple-400 mr-2.5">(A)</span> ${q.a}</div>
+                  <div class="p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-white/5 font-siliguri leading-relaxed"><span class="font-black text-purple-400 mr-2.5">(B)</span> ${q.b}</div>
+                  <div class="p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-white/5 font-siliguri leading-relaxed"><span class="font-black text-purple-400 mr-2.5">(C)</span> ${q.c}</div>
+                  <div class="p-3.5 sm:p-4 rounded-xl bg-slate-900/80 border border-white/5 font-siliguri leading-relaxed"><span class="font-black text-purple-400 mr-2.5">(D)</span> ${q.d}</div>
                 </div>
 
                 <!-- OMR Bubbles Row -->
@@ -808,11 +808,11 @@
             </div>
           </div>
 
-          <!-- Question Text in Exam-Matching Font Size -->
-          <p class="text-base sm:text-lg md:text-xl font-bold text-slate-100 leading-relaxed mb-5 font-siliguri">${q.q}</p>
+          <!-- Question Text in Exam-Matching Font Size with enhanced spacing -->
+          <p class="text-lg sm:text-xl md:text-2xl font-bold text-slate-100 leading-relaxed mb-6 sm:mb-8 font-siliguri">${q.q}</p>
 
-          <!-- 2-Line / 2-Column Options Grid with Exact Exam Proportions -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          <!-- 2-Line / 2-Column Options Grid with Exact Exam Proportions and spacing -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 mb-6">
             ${['a', 'b', 'c', 'd'].map(opt => {
               const isOptionCorrect = item.correct.toLowerCase() === opt;
               const isUserChoice = item.user.toLowerCase() === opt;
@@ -829,11 +829,11 @@
               }
 
               return `
-                <div class="p-3.5 sm:p-4 rounded-xl border flex items-center gap-3 ${style}">
-                  <span class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${isOptionCorrect ? 'bg-emerald-500 text-slate-900 font-black' : 'bg-slate-800 text-slate-400'}">
+                <div class="p-4 sm:p-5 rounded-2xl border flex items-center gap-3.5 ${style}">
+                  <span class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0 ${isOptionCorrect ? 'bg-emerald-500 text-slate-900 font-black' : 'bg-slate-800 text-slate-400'}">
                     ${opt.toUpperCase()}
                   </span>
-                  <span class="flex-1 break-words font-medium font-siliguri leading-relaxed text-sm sm:text-base">${q[opt]}</span>
+                  <span class="flex-1 break-words font-semibold font-siliguri leading-relaxed text-base sm:text-lg">${q[opt]}</span>
                   ${badge}
                 </div>
               `;
