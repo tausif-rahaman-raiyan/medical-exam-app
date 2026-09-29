@@ -31,20 +31,10 @@ jobs:
         run: |
           node --input-type=module -e "import './www/assets/science-formatter.js'; console.log('Offline Science Engine validated successfully:', typeof globalThis.cleanAndFormatScience);"
 
-      - name: Build Windows Executables (.exe & Portable)
+      - name: Build Windows Executables (Installer & Portable)
         shell: bash
         run: |
-          npx electron-builder --windows --x64 \
-            --config.appId="com.medicalsecretfiles.app" \
-            --config.productName="Medical Secret Files" \
-            --config.copyright="Copyright © 2026 Medical Secret Files" \
-            --config.directories.output="dist-win" \
-            --config.files="www/**/*,electron-main.cjs,package.json" \
-            --config.win.target="nsis,portable" \
-            --config.nsis.oneClick=false \
-            --config.nsis.allowToChangeInstallationDirectory=true \
-            --config.nsis.createDesktopShortcut=true \
-            --config.nsis.createStartMenuShortcut=true
+          npx electron-builder --windows --x64 --config electron-builder.json --publish never
 
       - name: Upload Windows Standalone Installer Artifact
         uses: actions/upload-artifact@v4

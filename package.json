@@ -1,6 +1,7 @@
 {
   "name": "medical-exam-app",
   "version": "1.0.0",
+  "author": "Medical Secret Files",
   "type": "module",
   "main": "server.ts",
   "description": "Medical Secret Files - Complete Medical Admission Exam Platform",
