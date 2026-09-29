@@ -258,7 +258,7 @@
   }
 
   /**
-   * Render Questions List (Large Fonts, 2-Line / 2-Column Options Layout)
+   * Render Questions List (Compact Modern Cards with Clear Bengali Typography)
    */
   function renderQuestionsList() {
     return ExamState.questions.map((q, idx) => {
@@ -266,23 +266,23 @@
       const isLocked = selected !== undefined && selected !== null;
 
       if (ExamState.mode === 'card') {
-        // Quiz Card Mode (Default) - 2-Column / 2-Line Options Grid
+        // Quiz Card Mode (Default) - Compact 2-Column / 2-Line Options Grid
         return `
-          <div id="q-card-${idx}" class="question-card bg-[#1E293B] border ${isLocked ? 'border-purple-500/50 shadow-purple-900/10' : 'border-white/10'} rounded-2xl p-5 sm:p-7 transition-all shadow-lg w-full mb-6">
-            <div class="flex items-center justify-between mb-3.5">
-              <span class="px-3 py-1 rounded-xl bg-purple-950/90 border border-purple-600/50 text-purple-200 text-xs font-black font-mono tracking-wider">
+          <div id="q-card-${idx}" class="question-card bg-[#1E293B] border ${isLocked ? 'border-purple-500/50 shadow-purple-900/10' : 'border-white/10'} rounded-2xl p-4 sm:p-5 transition-all shadow-md w-full mb-4">
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="px-2.5 py-0.5 rounded-lg bg-purple-950/90 border border-purple-600/50 text-purple-200 text-xs font-black font-mono tracking-wider">
                 QUESTION #${q.id}
               </span>
               <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isLocked ? 'text-emerald-400' : 'text-slate-500'}">
-                ${isLocked ? '<i class="fa fa-lock text-emerald-400"></i> Locked' : '<i class="fa fa-circle text-slate-600"></i> Unattempted'}
+                ${isLocked ? '<i class="fa fa-lock text-emerald-400"></i> Locked' : '<i class="fa fa-circle text-slate-600 text-[10px]"></i> Unattempted'}
               </span>
             </div>
 
-            <!-- Standard Large Crisp Question Typography -->
-            <p class="text-base sm:text-lg md:text-xl font-bold text-slate-100 leading-relaxed mb-5 font-siliguri">${q.q}</p>
+            <!-- Standard Large Crisp Question Typography (20-24px, Compact Margin) -->
+            <p class="text-xl sm:text-2xl font-bold text-slate-100 leading-snug mb-3.5 font-siliguri">${q.q}</p>
 
-            <!-- 2-Line 2-Column Options Grid (A & B on line 1, C & D on line 2) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Compact 2-Line 2-Column Options Grid (16-18px) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               ${['a', 'b', 'c', 'd'].map(opt => {
                 const isSelected = selected === opt;
                 let btnStyle = 'bg-slate-900/80 border-white/10 text-slate-200 hover:border-purple-500/50 hover:bg-slate-900 cursor-pointer';
@@ -296,14 +296,14 @@
                 }
 
                 return `
-                  <button ${isLocked ? 'disabled' : `onclick="window.ExamEngine.selectOption(${idx}, '${opt}')"`} class="w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all flex items-center justify-between ${btnStyle}">
-                    <div class="flex items-center gap-3 min-w-0 flex-1">
-                      <span class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${isSelected ? 'bg-purple-600 text-white font-black shadow-md' : 'bg-slate-800 text-slate-400'}">
+                  <button ${isLocked ? 'disabled' : `onclick="window.ExamEngine.selectOption(${idx}, '${opt}')"`} class="w-full text-left p-2.5 sm:p-3 rounded-xl border transition-all flex items-center justify-between ${btnStyle}">
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                      <span class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 ${isSelected ? 'bg-purple-600 text-white font-black shadow-md' : 'bg-slate-800 text-slate-400'}">
                         ${opt.toUpperCase()}
                       </span>
-                      <span class="text-sm sm:text-base font-medium break-words leading-relaxed text-slate-100 font-siliguri">${q[opt]}</span>
+                      <span class="text-base sm:text-lg font-medium break-words leading-relaxed text-slate-100 font-siliguri">${q[opt]}</span>
                     </div>
-                    ${isSelected ? '<i class="fa fa-circle-check text-purple-400 text-base ml-2 flex-shrink-0"></i>' : '<i class="fa fa-circle text-slate-700 text-xs ml-2 flex-shrink-0"></i>'}
+                    ${isSelected ? '<i class="fa fa-circle-check text-purple-400 text-sm ml-2 flex-shrink-0"></i>' : '<i class="fa fa-circle text-slate-700 text-[10px] ml-2 flex-shrink-0"></i>'}
                   </button>
                 `;
               }).join('')}
@@ -311,43 +311,43 @@
           </div>
         `;
       } else {
-        // OMR Bubble Sheet Mode
+        // OMR Bubble Sheet Mode (Compact)
         return `
-          <div id="q-card-${idx}" class="question-card bg-[#1E293B] border ${isLocked ? 'border-purple-500/50' : 'border-white/10'} rounded-2xl p-5 sm:p-6 transition-all shadow-lg w-full mb-6">
-            <div class="flex items-start gap-3.5">
-              <span class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-900/70 border border-purple-500/40 text-purple-300 font-mono font-bold text-sm flex items-center justify-center">
+          <div id="q-card-${idx}" class="question-card bg-[#1E293B] border ${isLocked ? 'border-purple-500/50' : 'border-white/10'} rounded-2xl p-4 sm:p-5 transition-all shadow-md w-full mb-4">
+            <div class="flex items-start gap-3">
+              <span class="flex-shrink-0 w-8 h-8 rounded-xl bg-purple-900/70 border border-purple-500/40 text-purple-300 font-mono font-bold text-xs flex items-center justify-center">
                 ${q.id}
               </span>
               <div class="flex-1 min-w-0">
-                <p class="text-base sm:text-lg font-bold text-slate-100 leading-relaxed mb-3.5 font-siliguri">${q.q}</p>
+                <p class="text-xl sm:text-2xl font-bold text-slate-100 leading-snug mb-3 font-siliguri">${q.q}</p>
                 
-                <!-- 2-Line 2-Column Options Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4 text-sm sm:text-base text-slate-200">
-                  <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5"><span class="font-black text-purple-400 mr-2">(A)</span> ${q.a}</div>
-                  <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5"><span class="font-black text-purple-400 mr-2">(B)</span> ${q.b}</div>
-                  <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5"><span class="font-black text-purple-400 mr-2">(C)</span> ${q.c}</div>
-                  <div class="p-3 rounded-xl bg-slate-900/80 border border-white/5"><span class="font-black text-purple-400 mr-2">(D)</span> ${q.d}</div>
+                <!-- 2-Line 2-Column Options Grid (16-18px) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 text-base sm:text-lg text-slate-200">
+                  <div class="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 font-siliguri"><span class="font-black text-purple-400 mr-1.5">(A)</span> ${q.a}</div>
+                  <div class="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 font-siliguri"><span class="font-black text-purple-400 mr-1.5">(B)</span> ${q.b}</div>
+                  <div class="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 font-siliguri"><span class="font-black text-purple-400 mr-1.5">(C)</span> ${q.c}</div>
+                  <div class="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 font-siliguri"><span class="font-black text-purple-400 mr-1.5">(D)</span> ${q.d}</div>
                 </div>
 
                 <!-- OMR Bubbles Row -->
-                <div class="flex items-center justify-between sm:justify-start sm:gap-6 pt-3 border-t border-white/5">
+                <div class="flex items-center justify-between sm:justify-start sm:gap-4 pt-2.5 border-t border-white/5">
                   <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <i class="fa fa-fingerprint text-purple-400 text-sm"></i> ${isLocked ? 'Locked Bubble:' : 'Fill Bubble:'}
+                    <i class="fa fa-fingerprint text-purple-400 text-xs"></i> ${isLocked ? 'Locked Bubble:' : 'Fill Bubble:'}
                   </span>
-                  <div class="flex items-center gap-2.5 sm:gap-4">
+                  <div class="flex items-center gap-2 sm:gap-3">
                     ${['a', 'b', 'c', 'd'].map(opt => {
                       const isSelected = selected === opt;
                       let bubbleClass = 'bg-slate-900 border-slate-600 text-slate-300 hover:border-purple-400';
                       if (isLocked) {
                         if (isSelected) {
-                          bubbleClass = 'bg-purple-600 border-purple-400 text-white shadow-lg shadow-purple-900/60 scale-105 ring-2 ring-purple-400/50';
+                          bubbleClass = 'bg-purple-600 border-purple-400 text-white shadow-md shadow-purple-900/60 scale-105 ring-2 ring-purple-400/50';
                         } else {
                           bubbleClass = 'bg-slate-950 border-slate-800 text-slate-600 opacity-50 cursor-not-allowed';
                         }
                       }
                       return `
                         <button ${isLocked ? 'disabled' : `onclick="window.ExamEngine.selectOption(${idx}, '${opt}')"`} class="omr-bubble flex items-center justify-center focus:outline-none">
-                          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 transition-all flex items-center justify-center font-black text-sm ${bubbleClass}">
+                          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 transition-all flex items-center justify-center font-black text-xs ${bubbleClass}">
                             ${opt.toUpperCase()}
                           </div>
                         </button>
@@ -601,6 +601,40 @@
     }
   }
 
+  function syncOfflinePendingResults() {
+    if (!navigator.onLine || !global.firebaseDB) return;
+    try {
+      const rawPending = localStorage.getItem('msf_offline_pending_results');
+      if (!rawPending) return;
+      const pendingList = JSON.parse(rawPending);
+      if (!Array.isArray(pendingList) || pendingList.length === 0) return;
+
+      const user = global.firebaseAuth?.currentUser;
+      const profileRaw = localStorage.getItem('msf_user_profile');
+      const profile = profileRaw ? JSON.parse(profileRaw) : null;
+      const uid = profile?.uid || (user ? user.uid : null);
+      if (!uid || uid === 'guest') return;
+
+      const promises = pendingList.map(item => {
+        return global.firebaseDB.collection('exam_results').add({
+          ...item,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+
+      Promise.all(promises).then(() => {
+        localStorage.removeItem('msf_offline_pending_results');
+        console.log(`Synced ${pendingList.length} offline exam results to Firestore.`);
+      }).catch(err => console.warn('Offline sync error:', err));
+    } catch (e) {
+      console.warn('Pending sync error:', e);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', syncOfflinePendingResults);
+  }
+
   function saveExamResult(payload) {
     let profile = null;
     try {
@@ -631,42 +665,48 @@
     payload.userId = candidateUid;
     payload.isGoogleSaved = isGoogleLoggedIn;
 
-    // Save to local device history
-    try {
-      history.unshift(payload);
-      localStorage.setItem(STORAGE_KEY_RESULTS, JSON.stringify(history.slice(0, 200)));
-    } catch (e) {
-      console.warn('LocalStorage save error:', e);
-    }
+    const firestoreRecord = {
+      userId: candidateUid,
+      userName: candidateName,
+      userEmail: candidateEmail,
+      userPhoto: candidatePhoto || '',
+      attemptNumber: attemptNumber,
+      topicName: payload.topicName,
+      category: payload.category,
+      examCode: payload.examId,
+      score: payload.score,
+      correctCount: payload.correctCount,
+      wrongCount: payload.wrongCount,
+      skippedCount: payload.skippedCount,
+      accuracy: payload.accuracy,
+      timeSpentSeconds: payload.timeSpentSeconds,
+      date: payload.date
+    };
 
-    // ONLY save to Global Leaderboard in Firestore if user is authenticated with Google
-    if (isGoogleLoggedIn && global.firebaseDB) {
-      try {
-        global.firebaseDB.collection('exam_results').add({
-          userId: candidateUid,
-          userName: candidateName,
-          userEmail: candidateEmail,
-          userPhoto: candidatePhoto || '',
-          attemptNumber: attemptNumber,
-          topicName: payload.topicName,
-          category: payload.category,
-          examCode: payload.examId,
-          score: payload.score,
-          correctCount: payload.correctCount,
-          wrongCount: payload.wrongCount,
-          skippedCount: payload.skippedCount,
-          accuracy: payload.accuracy,
-          timeSpentSeconds: payload.timeSpentSeconds,
-          date: payload.date,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-          console.log(`Exam result for ${candidateName} (Attempt #${attemptNumber}) saved to Firestore.`);
-        }).catch((err) => console.warn('Firestore sync note:', err));
-      } catch (e) {
-        console.warn('Firestore sync note:', e);
-      }
+    // If online and authenticated with Google: Save directly to Firestore database
+    if (isGoogleLoggedIn && global.firebaseDB && navigator.onLine) {
+      global.firebaseDB.collection('exam_results').add({
+        ...firestoreRecord,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        console.log(`Exam result for ${candidateName} (Attempt #${attemptNumber}) saved directly to Firestore.`);
+        syncOfflinePendingResults();
+      }).catch((err) => {
+        console.warn('Firestore direct save error (caching offline):', err);
+        // Fallback: save to offline pending sync queue
+        try {
+          const pending = JSON.parse(localStorage.getItem('msf_offline_pending_results') || '[]');
+          pending.push(firestoreRecord);
+          localStorage.setItem('msf_offline_pending_results', JSON.stringify(pending));
+        } catch {}
+      });
     } else {
-      console.log('Guest candidate exam completed. Sign in with Google to publish score to Global Leaderboard.');
+      // Offline or guest: save ONLY to offline queue so it syncs when internet is available
+      try {
+        const pending = JSON.parse(localStorage.getItem('msf_offline_pending_results') || '[]');
+        pending.push(firestoreRecord);
+        localStorage.setItem('msf_offline_pending_results', JSON.stringify(pending));
+      } catch {}
     }
   }
 
@@ -688,88 +728,90 @@
     const isNegative = result.score < 0;
 
     container.innerHTML = `
-      <!-- Result Summary Hero Card -->
-      <div class="bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8 w-full">
-        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6 mb-6">
-          <div>
-            <span class="px-3.5 py-1 rounded-full bg-purple-900/60 border border-purple-500/30 text-purple-300 text-xs font-black uppercase tracking-wider inline-block mb-2">
-              ${result.category}
-            </span>
-            <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-white">${result.topicName}</h2>
-            <p class="text-xs text-slate-400 font-mono mt-1">Code: ${result.examId} • Completed on ${result.date}</p>
-          </div>
-          
-          <div class="text-right">
-            <p class="text-xs uppercase font-bold tracking-widest text-slate-400 mb-0.5">Final Net Score</p>
-            <div class="text-4xl sm:text-5xl md:text-6xl font-black ${isNegative ? 'text-rose-500' : (result.score >= 60 ? 'text-emerald-400' : (result.score >= 40 ? 'text-amber-400' : 'text-rose-400'))}">
-              ${result.score}<span class="text-xl sm:text-2xl text-slate-500">/${result.totalQuestions}</span>
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+        <!-- Result Summary Hero Card -->
+        <div class="bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8 w-full">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6 mb-6">
+            <div>
+              <span class="px-3.5 py-1 rounded-full bg-purple-900/60 border border-purple-500/30 text-purple-300 text-xs font-black uppercase tracking-wider inline-block mb-2">
+                ${result.category}
+              </span>
+              <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-white">${result.topicName}</h2>
+              <p class="text-xs text-slate-400 font-mono mt-1">Code: ${result.examId} • Completed on ${result.date}</p>
             </div>
-            <p class="text-xs text-slate-400 mt-1 font-semibold">${isNegative ? 'Negative Marks' : 'Net Marks (+1.00 / -0.25)'}</p>
+            
+            <div class="text-right">
+              <p class="text-xs uppercase font-bold tracking-widest text-slate-400 mb-0.5">Final Net Score</p>
+              <div class="text-4xl sm:text-5xl md:text-6xl font-black ${isNegative ? 'text-rose-500' : (result.score >= 60 ? 'text-emerald-400' : (result.score >= 40 ? 'text-amber-400' : 'text-rose-400'))}">
+                ${result.score}<span class="text-xl sm:text-2xl text-slate-500">/${result.totalQuestions}</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1 font-semibold">${isNegative ? 'Negative Marks' : 'Net Marks (+1.00 / -0.25)'}</p>
+            </div>
+          </div>
+
+          <!-- 4-Pillar Stat Box Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 mb-6">
+            <div class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-center">
+              <p class="text-2xl sm:text-3xl font-black text-emerald-400">${result.correctCount}</p>
+              <p class="text-xs uppercase font-bold text-emerald-300/80">Correct (+${result.correctCount}.00)</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-center">
+              <p class="text-2xl sm:text-3xl font-black text-rose-400">${result.wrongCount}</p>
+              <p class="text-xs uppercase font-bold text-rose-300/80">Wrong (-${(result.wrongCount * 0.25).toFixed(2)})</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 text-center">
+              <p class="text-2xl sm:text-3xl font-black text-slate-300">${result.skippedCount}</p>
+              <p class="text-xs uppercase font-bold text-slate-400">Skipped (0.00)</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-center">
+              <p class="text-2xl sm:text-3xl font-black text-purple-300">${result.accuracy}</p>
+              <p class="text-xs uppercase font-bold text-purple-300/80">Accuracy Rate</p>
+            </div>
+          </div>
+
+          <!-- Action CTAs -->
+          <div class="flex flex-wrap gap-3 pt-2">
+            <button onclick="window.ExamEngine.exitExam()" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
+              <i class="fa fa-house"></i> Return to Question Bank
+            </button>
+            <button onclick="window.openResultsModal()" class="flex-1 py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-purple-900/40 transition-all flex items-center justify-center gap-2">
+              <i class="fa fa-trophy"></i> View Leaderboard & History
+            </button>
           </div>
         </div>
 
-        <!-- 4-Pillar Stat Box Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 mb-6">
-          <div class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-center">
-            <p class="text-2xl sm:text-3xl font-black text-emerald-400">${result.correctCount}</p>
-            <p class="text-xs uppercase font-bold text-emerald-300/80">Correct (+${result.correctCount}.00)</p>
+        <!-- Deep Solution & Reference Review Section Header + Interactive Filters -->
+        <div class="bg-[#1E293B] border border-white/10 rounded-2xl p-4 sm:p-5 mb-6 shadow-xl w-full">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4 mb-4">
+            <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+              <i class="fa fa-book-open-reader text-purple-400"></i> Deep Solution & Reference Review
+            </h3>
+            <span id="review-counter-badge" class="text-xs text-slate-400 font-semibold font-mono">
+              Showing ${details.length} Questions
+            </span>
           </div>
-          <div class="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-center">
-            <p class="text-2xl sm:text-3xl font-black text-rose-400">${result.wrongCount}</p>
-            <p class="text-xs uppercase font-bold text-rose-300/80">Wrong (-${(result.wrongCount * 0.25).toFixed(2)})</p>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 text-center">
-            <p class="text-2xl sm:text-3xl font-black text-slate-300">${result.skippedCount}</p>
-            <p class="text-xs uppercase font-bold text-slate-400">Skipped (0.00)</p>
-          </div>
-          <div class="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-center">
-            <p class="text-2xl sm:text-3xl font-black text-purple-300">${result.accuracy}</p>
-            <p class="text-xs uppercase font-bold text-purple-300/80">Accuracy Rate</p>
+
+          <!-- Filter Buttons: All, Wrong, Correct, Skipped -->
+          <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <button id="filter-btn-all" onclick="window.ExamEngine.filterReview('all')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-purple-600 text-white shadow-md">
+              All Questions (${details.length})
+            </button>
+            <button id="filter-btn-wrong" onclick="window.ExamEngine.filterReview('wrong')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-900 text-rose-400 border border-rose-500/30 hover:bg-rose-950/40">
+              <i class="fa fa-circle-xmark mr-1"></i> Wrong (${result.wrongCount})
+            </button>
+            <button id="filter-btn-correct" onclick="window.ExamEngine.filterReview('correct')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-900 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-950/40">
+              <i class="fa fa-circle-check mr-1"></i> Correct (${result.correctCount})
+            </button>
+            <button id="filter-btn-skipped" onclick="window.ExamEngine.filterReview('skipped')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-900 text-slate-400 border border-white/10 hover:bg-slate-800">
+              <i class="fa fa-circle-minus mr-1"></i> Skipped (${result.skippedCount})
+            </button>
           </div>
         </div>
 
-        <!-- Action CTAs -->
-        <div class="flex flex-wrap gap-3 pt-2">
-          <button onclick="window.ExamEngine.exitExam()" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
-            <i class="fa fa-house"></i> Return to Question Bank
-          </button>
-          <button onclick="window.openResultsModal()" class="flex-1 py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-purple-900/40 transition-all flex items-center justify-center gap-2">
-            <i class="fa fa-trophy"></i> View Leaderboard & History
-          </button>
+        <!-- Solutions Stream (Centered with breathing space on left and right) -->
+        <div id="review-questions-stream" class="space-y-4 pb-20 w-full">
+          ${renderReviewQuestionsList('all')}
         </div>
-      </div>
-
-      <!-- Deep Solution & Reference Review Section Header + Interactive Filters -->
-      <div class="bg-[#1E293B] border border-white/10 rounded-2xl p-4 sm:p-5 mb-6 shadow-xl w-full">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4 mb-4">
-          <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-            <i class="fa fa-book-open-reader text-purple-400"></i> Deep Solution & Reference Review
-          </h3>
-          <span id="review-counter-badge" class="text-xs text-slate-400 font-semibold font-mono">
-            Showing ${details.length} Questions
-          </span>
-        </div>
-
-        <!-- Filter Buttons: All, Wrong, Correct, Skipped -->
-        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <button id="filter-btn-all" onclick="window.ExamEngine.filterReview('all')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-purple-600 text-white shadow-md">
-            All Questions (${details.length})
-          </button>
-          <button id="filter-btn-wrong" onclick="window.ExamEngine.filterReview('wrong')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-900 text-rose-400 border border-rose-500/30 hover:bg-rose-950/40">
-            <i class="fa fa-circle-xmark mr-1"></i> Wrong (${result.wrongCount})
-          </button>
-          <button id="filter-btn-correct" onclick="window.ExamEngine.filterReview('correct')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-900 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-950/40">
-            <i class="fa fa-circle-check mr-1"></i> Correct (${result.correctCount})
-          </button>
-          <button id="filter-btn-skipped" onclick="window.ExamEngine.filterReview('skipped')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-slate-900 text-slate-400 border border-white/10 hover:bg-slate-800">
-            <i class="fa fa-circle-minus mr-1"></i> Skipped (${result.skippedCount})
-          </button>
-        </div>
-      </div>
-
-      <!-- Solutions Stream (Identical standard font sizes as live exam) -->
-      <div id="review-questions-stream" class="space-y-6 pb-20 w-full">
-        ${renderReviewQuestionsList('all')}
       </div>
     `;
 
@@ -830,10 +872,10 @@
       const isWrong = item.status === 'wrong';
 
       return `
-        <div class="bg-[#1E293B] border ${isCorrect ? 'border-emerald-500/40' : (isWrong ? 'border-rose-500/40' : 'border-slate-700/60')} rounded-2xl p-5 sm:p-7 shadow-lg w-full mb-6">
-          <div class="flex items-center justify-between mb-3.5">
+        <div class="bg-[#1E293B] border ${isCorrect ? 'border-emerald-500/40' : (isWrong ? 'border-rose-500/40' : 'border-slate-700/60')} rounded-2xl p-4 sm:p-5 shadow-md w-full mb-4">
+          <div class="flex items-center justify-between mb-2.5">
             <div class="flex items-center gap-2">
-              <span class="px-3 py-1 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono font-black text-slate-300">
+              <span class="px-2.5 py-0.5 rounded-lg bg-slate-900 border border-white/10 text-xs font-mono font-black text-slate-300">
                 #${item.id}
               </span>
               <span class="text-xs font-bold ${isCorrect ? 'text-emerald-400' : (isWrong ? 'text-rose-400' : 'text-amber-400')}">
@@ -845,11 +887,11 @@
             </div>
           </div>
 
-          <!-- Question Text in Exam-Matching Font Size -->
-          <p class="text-base sm:text-lg md:text-xl font-bold text-slate-100 leading-relaxed mb-5 font-siliguri">${q.q}</p>
+          <!-- Question Text in 20-24px Crisp Typography -->
+          <p class="text-xl sm:text-2xl font-bold text-slate-100 leading-snug mb-3.5 font-siliguri">${q.q}</p>
 
-          <!-- 2-Line / 2-Column Options Grid with Exact Exam Proportions -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          <!-- Compact 2-Line / 2-Column Options Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3.5">
             ${['a', 'b', 'c', 'd'].map(opt => {
               const isOptionCorrect = item.correct.toLowerCase() === opt;
               const isUserChoice = item.user.toLowerCase() === opt;
@@ -866,19 +908,19 @@
               }
 
               return `
-                <div class="p-3.5 sm:p-4 rounded-xl border flex items-center gap-3 ${style}">
-                  <span class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${isOptionCorrect ? 'bg-emerald-500 text-slate-900 font-black' : 'bg-slate-800 text-slate-400'}">
+                <div class="p-2.5 sm:p-3 rounded-xl border flex items-center gap-2.5 ${style}">
+                  <span class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 ${isOptionCorrect ? 'bg-emerald-500 text-slate-900 font-black' : 'bg-slate-800 text-slate-400'}">
                     ${opt.toUpperCase()}
                   </span>
-                  <span class="flex-1 break-words font-medium font-siliguri leading-relaxed text-sm sm:text-base">${q[opt]}</span>
+                  <span class="flex-1 break-words font-medium font-siliguri leading-relaxed text-base sm:text-lg">${q[opt]}</span>
                   ${badge}
                 </div>
               `;
             }).join('')}
           </div>
 
-          <!-- Distinct 2 Lines for রেফারেন্স and কনসেপ্ট in 2 Colors -->
-          <div class="mt-4 pt-3.5 border-t border-white/10 space-y-2">
+          <!-- Distinct 2 Lines for রেফারেন্স and কনসেপ্ট in 2 Colors (Uniform 10-11px) -->
+          <div class="mt-3 pt-2.5 border-t border-white/10 space-y-1.5">
             ${fmtExp(q.exp)}
           </div>
         </div>
@@ -911,7 +953,9 @@
     confirmSubmit,
     submitExam,
     confirmExit,
-    exitExam
+    exitExam,
+    filterReview
   };
+  global.filterReview = filterReview;
 
 })(typeof window !== 'undefined' ? window : this);

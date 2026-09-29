@@ -107,22 +107,22 @@
     concept = concept.replace(/^[:：\-–—\s]+/, '');
 
     return `
-      <!-- Line 1: রেফারেন্স in vibrant Cyan/Teal (Balanced Standard Size) -->
-      <div class="p-3.5 sm:p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/40 flex items-start gap-3 shadow-sm">
-        <span class="px-2.5 py-1 rounded-lg bg-cyan-500 text-slate-950 font-black text-xs uppercase tracking-wider inline-flex items-center gap-1.5 flex-shrink-0 shadow">
-          <i class="fa fa-book-bookmark text-xs"></i> রেফারেন্স
+      <!-- Line 1: রেফারেন্স in vibrant Cyan/Teal (Uniform Guaranteed Styling) -->
+      <div class="p-2.5 sm:p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex items-start gap-2.5 shadow-sm">
+        <span class="px-2 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider inline-flex items-center gap-1 flex-shrink-0 shadow">
+          <i class="fa fa-book-bookmark text-[9.5px]"></i> রেফারেন্স
         </span>
-        <div class="text-sm sm:text-base font-semibold text-cyan-100 leading-relaxed self-center font-siliguri">
+        <div class="reference-box-text text-sm font-semibold text-cyan-100 leading-relaxed self-center font-siliguri">
           ${reference || 'মেডিকেল ভর্তি প্রশ্নব্যাংক ও এইচএসসি পাঠ্যবই।'}
         </div>
       </div>
 
-      <!-- Line 2: কনসেপ্ট in vibrant Amber/Gold (Balanced Standard Size) -->
-      <div class="mt-2.5 p-3.5 sm:p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 flex items-start gap-3 shadow-sm">
-        <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider inline-flex items-center gap-1.5 flex-shrink-0 shadow">
-          <i class="fa fa-lightbulb text-xs"></i> কনসেপ্ট
+      <!-- Line 2: কনসেপ্ট in vibrant Amber/Gold (Uniform Guaranteed 15-16px Text) -->
+      <div class="mt-2 p-2.5 sm:p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 flex items-start gap-2.5 shadow-sm">
+        <span class="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-black text-[10.5px] sm:text-[11px] uppercase tracking-wider inline-flex items-center gap-1 flex-shrink-0 shadow">
+          <i class="fa fa-lightbulb text-[9.5px]"></i> কনসেপ্ট
         </span>
-        <div class="text-sm sm:text-base font-medium text-amber-100 leading-relaxed self-center font-siliguri">
+        <div class="concept-box-text text-base font-normal text-amber-100 leading-relaxed self-center font-siliguri">
           ${concept || 'সঠিক উত্তর যাচাই করে মেডিকেল কারিকুলাম ও প্রশ্নব্যাংক অনুসারে প্রস্তুত করা হয়েছে।'}
         </div>
       </div>
