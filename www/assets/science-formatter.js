@@ -120,4 +120,8 @@
 
   global.cleanAndFormatScience = cleanAndFormatScience;
   global.formatExplanation = formatExplanation;
-})(typeof window !== 'undefined' ? window : this);
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { cleanAndFormatScience, formatExplanation };
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {})));

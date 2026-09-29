@@ -18,19 +18,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Install Dependencies
+        shell: bash
         run: |
-          npm ci || npm install
-          npm install --save-dev electron electron-builder
+          npm install --no-audit --no-fund
+          npm install --save-dev electron electron-builder --no-audit --no-fund
 
-      - name: Verify Offline Assets & Scientific Formulas Engine
+      - name: Verify Offline Science Engine
+        shell: bash
         run: |
-          node -e "console.log('Validating Offline Science Parser & Local Datasets...'); require('./www/assets/science-formatter.js');"
+          node --input-type=module -e "import './www/assets/science-formatter.js'; console.log('Offline Science Engine validated successfully:', typeof globalThis.cleanAndFormatScience);"
 
-      - name: Build Windows Executable (.exe & Portable)
+      - name: Build Windows Executables (.exe & Portable)
+        shell: bash
         run: |
           npx electron-builder --windows --x64 \
             --config.appId="com.medicalsecretfiles.app" \
