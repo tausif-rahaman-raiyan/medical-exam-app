@@ -652,10 +652,16 @@
     let history = [];
     try {
       history = JSON.parse(localStorage.getItem(STORAGE_KEY_RESULTS) || '[]');
-    } catch (e) {}
+      if (!Array.isArray(history)) history = [];
+    } catch (e) {
+      history = [];
+    }
 
-    // Calculate attempt number for this specific topic / exam
-    const sameExamAttempts = history.filter(h => (h.examId === payload.examId || h.topicName === payload.topicName));
+    // Calculate sequential attempt number for this candidate on this topic
+    const sameExamAttempts = history.filter(h => 
+      (h.examId === payload.examId || h.examCode === payload.examId || h.topicName === payload.topicName) &&
+      (h.userId === candidateUid || h.userEmail === candidateEmail)
+    );
     const attemptNumber = sameExamAttempts.length + 1;
 
     payload.attemptNumber = attemptNumber;
@@ -664,6 +670,12 @@
     payload.userPhoto = candidatePhoto;
     payload.userId = candidateUid;
     payload.isGoogleSaved = isGoogleLoggedIn;
+
+    // Cache locally for instant attempt counting and offline fallback
+    try {
+      const updatedHistory = [payload, ...history.filter(h => h.examId !== payload.examId || h.date !== payload.date)];
+      localStorage.setItem(STORAGE_KEY_RESULTS, JSON.stringify(updatedHistory));
+    } catch (e) {}
 
     const firestoreRecord = {
       userId: candidateUid,

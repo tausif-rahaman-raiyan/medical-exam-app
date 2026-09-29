@@ -976,6 +976,21 @@ Ans: A
         const historyBadge = document.getElementById('historyCountBadge');
         if (historyBadge && currentResultsTab === 'personal') historyBadge.textContent = totalAttempts;
 
+        // Compute accurate sequential attempt number for each candidate per exam topic
+        const attemptTracker = {};
+        // Clone and sort chronologically by date/timestamp to assign 1, 2, 3...
+        const chronological = [...data].sort((a, b) => {
+            const timeA = a.timestamp?.seconds ? a.timestamp.seconds * 1000 : (a.date ? new Date(a.date).getTime() : 0);
+            const timeB = b.timestamp?.seconds ? b.timestamp.seconds * 1000 : (b.date ? new Date(b.date).getTime() : 0);
+            return timeA - timeB;
+        });
+
+        chronological.forEach((entry) => {
+            const key = `${entry.userId || entry.userEmail || entry.userName || 'user'}_${entry.examCode || entry.topicName || 'exam'}`;
+            attemptTracker[key] = (attemptTracker[key] || 0) + 1;
+            entry.calculatedAttempt = attemptTracker[key];
+        });
+
         // Filter by Subject & Topic
         let filtered = data.filter(item => {
             const matchesSub = subFilter === 'all' || 
@@ -987,7 +1002,7 @@ Ans: A
             return matchesSub && matchesTopic;
         });
 
-        // Always sort highest score first
+        // Always sort highest score first for leaderboard rankings
         filtered.sort((a, b) => b.score - a.score);
 
         if (counterEl) {
@@ -1010,7 +1025,8 @@ Ans: A
             const isNegative = item.score < 0;
             const rankNumber = idx + 1;
             const isGlobal = currentResultsTab === 'global';
-            const attemptDisplay = item.attemptNumber ? `Attempt #${item.attemptNumber}` : `Attempt #${filtered.length - idx}`;
+            const attemptNum = item.calculatedAttempt || item.attemptNumber || 1;
+            const attemptDisplay = `Attempt #${attemptNum}`;
             const avatarSrc = item.userPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.userName || 'Candidate')}&background=0F172A&color=c084fc&bold=true`;
 
             // Top Rank Medals & Glow
