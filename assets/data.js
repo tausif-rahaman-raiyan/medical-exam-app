@@ -87,7 +87,7 @@ const subjectData = [
     },
     { 
         cat: "রসায়ন প্রথম পত্র", 
-        icon: "fa-flask-vial",
+        icon: "fa-flask",
         color: "from-rose-600 to-pink-600",
         items: [
             {t:"ল্যাবরেটরির নিরাপদ ব্যবহার", c:"1020325054", url:"Question/blog-page_45.html", qCount: 100, duration: 50},
