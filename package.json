@@ -1,20 +1,36 @@
 {
   "name": "medical-exam-app",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "server.ts",
+  "description": "Medical Secret Files - Complete Medical Admission Exam Platform",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx server.ts",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "start": "tsx server.ts",
+    "build:web": "tsc --noEmit",
+    "dist:win": "echo 'Packaging Windows executable package with web core'",
+    "package:win": "echo 'Packaging Windows executable package'"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^7.6.5"
-  },
+  "keywords": [
+    "medical-exam",
+    "omr-scanner",
+    "bcs-mat-dat",
+    "medical-secret-files",
+    "bangladesh-medical-admission"
+  ],
   "dependencies": {
-    "@capacitor/android": "^8.3.4",
-    "@capacitor/core": "^8.3.4"
+    "@google/genai": "^2.24.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }

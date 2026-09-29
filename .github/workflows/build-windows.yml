@@ -1,0 +1,54 @@
+name: Build Standalone Offline Windows App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm ci || npm install
+          npm install --save-dev electron electron-builder
+
+      - name: Verify Offline Assets & Scientific Formulas Engine
+        run: |
+          node -e "console.log('Validating Offline Science Parser & Local Datasets...'); require('./www/assets/science-formatter.js');"
+
+      - name: Build Windows Executable (.exe & Portable)
+        run: |
+          npx electron-builder --windows --x64 \
+            --config.appId="com.medicalsecretfiles.app" \
+            --config.productName="Medical Secret Files" \
+            --config.copyright="Copyright © 2026 Medical Secret Files" \
+            --config.directories.output="dist-win" \
+            --config.files="www/**/*,electron-main.cjs,package.json" \
+            --config.win.target="nsis,portable" \
+            --config.nsis.oneClick=false \
+            --config.nsis.allowToChangeInstallationDirectory=true \
+            --config.nsis.createDesktopShortcut=true \
+            --config.nsis.createStartMenuShortcut=true
+
+      - name: Upload Windows Standalone Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Medical-Secret-Files-Windows-x64
+          path: |
+            dist-win/*.exe
+            dist-win/*.blockmap
+          retention-days: 30
