@@ -1,0 +1,38 @@
+{
+  "appId": "com.medicalsecretfiles.app",
+  "productName": "Medical Secret Files",
+  "copyright": "Copyright © 2026 Medical Secret Files",
+  "directories": {
+    "output": "dist-win"
+  },
+  "files": [
+    "www/**/*",
+    "electron-main.cjs",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "main": "electron-main.cjs"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "allowElevation": true,
+    "perMachine": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Medical Secret Files",
+    "uninstallDisplayName": "Medical Secret Files"
+  }
+}

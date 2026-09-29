@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows App & Web Sync Hub - Medical Secret Files</title>
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+    <script src="assets/tailwindcss.js"></script>
+    <link href="assets/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-[#0F172A] text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 selection:bg-purple-600 selection:text-white">
+
+    <!-- Sync Hub Container Card -->
+    <div class="bg-[#1E293B] border border-purple-500/40 rounded-3xl max-w-xl w-full shadow-2xl shadow-purple-950/40 overflow-hidden flex flex-col my-6">
+        
+        <!-- Header -->
+        <div class="p-6 bg-gradient-to-r from-purple-900/60 via-indigo-900/50 to-slate-900 border-b border-white/10 flex items-center justify-between">
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-purple-600/30 border border-purple-400/50 text-purple-300 flex items-center justify-center text-2xl shadow-inner">
+                    <i class="fa fa-rotate"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-white leading-tight">Windows App & Web Sync Hub</h1>
+                    <p class="text-xs sm:text-sm text-purple-300 font-mono font-bold mt-0.5">1-Click Cross-Device Account & History Sync</p>
+                </div>
+            </div>
+            <a href="index.html" class="px-3.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+                <i class="fa fa-house"></i> Home
+            </a>
+        </div>
+
+        <!-- Main Body -->
+        <div class="p-6 space-y-6 flex-1 text-slate-200">
+            
+            <!-- Platform Status Banner -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-purple-950/60 border border-purple-500/40 flex flex-wrap items-center justify-between gap-3 shadow-inner">
+                <div class="flex items-center gap-3.5 min-w-0">
+                    <i class="fa fa-globe text-purple-400 text-2xl flex-shrink-0"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs font-black uppercase tracking-wider text-purple-300">Running on Web Platform</p>
+                        <p id="user-display-status" class="text-xs sm:text-sm text-white font-bold truncate mt-0.5">Checking login state...</p>
+                    </div>
+                </div>
+                <span id="login-state-badge" class="px-3 py-1 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs font-black uppercase flex-shrink-0">
+                    Not Logged In
+                </span>
+            </div>
+
+            <!-- If Not Logged In: Google Login CTA -->
+            <div id="unauth-callout" class="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-white/10 text-center space-y-3">
+                <p class="text-xs sm:text-sm text-slate-300">Sign in with your Google account to authorize your Windows App:</p>
+                <button onclick="signInWithGoogle()" class="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-purple-900/40 flex items-center justify-center gap-2 mx-auto transition-all">
+                    <i class="fa-brands fa-google text-base"></i> Sign In with Google
+                </button>
+            </div>
+
+            <!-- Automatic 6-Digit Pairing Section -->
+            <div class="bg-slate-900/90 border border-white/10 rounded-2xl p-5 space-y-4">
+                <div class="flex items-center justify-between border-b border-white/5 pb-3">
+                    <span class="text-xs font-black uppercase tracking-wider text-purple-300 flex items-center gap-2">
+                        <i class="fa fa-key text-purple-400"></i> Automatic 6-Digit Pairing
+                    </span>
+                    <span id="sync-status-badge" class="text-xs font-mono font-bold text-emerald-400">Status: Ready</span>
+                </div>
+
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    Enter the <strong>6-digit Pair Code</strong> shown on your Windows App screen to instantly log your desktop app in:
+                </p>
+
+                <!-- Code Input & Push Button -->
+                <div class="flex flex-col sm:flex-row gap-2.5">
+                    <input type="text" id="sync-code-input" placeholder="e.g. MSF-7842" maxlength="10" class="uppercase bg-slate-950 border border-purple-500/40 focus:border-purple-400 rounded-xl px-4 py-3 font-mono font-black text-lg text-purple-200 tracking-wider placeholder:text-slate-600 outline-none flex-1 text-center sm:text-left" />
+                    <button onclick="pushLoginToDesktop()" id="btn-push-login" class="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-purple-950/50 flex items-center justify-center gap-2 transition-all">
+                        <i class="fa fa-bolt"></i> Push Login
+                    </button>
+                </div>
+
+                <div id="ready-push-indicator" class="hidden text-xs text-emerald-400 font-semibold flex items-center gap-1.5 pt-1">
+                    <i class="fa fa-circle-check"></i> <span>Ready to push <strong id="ready-user-name" class="text-white">User</strong> to desktop.</span>
+                </div>
+            </div>
+
+            <!-- Direct Token & Offline History Sync Section -->
+            <div class="bg-slate-900/90 border border-white/10 rounded-2xl p-5 space-y-3.5">
+                <span class="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <i class="fa fa-shield-halved text-indigo-400"></i> Direct Token & Offline History Sync
+                </span>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    You can also copy your complete encrypted account & exam history token to transfer between any device:
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <button onclick="copySyncToken()" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm">
+                        <i class="fa fa-file-export text-purple-400"></i> Copy My Sync Token
+                    </button>
+                    <button onclick="openPasteModal()" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm">
+                        <i class="fa fa-file-import text-indigo-400"></i> Paste & Import Token
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-950/80 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 font-mono">
+            <span>Medical Secret Files v2.0</span>
+            <a href="index.html" class="text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 font-sans">
+                Open Question Bank <i class="fa fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Token Paste Modal -->
+    <div id="paste-token-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#1E293B] border border-purple-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-black text-white flex items-center gap-2">
+                    <i class="fa fa-file-import text-indigo-400"></i> Paste & Import Sync Token
+                </h3>
+                <button onclick="closePasteModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center">
+                    <i class="fa fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-300">Paste your base64 encoded token from another device:</p>
+            <textarea id="token-textarea-input" rows="4" placeholder="Paste your token string here..." class="w-full bg-slate-950 border border-purple-500/40 rounded-xl p-3 text-xs font-mono text-slate-200 outline-none focus:border-purple-400"></textarea>
+            <div class="flex gap-2.5">
+                <button onclick="readFromClipboardDirect()" class="py-2.5 px-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-700">
+                    <i class="fa fa-paste"></i> Read Clipboard
+                </button>
+                <button onclick="processImportedToken()" class="flex-1 py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs">
+                    Import Account & History
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/confetti.browser.min.js"></script>
+    <script src="assets/firebase-app-compat.js"></script>
+    <script src="assets/firebase-auth-compat.js"></script>
+    <script src="assets/firebase-firestore-compat.js"></script>
+    <script src="assets/firebase-config.js"></script>
+
+    <script>
+        let currentAuthUser = null;
+
+        function updateUIState() {
+            const userDisplay = document.getElementById('user-display-status');
+            const badge = document.getElementById('login-state-badge');
+            const unauthCallout = document.getElementById('unauth-callout');
+            const readyIndicator = document.getElementById('ready-push-indicator');
+            const readyUserName = document.getElementById('ready-user-name');
+
+            let profile = null;
+            try {
+                const raw = localStorage.getItem('msf_user_profile');
+                if (raw) profile = JSON.parse(raw);
+            } catch {}
+
+            if (currentAuthUser) {
+                profile = {
+                    uid: currentAuthUser.uid,
+                    name: currentAuthUser.displayName || 'Medical Candidate',
+                    email: currentAuthUser.email || '',
+                    photoURL: currentAuthUser.photoURL || ''
+                };
+                localStorage.setItem('msf_user_profile', JSON.stringify(profile));
+            }
+
+            if (profile && profile.name) {
+                userDisplay.textContent = `Active: ${profile.name} (${profile.email || 'Logged in'})`;
+                badge.textContent = 'Logged In';
+                badge.className = 'px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-black uppercase flex-shrink-0';
+                unauthCallout.classList.add('hidden');
+                readyIndicator.classList.remove('hidden');
+                readyUserName.textContent = profile.name;
+            } else {
+                userDisplay.textContent = 'Not signed in';
+                badge.textContent = 'Not Logged In';
+                badge.className = 'px-3 py-1 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs font-black uppercase flex-shrink-0';
+                unauthCallout.classList.remove('hidden');
+                readyIndicator.classList.add('hidden');
+            }
+        }
+
+        async function signInWithGoogle() {
+            try {
+                if (window.firebaseAuth && window.googleProvider) {
+                    const res = await window.firebaseAuth.signInWithPopup(window.googleProvider);
+                    if (res.user) {
+                        currentAuthUser = res.user;
+                        updateUIState();
+                        if (typeof confetti === 'function') confetti({ particleCount: 70, spread: 60 });
+                    }
+                }
+            } catch (err) {
+                alert('Sign in note: ' + (err.message || 'Please try again'));
+            }
+        }
+
+        async function pushLoginToDesktop() {
+            const input = document.getElementById('sync-code-input');
+            const code = input ? input.value.trim().toUpperCase() : '';
+            const btn = document.getElementById('btn-push-login');
+
+            if (!code || code.length < 5) {
+                alert('Please enter a valid 6-digit Pair Code (e.g. MSF-7842)');
+                return;
+            }
+
+            let profile = null;
+            try {
+                const raw = localStorage.getItem('msf_user_profile');
+                if (raw) profile = JSON.parse(raw);
+            } catch {}
+
+            if (!profile && !currentAuthUser) {
+                alert('Please sign in with Google first before pushing your login to the desktop app.');
+                return;
+            }
+
+            if (!profile && currentAuthUser) {
+                profile = {
+                    uid: currentAuthUser.uid,
+                    name: currentAuthUser.displayName || 'Medical Aspirant',
+                    email: currentAuthUser.email || '',
+                    photoURL: currentAuthUser.photoURL || ''
+                };
+            }
+
+            let historyData = [];
+            try {
+                const rawH = localStorage.getItem('msf_exam_history_v2');
+                if (rawH) historyData = JSON.parse(rawH);
+            } catch {}
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Pushing...';
+            }
+
+            try {
+                if (window.firebaseDB) {
+                    await window.firebaseDB.collection('app_sync_tokens').doc(code).set({
+                        status: 'authorized',
+                        code: code,
+                        user: profile,
+                        history: historyData.slice(0, 100),
+                        authorizedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                    }
+
+                    const badge = document.getElementById('sync-status-badge');
+                    if (badge) {
+                        badge.textContent = 'Status: Successfully Pushed!';
+                        badge.className = 'text-xs font-mono font-bold text-emerald-300';
+                    }
+
+                    alert(`✓ Successfully linked and pushed ${profile.name} to your Windows Desktop App!`);
+                } else {
+                    throw new Error('Firestore not ready');
+                }
+            } catch (err) {
+                console.error('Push login error:', err);
+                alert('Push error. You can also use "Copy My Sync Token" below for manual transfer.');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa fa-bolt"></i> Push Login';
+                }
+            }
+        }
+
+        function copySyncToken() {
+            let profile = null;
+            try {
+                const raw = localStorage.getItem('msf_user_profile');
+                if (raw) profile = JSON.parse(raw);
+            } catch {}
+            if (!profile) profile = { name: 'Medical Aspirant', email: 'candidate@med.app' };
+
+            let history = [];
+            try {
+                const rawH = localStorage.getItem('msf_exam_history_v2');
+                if (rawH) history = JSON.parse(rawH);
+            } catch {}
+
+            const payload = { profile, history: history.slice(0, 50), timestamp: Date.now() };
+            const tokenStr = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+
+            navigator.clipboard.writeText(tokenStr).then(() => {
+                alert('✓ Sync Token copied to clipboard!');
+            }).catch(() => {
+                prompt('Copy your Sync Token:', tokenStr);
+            });
+        }
+
+        function openPasteModal() {
+            document.getElementById('paste-token-modal').classList.remove('hidden');
+        }
+
+        function closePasteModal() {
+            document.getElementById('paste-token-modal').classList.add('hidden');
+        }
+
+        async function readFromClipboardDirect() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('token-textarea-input').value = text.trim();
+            } catch {
+                alert('Please paste using Ctrl+V in the box.');
+            }
+        }
+
+        function processImportedToken() {
+            const raw = document.getElementById('token-textarea-input')?.value?.trim();
+            if (!raw) {
+                alert('Please paste a sync token first.');
+                return;
+            }
+            try {
+                const parsed = JSON.parse(decodeURIComponent(escape(atob(raw))));
+                if (parsed && parsed.profile) {
+                    localStorage.setItem('msf_user_profile', JSON.stringify(parsed.profile));
+                    if (parsed.history && Array.isArray(parsed.history)) {
+                        localStorage.setItem('msf_exam_history_v2', JSON.stringify(parsed.history));
+                    }
+                    closePasteModal();
+                    updateUIState();
+                    alert(`✓ Welcome ${parsed.profile.name}! Account and history imported.`);
+                } else {
+                    throw new Error('Invalid token structure');
+                }
+            } catch {
+                alert('Invalid sync token format.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUIState();
+
+            // Pre-fill pair code if present in URL (?pair=MSF-XXXX or ?code=MSF-XXXX)
+            const urlParams = new URLSearchParams(window.location.search);
+            const pairCode = urlParams.get('pair') || urlParams.get('code') || urlParams.get('sync_code');
+            if (pairCode) {
+                const input = document.getElementById('sync-code-input');
+                if (input) input.value = pairCode.toUpperCase();
+            }
+
+            // Firebase Auth Listener
+            setTimeout(() => {
+                if (window.firebaseAuth) {
+                    window.firebaseAuth.onAuthStateChanged((user) => {
+                        if (user) {
+                            currentAuthUser = user;
+                            updateUIState();
+                        }
+                    });
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
