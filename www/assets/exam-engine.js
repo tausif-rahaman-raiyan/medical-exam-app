@@ -740,7 +740,7 @@
     const isNegative = result.score < 0;
 
     container.innerHTML = `
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+      <div class="max-w-6xl mx-auto px-3 sm:px-6 md:px-8 py-4 sm:py-6 w-full">
         <!-- Result Summary Hero Card -->
         <div class="bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8 w-full">
           <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6 mb-6">

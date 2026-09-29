@@ -44,8 +44,24 @@ jobs:
           print("\n✓ All HTML files secured - no API keys embedded")
           EOF
 
-      - name: Deploy to GitHub Pages 🚀
+      - name: Prepare Clean Deployment Directory 🧹
+        run: |
+          # Completely wipe and recreate a fresh deployment directory
+          rm -rf deploy_out
+          mkdir -p deploy_out/www
+          
+          # Copy all fresh assets and html files
+          cp -r www/* deploy_out/
+          cp -r www/* deploy_out/www/
+          cp -f index.html deploy_out/index.html || true
+          cp -f favicon.svg deploy_out/favicon.svg || true
+          
+          echo "Fresh deployment directory prepared with 0 leftovers from previous builds."
+
+      - name: Deploy to GitHub Pages (Clean & Fresh) 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: www
+          folder: deploy_out
           branch: gh-pages
+          clean: true
+          single-commit: false

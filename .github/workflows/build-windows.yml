@@ -31,6 +31,12 @@ jobs:
         run: |
           node --input-type=module -e "import './www/assets/science-formatter.js'; console.log('Offline Science Engine validated successfully:', typeof globalThis.cleanAndFormatScience);"
 
+      - name: Clean Previous Build Artifacts 🧹
+        shell: bash
+        run: |
+          rm -rf dist dist-win build out .cache
+          echo "Previous development build directories completely deleted."
+
       - name: Build Windows Executables (Installer & Portable)
         shell: bash
         run: |
