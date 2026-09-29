@@ -339,13 +339,24 @@ Ans: A
 ব্যাখ্যা: রেফারেন্স: উদ্ভিদ শারীরতত্ত্ব, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: আলোক নির্ভর পর্যায়ে ফটোফসফোরাইলেশনের মাধ্যমে ATP ও NADPH2 তৈরি হয়।" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs sm:text-sm font-mono focus:outline-none focus:border-purple-500"></textarea>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-2">
-                    <button onclick="switchMainTab('bank')" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs">
-                        Cancel
-                    </button>
-                    <button onclick="launchCustomExam()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-900/40">
-                        <i class="fa fa-play mr-1.5"></i> Launch Custom Test
-                    </button>
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="loadDemoQuestions()" class="px-4 py-2.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-300 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm">
+                            <i class="fa fa-wand-magic-sparkles text-amber-400"></i> Demo Questions (লোড করুন)
+                        </button>
+                        <button type="button" id="btnCopyDemo" onclick="copyDemoQuestions()" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all">
+                            <i class="fa fa-copy text-purple-400"></i> Copy Demo
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button onclick="switchMainTab('bank')" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all">
+                            Cancel
+                        </button>
+                        <button onclick="launchCustomExam()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-900/40 transition-all flex items-center gap-1.5">
+                            <i class="fa fa-play"></i> Launch Custom Test
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -557,6 +568,82 @@ Ans: A
             creatorView?.classList.remove('hidden');
             tabCC.className = 'px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-purple-600 text-white shadow-lg shadow-purple-600/30 transition-all';
             tabQB.className = 'px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition-all';
+        }
+    }
+
+    // Demo High-Yield Medical Questions for Custom Creator
+    const DEMO_QUESTIONS_TEXT = `১. আমাদের প্রধান খাদ্যশস্য ধানে (Oryza sativa) ক্রোমোসোম (2n) থাকে কয়টি?
+A. ২৪ টি
+B. ৪২ টি
+C. ২০ টি
+D. ৪৪ টি
+Ans: A
+ব্যাখ্যা: রেফারেন্স: ক্রোমোজোম, কোষ ও এর গঠন, জীববিজ্ঞান প্রথম পত্র, হাসান স্যার। কনসেপ্ট: Poaceae গোত্রের অন্তর্গত মানুষের প্রধান খাদ্যশস্য ধানে (Oryza sativa) ক্রোমোসোম (2n) থাকে ২৪টি। ভুট্টার ২৪টি, গমের ৪২টি এবং কলা উদ্ভিদে ৪৪টি ক্রোমোজোম থাকে।
+
+২. মানুষের হৃৎপিণ্ডের কোন কপাটিকায় ৩টি কাস্প (Trifoliate) থাকে?
+A. মাইট্রাল কপাটিকা
+B. ট্রাইকাসপিড কপাটিকা
+C. বাইকাসপিড কপাটিকা
+D. থিবেসিয়ান কপাটিকা
+Ans: B
+ব্যাখ্যা: রেফারেন্স: রক্ত সংবহনতন্ত্র, জীববিজ্ঞান ২য় পত্র, গাজী আজমল স্যার। কনসেপ্ট: ডান অলিন্দ ও ডান নিলয়ের সংযোগস্থলে অবস্থিত ট্রাইকাসপিড কপাটিকা ৩টি কাস্পযুক্ত। বাম অলিন্দ ও বাম নিলয়ের সংযোগস্থলে বাইকাসপিড (মাইট্রাল) কপাটিকা ২টি কাস্পযুক্ত।
+
+৩. সালোকসংশ্লেষণের আলোক-নির্ভর পর্যায়ে উৎপন্ন মূল শক্তি উপাদান কোনটি?
+A. গ্লুকোজ ও ফ্রুক্টোজ
+B. ATP ও NADPH2
+C. পাইরুভিক অ্যাসিড
+D. ল্যাকটিক অ্যাসিড
+Ans: B
+ব্যাখ্যা: রেফারেন্স: উদ্ভিদ শারীরতত্ত্ব, অধ্যায় ৯, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: থাইলাকয়েড পর্দায় ফটোফসফোরাইলেশনের মাধ্যমে আলোক শক্তি রাসায়নিক শক্তিতে রূপান্তরিত হয়ে ATP এবং NADPH2 তৈরি হয়।
+
+৪. মস্তিষ্কের কোন অংশ মানবদেহের ভারসাম্য (Equilibrium) নিয়ন্ত্রণে প্রধান ভূমিকা পালন করে?
+A. সেরিব্রাম (Cerebrum)
+B. সেরেবেলাম (Cerebellum)
+C. মেডুলা অবলংগাটা
+D. থ্যালামাস
+Ans: B
+ব্যাখ্যা: রেফারেন্স: স্নায়বিক সমন্বয়, জীববিজ্ঞান ২য় পত্র। কনসেপ্ট: লঘুমস্তিষ্ক বা সেরেবেলাম মানবদেহের পেশিটান নিয়ন্ত্রণ করে এবং দৈহিক ভারসাম্য রক্ষা করে।
+
+৫. কোষঝিল্লির সবচেয়ে গ্রহণযোগ্য 'ফ্লুইড মোজাইক মডেল' কত সালে প্রবর্তিত হয়?
+A. ১৯৭২ সালে
+B. ১৯৩৫ সালে
+C. ১৯৫৩ সালে
+D. ১৯৬২ সালে
+Ans: A
+ব্যাখ্যা: রেফারেন্স: কোষ ও এর গঠন, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: বিজ্ঞানী এস. জে. সিঙ্গার এবং জি. এল. নিকোলসন ১৯৭২ সালে কোষঝিল্লির গঠন ব্যাখ্যার জন্য বহুল প্রচলিত Fluid Mosaic Model প্রস্তাব করেন।`;
+
+    function loadDemoQuestions() {
+        const titleEl = document.getElementById('customExamTitle');
+        const textEl = document.getElementById('customQuestionsRaw');
+        if (titleEl) titleEl.value = 'Medical High-Yield Demo Test (নমুনা প্রশ্ন)';
+        if (textEl) {
+            textEl.value = DEMO_QUESTIONS_TEXT;
+            textEl.focus();
+        }
+    }
+
+    async function copyDemoQuestions() {
+        try {
+            await navigator.clipboard.writeText(DEMO_QUESTIONS_TEXT);
+            const btn = document.getElementById('btnCopyDemo');
+            if (btn) {
+                const oldHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-check text-emerald-400"></i> Copied!';
+                setTimeout(() => { btn.innerHTML = oldHTML; }, 2000);
+            }
+        } catch (e) {
+            const textEl = document.getElementById('customQuestionsRaw');
+            if (textEl) {
+                textEl.value = DEMO_QUESTIONS_TEXT;
+                textEl.select();
+                document.execCommand('copy');
+                const btn = document.getElementById('btnCopyDemo');
+                if (btn) {
+                    const oldHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa fa-check text-emerald-400"></i> Copied!';
+                    setTimeout(() => { btn.innerHTML = oldHTML; }, 2000);
+                }
+            }
         }
     }
 
