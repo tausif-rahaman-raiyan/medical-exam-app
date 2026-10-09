@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Medical Secret Files</title>
     <meta name="description" content="Comprehensive medical admission exam preparation platform with interactive question banks, OMR sheet scanner, practice tests, and detailed answer explanations.">
     <meta property="og:title" content="Medical Secret Files">
@@ -169,6 +169,29 @@
         @media (max-width: 640px) {
           #appFooter { font-size: 14px; padding-top: 14px; padding-bottom: 16px; }
           #mainContent { padding-top: 12px; }
+          #mainHeader > div { gap: .5rem !important; }
+          #mainHeader a.group { gap: .5rem !important; max-width: 46%; }
+          #mainHeader a.group img { width: 2rem; height: 2rem; }
+          #mainHeader a.group p { display: none; }
+          #mainHeader > div > div { gap: .35rem !important; }
+          #headerGoogleLogin, #btnFullscreen { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          #mainHeader button[title="Leaderboard & My Results"] { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          #mainHeader button[title="Leaderboard & My Results"] span { display: none !important; }
+          #profileBtn { width: 2.15rem !important; height: 2.15rem !important; }
+          #home-view .text-center.max-w-4xl { padding-left: .25rem; padding-right: .25rem; }
+          #home-view h1 { font-size: clamp(1.35rem, 6vw, 2rem); line-height: 1.2; }
+          #home-view .mt-5.flex.flex-wrap { gap: .5rem; padding: .75rem; }
+          #home-view .flex.items-center.justify-center.gap-3.mb-6 { flex-direction: column; align-items: stretch; gap: .5rem; }
+          #tabQuestionBank, #tabCustomCreator { width: 100%; }
+          #searchInput { font-size: 16px; }
+          .subject-card { border-radius: 1rem !important; }
+          .subject-card > button { align-items: center; }
+          .exam-row .flex.flex-wrap { row-gap: .4rem; }
+          .exam-row button { min-height: 42px; }
+          #custom-mcq-builder input, #custom-mcq-builder textarea, #custom-mcq-builder select { font-size: 16px; }
+          #bottomAppNav { padding-left: .25rem; padding-right: .25rem; }
+          .bottom-nav-item { min-width: 0; min-height: 48px; }
+          .bottom-nav-item span { font-size: 10px; white-space: nowrap; }
         }
         @media (min-width: 641px) and (max-width: 1023px) {
           #appFooter { font-size: 15px; }
