@@ -28,6 +28,20 @@
     else setStatus('If no prompt appears, use your browser menu → Install app / Add to Home Screen.');
   }
   window.refreshInstallPanel = refresh;
+  window.refreshProfilePanel = function () {
+    var profile = null;
+    try { profile = JSON.parse(localStorage.getItem('msf_user_profile') || 'null'); } catch (_) {}
+    var user = window.firebaseAuth && window.firebaseAuth.currentUser;
+    if (user) profile = { name:user.displayName || 'Medical Aspirant', email:user.email || '', photoURL:user.photoURL || '' };
+    var name = document.getElementById('profilePanelName');
+    var email = document.getElementById('profilePanelEmail');
+    var avatar = document.getElementById('profilePanelAvatar');
+    var logout = document.getElementById('profilePanelLogout');
+    if (name) name.textContent = profile && profile.name ? profile.name : 'Guest Candidate';
+    if (email) email.textContent = profile && profile.email ? profile.email : 'Not signed in';
+    if (avatar) avatar.src = profile && profile.photoURL ? profile.photoURL : 'https://ui-avatars.com/api/?name=Candidate&background=0F172A&color=5eead4&bold=true';
+    if (logout) logout.classList.toggle('hidden', !(profile && profile.name && profile.name !== 'Guest Candidate'));
+  };
   window.addEventListener('beforeinstallprompt', function (event) {
     event.preventDefault();
     deferredPrompt = event;
@@ -40,6 +54,8 @@
   });
   document.addEventListener('DOMContentLoaded', function () {
     refresh();
+    window.refreshProfilePanel();
+    if (window.firebaseAuth && window.firebaseAuth.onAuthStateChanged) window.firebaseAuth.onAuthStateChanged(function(){ window.refreshProfilePanel(); });
     document.getElementById('installPwaButton')?.addEventListener('click', async function () {
       if (!deferredPrompt) {
         setStatus('No install prompt is available. Try browser menu → Install app / Add to Home Screen.');
