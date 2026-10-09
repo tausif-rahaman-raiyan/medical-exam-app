@@ -167,7 +167,7 @@
 
     container.innerHTML = `
       <!-- Sticky Command Header: mobile has title left + timer/submit stacked right; desktop timer is centered in the full header -->
-      <div class="sticky top-0 z-[100] -mt-px bg-[#0F172A] border-b border-white/10 pt-0 pb-2 sm:py-2.5 mb-3 sm:mb-4 w-full">
+      <div class="fixed sm:sticky top-0 left-0 right-0 z-[100] bg-[#0F172A] border-b border-white/10 pt-2 pb-2 sm:py-2.5 sm:mb-4 w-full shadow-xl">
         <div class="relative grid grid-cols-[minmax(0,1fr)_auto] sm:flex sm:items-center sm:justify-between gap-2 sm:gap-3 w-full min-h-10">
           <!-- Left: Title and Exam info -->
           <div class="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 sm:max-w-[42%]">
@@ -206,7 +206,7 @@
       </div>
 
       <!-- 2-Column Responsive Layout: Left Questions, Right Sticky Palette -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 w-full items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 pt-[108px] sm:pt-0 w-full items-start">
         
         <!-- Left Column: Main Questions Stream -->
         <div class="lg:col-span-8 xl:col-span-8 space-y-3 pb-8 sm:pb-12 min-w-0">
