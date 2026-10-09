@@ -482,7 +482,7 @@ Ans: A
       <button onclick="showAppSection('install')" class="text-left rounded-2xl bg-slate-900/80 border border-indigo-500/20 p-4 hover:border-indigo-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-300 flex items-center justify-center mb-3"><i class="fa fa-mobile-screen-button"></i></span><span class="block text-sm font-black text-white group-hover:text-indigo-200">App & Devices</span><span class="block text-xs text-slate-400 mt-1">Install or connect devices</span></button>
       <button onclick="window.AppSync ? window.AppSync.openSyncModal() : showAppSection('install')" class="text-left rounded-2xl bg-slate-900/80 border border-purple-500/20 p-4 hover:border-purple-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-300 flex items-center justify-center mb-3"><i class="fa fa-rotate"></i></span><span class="block text-sm font-black text-white group-hover:text-purple-200">Sync & Backup</span><span class="block text-xs text-slate-400 mt-1">Manage cross-device sync</span></button>
     </div>
-    <div class="rounded-2xl bg-slate-900/70 border border-white/10 p-5 mb-5"><p class="text-sm text-slate-300">Sign in with Google to sync exam history and ranking across devices. Your custom MCQ draft remains saved locally on this device.</p><div class="flex flex-wrap gap-3 mt-4"><button onclick="document.getElementById('authBtn')?.click()" class="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm"><i class="fa-brands fa-google mr-2"></i>Google Login</button><button id="profilePanelLogout" onclick="handleLogout()" class="hidden px-5 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-rose-300 font-bold text-sm"><i class="fa fa-arrow-right-from-bracket mr-2"></i>Sign out</button></div></div>
+    <div class="rounded-2xl bg-slate-900/70 border border-white/10 p-5 mb-5"><p class="text-sm text-slate-300">Sign in with Google to sync exam history and ranking across devices. Your custom MCQ draft remains saved locally on this device.</p><div class="flex flex-wrap gap-3 mt-4"><button id="profilePanelGoogleLogin" onclick="document.getElementById('authBtn')?.click()" class="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm"><i class="fa-brands fa-google mr-2"></i>Google Login</button><button id="profilePanelLogout" onclick="handleLogout()" class="hidden px-5 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-rose-300 font-bold text-sm"><i class="fa fa-arrow-right-from-bracket mr-2"></i>Sign out</button></div></div>
     <div class="flex flex-wrap gap-3 text-xs text-slate-400"><button onclick="showAppSection('leaderboard')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 font-bold"><i class="fa fa-clock-rotate-left mr-1.5"></i>My Exam History</button><button onclick="showAppSection('model-tests')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 font-bold"><i class="fa fa-book-medical mr-1.5"></i>Back to Model Tests</button></div>
   </div>
 </section>
@@ -1272,9 +1272,23 @@ Ans: A
         }).join('');
     }
 
+    // Reflect authentication state consistently across every Google Login entry point.
+    function updateGoogleLoginVisibility(user) {
+        const signedIn = Boolean(user);
+        document.getElementById('headerGoogleLogin')?.classList.toggle('hidden', signedIn);
+        document.getElementById('authBtn')?.classList.toggle('hidden', signedIn);
+        document.getElementById('profilePanelGoogleLogin')?.classList.toggle('hidden', signedIn);
+        document.getElementById('profilePanelLogout')?.classList.toggle('hidden', !signedIn);
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.style.display = signedIn ? 'flex' : 'none';
+        const authBtnText = document.getElementById('authBtnText');
+        if (authBtnText) authBtnText.textContent = signedIn ? 'Signed in with Google' : 'Sign In with Google';
+    }
+
     // Google Sign-In Trigger & Auth State Observer
     if (window.firebaseAuth) {
         window.firebaseAuth.onAuthStateChanged((user) => {
+            updateGoogleLoginVisibility(user);
             if (user) {
                 const profile = {
                     uid: user.uid,
@@ -1287,6 +1301,8 @@ Ans: A
                 }
             }
         });
+    } else {
+        updateGoogleLoginVisibility(null);
     }
 
     const authBtn = document.getElementById('authBtn');
@@ -1335,6 +1351,7 @@ Ans: A
             document.getElementById('leaderboardAvatar').textContent = 'S';
             document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('authBtnText').textContent = 'Sign In with Google';
+            updateGoogleLoginVisibility(null);
         }
     }
 
