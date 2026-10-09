@@ -150,9 +150,26 @@
         .bottom-nav-item { transition: color .18s ease, background-color .18s ease; }
         .bottom-nav-item.active { background: rgba(20, 184, 166, .10); box-shadow: inset 0 0 0 1px rgba(45, 212, 191, .16); }
         #resultsModal { min-height: 60vh; }
+        #appFooter { line-height: 1.55; margin-top: auto; }
+        #appFooter p { margin-block: 2px; }
+        .review-explanation > div { margin-top: 0 !important; margin-bottom: 0 !important; }
+        .review-explanation > div + div { margin-top: .35rem !important; }
+        .review-explanation .reference-box-text, .review-explanation .concept-box-text { line-height: 1.45 !important; }
+        .question-card p { overflow-wrap: anywhere; }
+        @media (min-width: 1024px) { #bottomAppNav { display: none !important; } }
+        html:fullscreen #bottomAppNav, html:fullscreen #appFooter,
+        html:fullscreen #mainHeader, body.is-fullscreen #bottomAppNav,
+        body.is-fullscreen #appFooter, body.is-fullscreen #mainHeader { display: none !important; }
+        @media (max-width: 640px) {
+          #appFooter { font-size: 14px; padding-top: 14px; padding-bottom: 16px; }
+          #mainContent { padding-top: 12px; }
+        }
+        @media (min-width: 641px) and (max-width: 1023px) {
+          #appFooter { font-size: 15px; }
+        }
     </style>
 </head>
-<body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24">
+<body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full">
 
 <!-- Top Sticky Command Header with Smooth Auto-Hide on Scroll -->
 <header id="mainHeader" class="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 py-3 transition-transform duration-300 ease-in-out will-change-transform w-full">
@@ -570,7 +587,7 @@ Ans: A
     <button data-app-section="profile" onclick="showAppSection('profile')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-user text-base"></i><span class="text-[10px] sm:text-xs font-bold">Profile</span></button>
   </div>
 </nav>
-<footer id="appFooter" class="w-full text-center px-4 pt-5 pb-28 text-xs text-slate-500 border-t border-white/5">
+<footer id="appFooter" class="w-full text-center px-4 pt-4 pb-5 text-sm sm:text-base text-slate-400 border-t border-white/5">
   <p class="font-semibold text-slate-300">Made by Tausif Rahaman Raiyan</p><p class="mt-1">© 2026 Medical Secret Files • All Rights Reserved</p>
   <div class="flex items-center justify-center gap-4 mt-3"><a href="https://github.com/tausif-rahaman-raiyan" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-400 hover:text-white text-lg"><i class="fa-brands fa-github"></i></a><a href="https://www.instagram.com/tausifrahamanraiyan/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="text-slate-400 hover:text-pink-300 text-lg"><i class="fa-brands fa-instagram"></i></a></div>
 </footer>
