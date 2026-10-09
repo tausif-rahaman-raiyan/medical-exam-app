@@ -90,6 +90,43 @@
     if ($('customMcqStatus')) $('customMcqStatus').textContent = 'Demo loaded: 3 sample questions + blank cards · Edit before starting';
     $('customMcqCards').querySelector('.custom-mcq-card')?.scrollIntoView({behavior:'smooth',block:'start'});
   }
+  function importJsonFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(String(reader.result || ''));
+        var source = Array.isArray(data) ? data : (Array.isArray(data.questions) ? data.questions : null);
+        if (!source) throw new Error('Expected a JSON array or an object with a questions array.');
+        var normalized = source.slice(0,100).map(function (q,i) {
+          var answer = String(q.ans || q.answer || q.correctAnswer || 'a').trim().toLowerCase();
+          var match = answer.match(/[abcd]/);
+          return {
+            id:i+1,
+            q:String(q.q || q.question || q.text || ''),
+            a:String(q.a || q.optionA || q.options && q.options[0] || ''),
+            b:String(q.b || q.optionB || q.options && q.options[1] || ''),
+            c:String(q.c || q.optionC || q.options && q.options[2] || ''),
+            d:String(q.d || q.optionD || q.options && q.options[3] || ''),
+            ans:match ? match[0] : 'a',
+            exp:String(q.exp || q.explanation || q.reference || '')
+          };
+        });
+        if (!normalized.length) throw new Error('No questions found in this JSON file.');
+        questions = normalized;
+        while (questions.length < 100) questions.push(blankQuestion(questions.length));
+        if (!Array.isArray(data) && data.title) $('customMcqTitle').value = String(data.title);
+        $('customMcqCount').value = questions.length;
+        $('customMcqCards').innerHTML = questions.map(cardMarkup).join('');
+        saveDraft();
+        if ($('customMcqStatus')) $('customMcqStatus').textContent = 'Imported ' + normalized.filter(function(q){return q.q.trim();}).length + ' question(s) from JSON. Review before starting.';
+      } catch (error) {
+        alert('Could not import this JSON: ' + error.message);
+      }
+    };
+    reader.onerror = function () { alert('Could not read this file. Please choose a valid JSON file.'); };
+    reader.readAsText(file);
+  }
   function clearDraft() {
     if (!confirm('Clear all custom MCQ cards and the saved draft on this device?')) return;
     localStorage.removeItem(STORAGE_KEY); $('customMcqTitle').value='My Custom MCQ Test';
@@ -109,6 +146,8 @@
     $('customMcqTitle').addEventListener('input',scheduleSave);
     $('launchMcqBuilderTest').addEventListener('click',launchTest);
     $('exportCustomMcqDraft').addEventListener('click',exportDraft);
+    $('importCustomMcqJson')?.addEventListener('click',function(){ $('customMcqJsonFile')?.click(); });
+    $('customMcqJsonFile')?.addEventListener('change',function(event){ importJsonFile(event.target.files && event.target.files[0]); event.target.value=''; });
     $('clearCustomMcqDraft').addEventListener('click',clearDraft);
     $('loadDemoCustomMcq')?.addEventListener('click',loadDemoQuestions);
   });
