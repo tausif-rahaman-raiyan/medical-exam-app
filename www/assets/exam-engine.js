@@ -28,6 +28,17 @@
   async function launchExam(examItem) {
     if (!examItem) return;
 
+    // All exams require a real Google-authenticated account. Never start in guest mode.
+    const signedInUser = global.firebaseAuth?.currentUser;
+    const hasGoogleAccount = !!(signedInUser && signedInUser.email &&
+      Array.isArray(signedInUser.providerData) &&
+      signedInUser.providerData.some(provider => provider.providerId === 'google.com'));
+    if (!hasGoogleAccount) {
+      if (typeof global.showLoginRequiredModal === 'function') global.showLoginRequiredModal(examItem);
+      else alert('Please sign in with Google before starting an exam.');
+      return;
+    }
+
     // Reset Exam State
     clearInterval(ExamState.timerId);
     ExamState.active = true;
@@ -727,10 +738,10 @@
     const isNegative = result.score < 0;
 
     container.innerHTML = `
-      <div class="max-w-6xl mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-5 w-full">
+      <div class="exam-result-page max-w-6xl mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-5 w-full">
         <!-- Result Summary Hero Card -->
-        <div class="bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8 w-full">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6 mb-6">
+        <div class="exam-result-summary bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-white/10 rounded-3xl p-4 sm:p-8 shadow-2xl mb-5 sm:mb-8 w-full">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4 sm:pb-6 mb-4 sm:mb-6">
             <div>
               <span class="px-3.5 py-1 rounded-full bg-purple-900/60 border border-purple-500/30 text-purple-300 text-xs font-black uppercase tracking-wider inline-block mb-2">
                 ${result.category}
@@ -749,27 +760,27 @@
           </div>
 
           <!-- 4-Pillar Stat Box Grid -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 mb-6">
-            <div class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-center">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-5 sm:mb-6">
+            <div class="exam-stat-card p-3 sm:p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-center">
               <p class="text-2xl sm:text-3xl font-black text-emerald-400">${result.correctCount}</p>
               <p class="text-xs uppercase font-bold text-emerald-300/80">Correct (+${result.correctCount}.00)</p>
             </div>
-            <div class="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-center">
+            <div class="exam-stat-card p-3 sm:p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-center">
               <p class="text-2xl sm:text-3xl font-black text-rose-400">${result.wrongCount}</p>
               <p class="text-xs uppercase font-bold text-rose-300/80">Wrong (-${(result.wrongCount * 0.25).toFixed(2)})</p>
             </div>
-            <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 text-center">
+            <div class="exam-stat-card p-3 sm:p-4 rounded-2xl bg-slate-900/60 border border-white/5 text-center">
               <p class="text-2xl sm:text-3xl font-black text-slate-300">${result.skippedCount}</p>
               <p class="text-xs uppercase font-bold text-slate-400">Skipped (0.00)</p>
             </div>
-            <div class="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-center">
+            <div class="exam-stat-card p-3 sm:p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-center">
               <p class="text-2xl sm:text-3xl font-black text-purple-300">${result.accuracy}</p>
               <p class="text-xs uppercase font-bold text-purple-300/80">Accuracy Rate</p>
             </div>
           </div>
 
           <!-- Action CTAs -->
-          <div class="flex flex-wrap gap-3 pt-2">
+          <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-3 pt-2">
             <button onclick="window.ExamEngine.exitExam()" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
               <i class="fa fa-house"></i> Return to Question Bank
             </button>
@@ -780,7 +791,7 @@
         </div>
 
         <!-- Deep Solution & Reference Review Section Header + Interactive Filters -->
-        <div class="bg-[#1E293B] border border-white/10 rounded-2xl p-4 sm:p-5 mb-6 shadow-xl w-full">
+        <div class="exam-review-toolbar bg-[#1E293B] border border-white/10 rounded-2xl p-3 sm:p-5 mb-5 sm:mb-6 shadow-xl w-full">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4 mb-4">
             <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
               <i class="fa fa-book-open-reader text-purple-400"></i> Deep Solution & Reference Review
