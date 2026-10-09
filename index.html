@@ -1,21 +1,1353 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <base href="www/">
     <title>Medical Secret Files</title>
-    <meta name="description" content="Medical Secret Files - Comprehensive Medical Admission Exam Platform">
-    <meta http-equiv="refresh" content="0; url=www/index.html">
+    <meta name="description" content="Comprehensive medical admission exam preparation platform with interactive question banks, OMR sheet scanner, practice tests, and detailed answer explanations.">
+    <meta property="og:title" content="Medical Secret Files">
+    <meta property="og:description" content="Comprehensive medical admission exam preparation platform with interactive question banks, OMR sheet scanner, practice tests, and detailed answer explanations.">
+    <meta name="theme-color" content="#0F172A">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Fonts with Full Bengali Typography and Ligature Support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Styling -->
+    <link rel="stylesheet" href="assets/all.min.css">
+    <script src="assets/tailwindcss.js"></script>
     <script>
-        // Seamless immediate redirection to the application interface in www/
-        window.location.replace("www/index.html" + window.location.search + window.location.hash);
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Hind Siliguri"', '"Noto Sans Bengali"', '"Plus Jakarta Sans"', 'sans-serif'],
+                        siliguri: ['"Hind Siliguri"', '"Noto Sans Bengali"', '"SolaimanLipi"', '"Kalpurush"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            glow: '#F87171'
+                        }
+                    }
+                }
+            }
+        }
     </script>
+
+    <style>
+        :root {
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --accent-purple: #9333EA;
+            --accent-indigo: #4F46E5;
+        }
+
+        body {
+            background-color: #0F172A;
+            color: #F1F5F9;
+            font-family: 'Hind Siliguri', 'Noto Sans Bengali', 'SolaimanLipi', 'Kalpurush', 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            font-feature-settings: "liga" 1, "dlig" 1, "kern" 1;
+            min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* Balanced Centered Width for Laptop & Windows App */
+        main.exam-active-fullwidth {
+            max-width: 1280px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            width: 100% !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        @media (min-width: 1024px) {
+            main.exam-active-fullwidth {
+                padding-left: 1.5rem !important;
+                padding-right: 1.5rem !important;
+            }
+        }
+
+        /* Completely hide visible scrollbars everywhere while preserving smooth scrolling */
+        * {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+            box-sizing: border-box;
+        }
+        *::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        :root {
+            --concept-font-size: 17px;
+            --reference-font-size: 16px;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .accordion-content.open {
+            max-height: 4000px;
+        }
+
+        /* Bengali Font Family Definition */
+        .font-siliguri {
+            font-family: 'Hind Siliguri', 'Kalpurush', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        }
+
+        /* Target Concept (কনসেপ্ট) Box: Strict Uniform Dynamic Font Size Across All Nested Tags */
+        .concept-box-text,
+        .concept-box-text *,
+        .concept-box-text p,
+        .concept-box-text span,
+        .concept-box-text div,
+        .concept-box-text font,
+        .concept-box-text b,
+        .concept-box-text strong,
+        .concept-box-text em,
+        .concept-box-text i,
+        .concept-box-text sub,
+        .concept-box-text sup {
+            font-size: var(--concept-font-size, 15px) !important;
+            line-height: 1.7 !important;
+            font-weight: 500 !important;
+            font-family: 'Hind Siliguri', 'Kalpurush', sans-serif !important;
+        }
+
+        /* Target Reference (রেফারেন্স) Box: Strict Uniform Dynamic Font Size Across All Nested Tags */
+        .reference-box-text,
+        .reference-box-text *,
+        .reference-box-text p,
+        .reference-box-text span,
+        .reference-box-text div,
+        .reference-box-text font,
+        .reference-box-text b,
+        .reference-box-text strong {
+            font-size: var(--reference-font-size, 14px) !important;
+            line-height: 1.6 !important;
+            font-weight: 600 !important;
+            font-family: 'Hind Siliguri', 'Kalpurush', sans-serif !important;
+        }
+        .bottom-nav-item { transition: color .18s ease, background-color .18s ease; }
+        .bottom-nav-item.active { background: rgba(20, 184, 166, .10); box-shadow: inset 0 0 0 1px rgba(45, 212, 191, .16); }
+        #resultsModal { min-height: 60vh; }
+        #appFooter { line-height: 1.55; margin-top: auto; }
+        #appFooter p { margin-block: 2px; }
+        .review-explanation > div { margin-top: 0 !important; margin-bottom: 0 !important; }
+        .review-explanation > div + div { margin-top: .35rem !important; }
+        .review-explanation .reference-box-text, .review-explanation .concept-box-text { line-height: 1.45 !important; }
+        .question-card p { overflow-wrap: anywhere; }
+        @media (min-width: 1024px) { #bottomAppNav { display: none !important; } }
+        @media (max-width: 640px) {
+          #userDropdown { position: fixed !important; top: 4.25rem !important; right: .5rem !important; left: auto !important; margin-top: 0 !important; width: min(20rem, calc(100vw - 1rem)) !important; }
+        }
+        @media (min-width: 641px) and (max-width: 1023px) {
+          #userDropdown { width: min(20rem, calc(100vw - 2rem)); }
+        }
+        /* Keep site chrome visible even when the browser is maximized/fullscreen. */
+        html:fullscreen #bottomAppNav, body.is-fullscreen #bottomAppNav { display: none !important; }
+        #mainHeader { position: sticky !important; top: 0 !important; z-index: 100 !important; transform: none !important; visibility: visible !important; }
+        #appFooter { display: block !important; visibility: visible !important; }
+        @media (max-width: 640px) {
+          #appFooter { font-size: 14px; padding-top: 14px; padding-bottom: 16px; }
+          #mainContent { padding-top: 12px; }
+          #mainHeader > div { gap: .5rem !important; }
+          #mainHeader a.group { gap: .5rem !important; max-width: 46%; }
+          #mainHeader a.group img { width: 2rem; height: 2rem; }
+          #mainHeader a.group p { display: none; }
+          #mainHeader > div > div { gap: .35rem !important; }
+          #headerGoogleLogin, #btnFullscreen { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          #mainHeader button[title="Leaderboard & My Results"] { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          #mainHeader button[title="Leaderboard & My Results"] span { display: none !important; }
+          #profileBtn { width: 2.15rem !important; height: 2.15rem !important; }
+          #home-view .text-center.max-w-4xl { padding-left: .25rem; padding-right: .25rem; }
+          #home-view h1 { font-size: clamp(1.35rem, 6vw, 2rem); line-height: 1.2; }
+          #home-view .mt-5.flex.flex-wrap { gap: .5rem; padding: .75rem; }
+          #home-view .flex.items-center.justify-center.gap-3.mb-6 { flex-direction: column; align-items: stretch; gap: .5rem; }
+          #tabQuestionBank, #tabCustomCreator { width: 100%; }
+          #searchInput { font-size: 16px; }
+          .subject-card { border-radius: 1rem !important; }
+          .subject-card > button { align-items: center; }
+          .exam-row .flex.flex-wrap { row-gap: .4rem; }
+          .exam-row button { min-height: 42px; }
+          #custom-mcq-builder input, #custom-mcq-builder textarea, #custom-mcq-builder select { font-size: 16px; }
+          #bottomAppNav { padding-left: .25rem; padding-right: .25rem; }
+          .bottom-nav-item { min-width: 0; min-height: 48px; }
+          .bottom-nav-item span { font-size: 10px; white-space: nowrap; }
+        }
+        @media (min-width: 641px) and (max-width: 1023px) {
+          #appFooter { font-size: 15px; }
+        }
+    </style>
 </head>
-<body style="background:#0F172A; color:#fff; font-family:system-ui, -apple-system, sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0;">
-    <div style="text-align:center; padding:20px;">
-        <h2 style="font-weight:800; margin-bottom:8px; color:#c084fc;">Medical Secret Files</h2>
-        <p style="color:#94a3b8; font-size:14px; margin-bottom:16px;">Loading Examination Engine...</p>
-        <p><a href="www/index.html" style="color:#a855f7; text-decoration:none; font-weight:600; background:#1e293b; padding:8px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">Launch App &rarr;</a></p>
+<body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24 sm:pb-0">
+
+<!-- Top command header: stay visible while loading and while navigating -->
+<header id="mainHeader" class="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 px-2.5 sm:px-6 py-2.5 sm:py-3 w-full">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-4 w-full">
+        <!-- Left Side: Logo & Branding -->
+        <a href="../" onclick="event.preventDefault(); location.reload()" class="flex items-center space-x-3 group min-w-0 flex-shrink-0 text-left">
+            <img src="assets/icon.svg" alt="Medical Secret Files" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl object-cover shadow-lg shadow-purple-500/25 flex-shrink-0 border border-white/10 group-hover:scale-105 transition-transform" />
+            <div class="min-w-0">
+                <h1 class="text-sm sm:text-base md:text-lg font-black tracking-tight text-white leading-tight truncate">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-indigo-300">Medical Secret Files</span>
+                </h1>
+                <p class="text-[10px] sm:text-xs text-purple-300/90 font-mono font-bold uppercase tracking-wider truncate">
+                    Precision Medical Admission Engine
+                </p>
+            </div>
+        </a>
+
+        <!-- Right Side: Controls Group -->
+        <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 ml-auto">
+            <!-- Always-visible Google Login -->
+            <button id="headerGoogleLogin" onclick="document.getElementById('authBtn')?.click()" title="Sign in with Google" class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-white/10 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all">
+                <i class="fa-brands fa-google text-blue-300"></i><span class="hidden md:inline">Google Login</span>
+            </button>
+
+            <!-- Fullscreen Button -->
+            <button id="btnFullscreen" onclick="toggleFullScreen()" title="Toggle Fullscreen" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                <i id="fullscreen-icon" class="fa fa-expand text-xs sm:text-sm"></i>
+            </button>
+
+            <!-- Leaderboard Quick Button -->
+            <button onclick="openResultsModal()" title="Leaderboard & My Results" class="px-3 py-2 rounded-xl bg-purple-900/60 hover:bg-purple-800/70 border border-purple-500/40 text-purple-200 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
+                <i class="fa fa-trophy text-amber-400 text-xs"></i>
+                <span class="hidden sm:inline">Leaderboard</span>
+            </button>
+
+            <!-- Profile / User Menu -->
+            <div class="relative">
+                <button id="profileBtn" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 p-0.5 shadow-lg shadow-purple-600/20 flex items-center justify-center focus:outline-none">
+                    <img id="userImg" src="https://ui-avatars.com/api/?name=Candidate&background=0F172A&color=c084fc&bold=true" class="w-full h-full rounded-[10px] object-cover" alt="User" />
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-2xl bg-[#1E293B] border border-white/10 shadow-2xl p-3 z-[100] animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div class="p-2 border-b border-white/10 mb-2">
+                        <p id="userName" class="text-sm font-bold text-white truncate">Guest Candidate</p>
+                        <p id="userEmail" class="text-xs text-slate-400 truncate">Not signed in</p>
+                    </div>
+                    
+                    <button id="authBtn" class="w-full text-left px-3 py-2 rounded-xl hover:bg-purple-950/50 text-xs font-bold text-purple-300 flex items-center space-x-2 transition-all mb-1">
+                        <i class="fa-brands fa-google text-purple-400"></i>
+                        <span id="authBtnText">Sign In with Google</span>
+                    </button>
+
+                    <button onclick="openResultsModal()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-purple-950/50 text-xs font-bold text-slate-300 flex items-center space-x-2 transition-all mb-1">
+                        <i class="fa fa-chart-line text-emerald-400"></i>
+                        <span>My Exam Attempts</span>
+                    </button>
+
+                    <button onclick="showAppSection('model-tests'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-book-medical text-teal-300"></i><span>Model Tests</span></button>
+                    <button onclick="showAppSection('leaderboard'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-trophy text-amber-300"></i><span>Leaderboard</span></button>
+                    <button onclick="showAppSection('install'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-download text-teal-300"></i><span>Install App</span></button>
+                    <button onclick="showAppSection('profile'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-user text-teal-300"></i><span>Profile & Settings</span></button>
+
+                    <!-- Interactive Font Size Controller for Concept & Reference -->
+                    <div class="p-2.5 my-2 rounded-xl bg-slate-900/90 border border-white/10 shadow-inner">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+                                <i class="fa fa-text-height text-purple-400"></i> ব্যাখ্যা ও কনসেপ্ট সাইজ:
+                            </span>
+                            <span id="fontSizeDisplay" class="text-[10px] font-mono text-purple-300 font-bold bg-purple-950 px-2 py-0.5 rounded-md border border-purple-800">17px</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <button type="button" onclick="changeExplanationFontSize(13)" class="font-size-btn px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 hover:text-white transition-all text-center" data-size="13">13px</button>
+                            <button type="button" onclick="changeExplanationFontSize(15)" class="font-size-btn px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 hover:text-white transition-all text-center" data-size="15">15px</button>
+                            <button type="button" onclick="changeExplanationFontSize(17)" class="font-size-btn px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-purple-600 text-white transition-all text-center shadow-md shadow-purple-900/50" data-size="17">17px</button>
+                            <button type="button" onclick="changeExplanationFontSize(19)" class="font-size-btn px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 hover:text-white transition-all text-center" data-size="19">19px</button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="window.AppSync ? window.AppSync.openSyncModal() : null" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-950/50 text-xs font-bold text-indigo-300 flex items-center space-x-2 transition-all">
+                        <i class="fa fa-rotate text-indigo-400"></i>
+                        <span>Sync with Windows App</span>
+                    </button>
+
+                    <button id="logoutBtn" style="display:none;" onclick="handleLogout()" class="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-950/50 text-xs font-bold text-rose-400 flex items-center space-x-2 transition-all mt-1">
+                        <i class="fa fa-arrow-right-from-bracket"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
+</header>
+
+<main id="mainContent" class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-5 flex-1 w-full">
+
+    <!-- HOME VIEW: Catalog & Hero -->
+    <div id="home-view">
+        <!-- Hero Section -->
+        <div class="text-center max-w-4xl mx-auto pt-4 pb-6 px-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-bold tracking-widest uppercase mb-3">
+                <i class="fa fa-stethoscope"></i> Medical Secret Files
+            </div>
+            <h1 class="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-2 leading-tight">
+                Medical & Academic MCQ Question Bank
+            </h1>
+            <p class="text-xs sm:text-sm md:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                Official full-length model tests, past medical question papers, and chapter-wise question banks with 1-click lock and detailed explanations.
+            </p>
+
+            <!-- Live Stats Bar -->
+            <div class="mt-5 flex flex-wrap items-center justify-center gap-2 sm:gap-6 py-3 px-4 sm:px-6 rounded-2xl bg-slate-800/60 border border-slate-700/60 text-xs sm:text-sm font-semibold text-slate-200 shadow-xl backdrop-blur-md">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span><strong>114</strong> Full Exam Sets</span>
+                </div>
+                <div class="hidden sm:block text-slate-600">•</div>
+                <div class="flex items-center gap-1.5">
+                    <i class="fa fa-layer-group text-purple-400 text-xs"></i>
+                    <span><strong>11,499</strong> Verified Questions</span>
+                </div>
+                <div class="hidden sm:block text-slate-600">•</div>
+                <div class="flex items-center gap-1.5">
+                    <i class="fa fa-scale-balanced text-amber-400 text-xs"></i>
+                    <span>Marking: <strong>+1.00 / -0.25</strong></span>
+                </div>
+                <div class="hidden sm:block text-slate-600">•</div>
+                <div class="flex items-center gap-1.5">
+                    <i class="fa fa-stopwatch text-rose-400 text-xs"></i>
+                    <span>Timer: <strong>30s</strong> / Question</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Primary Tab Switcher -->
+        <div class="flex items-center justify-center gap-3 mb-6">
+            <button id="tabQuestionBank" onclick="switchMainTab('bank')" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-purple-600 text-white shadow-lg shadow-purple-600/30 transition-all">
+                <i class="fa fa-book-medical mr-1.5"></i> Question Bank (114 Exams)
+            </button>
+            <button id="tabCustomCreator" onclick="switchMainTab('creator')" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition-all">
+                <i class="fa fa-pen-to-square mr-1.5"></i> Custom Question Creator / Paste
+            </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative max-w-2xl mx-auto mb-6 px-1">
+            <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input 
+                id="searchInput"
+                type="text"
+                placeholder="Search by topic (e.g. কোষ ও এর গঠন), subject, or 10-digit code (e.g. 1020325001)..."
+                class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all shadow-lg"
+            />
+        </div>
+
+        <!-- Modules & Subject Accordions Container -->
+        <div id="view-modules" class="space-y-4">
+            <!-- Dynamically populated by data.js -->
+        </div>
+    </div>
+
+    <!-- CUSTOM QUESTION CREATOR VIEW -->
+    <div id="creator-view" class="hidden max-w-4xl mx-auto">
+        <div class="bg-[#1E293B] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-2xl bg-purple-600/30 border border-purple-500 flex items-center justify-center text-purple-400">
+                    <i class="fa fa-paste text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg sm:text-xl font-black text-white">Custom Question Creator & MCQ Parser</h2>
+                    <p class="text-xs text-slate-400">Paste your questions or custom medical exam text below</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">Exam Title / Subject Name</label>
+                    <input id="customExamTitle" type="text" placeholder="e.g. Zoology Chapter 3 Quick Test" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-purple-500" value="Custom Medical Model Test" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">Paste Questions with Options, Ans & Explanation (ব্যাখ্যা ও রেফারেন্স)</label>
+                    <textarea id="customQuestionsRaw" rows="12" placeholder="১. মানুষের হৃৎপিণ্ডের প্রকোষ্ঠ কয়টি?
+A. ২টি
+B. ৩টি
+C. ৪টি
+D. ৫টি
+Ans: C
+ব্যাখ্যা: রেফারেন্স: মানব শারীরতত্ত্ব, জীববিজ্ঞান ২য় পত্র। কনসেপ্ট: মানুষের হৃৎপিণ্ড ৪টি প্রকোষ্ঠ বিশিষ্ট (২টি অলিন্দ ও ২টি নিলয়)।
+
+২. সালোকসংশ্লেষণের আলোক পর্যায়ে কোনটি তৈরি হয়?
+A. ATP ও NADPH2
+B. গ্লুকোজ
+C. প্রোটিন
+D. লিপিড
+Ans: A
+ব্যাখ্যা: রেফারেন্স: উদ্ভিদ শারীরতত্ত্ব, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: আলোক নির্ভর পর্যায়ে ফটোফসফোরাইলেশনের মাধ্যমে ATP ও NADPH2 তৈরি হয়।" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs sm:text-sm font-mono focus:outline-none focus:border-purple-500"></textarea>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="loadDemoQuestions()" class="px-4 py-2.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-300 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm">
+                            <i class="fa fa-wand-magic-sparkles text-amber-400"></i> Demo Questions (লোড করুন)
+                        </button>
+                        <button type="button" id="btnCopyDemo" onclick="copyDemoQuestions()" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all">
+                            <i class="fa fa-copy text-purple-400"></i> Copy Demo
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button onclick="switchMainTab('bank')" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all">
+                            Cancel
+                        </button>
+                        <button onclick="launchCustomExam()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-900/40 transition-all flex items-center gap-1.5">
+                            <i class="fa fa-play"></i> Launch Custom Test
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM MCQ BUILDER: up to 100 visible cards on one scrollable page -->
+    <section id="custom-mcq-builder" class="hidden w-full max-w-5xl mx-auto">
+        <div class="bg-[#1E293B] border border-teal-500/20 rounded-3xl p-5 sm:p-7 shadow-2xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[11px] font-bold uppercase tracking-wider mb-2"><i class="fa fa-list-check"></i> Custom MCQ Studio</div>
+                    <h2 class="text-xl sm:text-2xl font-black text-white">Create Your Own MCQ Test</h2>
+                    <p class="text-sm text-slate-400 mt-1">সব প্রশ্ন একই পেজে থাকবে—উপরে থেকে নিচে scroll করে ১০০টি পর্যন্ত MCQ edit করুন। Draft এই ডিভাইসেই save হবে।</p>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-900 border border-white/10 rounded-2xl p-3">
+                    <label for="customMcqCount" class="text-xs font-bold text-slate-300 whitespace-nowrap">Questions</label>
+                    <input id="customMcqCount" type="number" min="1" max="100" value="100" class="w-20 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-center font-black focus:outline-none focus:border-teal-400">
+                    <button id="renderCustomMcqCards" class="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-slate-950 font-black text-xs">Render</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                <div class="sm:col-span-2"><label for="customMcqTitle" class="block text-xs font-bold text-slate-300 mb-1.5">Test title</label><input id="customMcqTitle" type="text" value="My Custom MCQ Test" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-teal-400"></div>
+                <div class="flex flex-col justify-end gap-2"><button id="loadDemoCustomMcq" class="w-full px-4 py-3 rounded-xl bg-teal-950/50 hover:bg-teal-900/60 border border-teal-500/20 text-teal-200 font-bold text-xs"><i class="fa fa-wand-magic-sparkles mr-1.5"></i>Load demo questions</button><button id="clearCustomMcqDraft" class="w-full px-4 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-slate-300 hover:text-rose-300 font-bold text-xs"><i class="fa fa-eraser mr-1.5"></i>Clear draft</button></div>
+            </div>
+            <div id="customMcqCards" class="space-y-4"></div>
+            <div class="sticky bottom-20 z-20 mt-6 p-3 rounded-2xl bg-[#0F172A]/95 backdrop-blur border border-teal-500/20 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+                <p id="customMcqStatus" class="text-xs text-slate-400">100 question cards ready · Draft saves on this device</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="switchMainTab('paste')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs"><i class="fa fa-paste mr-1.5"></i>Paste questions</button>
+                    <button id="importCustomMcqJson" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs"><i class="fa fa-file-import mr-1.5"></i>Import JSON</button><input id="customMcqJsonFile" type="file" accept=".json,application/json" class="hidden"><button id="exportCustomMcqDraft" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs"><i class="fa fa-download mr-1.5"></i>Export JSON</button>
+                    <button id="launchMcqBuilderTest" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 hover:from-teal-300 hover:to-cyan-300 text-slate-950 font-black text-xs shadow-lg shadow-teal-950/40"><i class="fa fa-play mr-1.5"></i>Start Test</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXAM VIEW CONTAINER (Full-Width Zero-Margin) -->
+    <div id="exam-view" class="hidden w-full">
+        <div id="exam-render-container" class="w-full">
+            <!-- Populated dynamically by exam-engine.js -->
+        </div>
+    </div>
+
+</main>
+
+<section id="installPanel" class="hidden w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 flex-1">
+  <div class="bg-[#1E293B] border border-teal-500/20 rounded-3xl p-6 sm:p-9 shadow-2xl">
+    <div class="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-300 flex items-center justify-center text-2xl mb-4"><i class="fa fa-mobile-screen-button"></i></div>
+    <h2 class="text-2xl sm:text-3xl font-black text-white">Install Medical Secret Files</h2>
+    <p class="text-slate-400 mt-2 max-w-2xl">Install the web app on your device for a faster, app-like experience. Offline support depends on which files have already been cached on this device.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+      <div class="rounded-2xl bg-slate-900/70 border border-white/10 p-5"><div class="flex items-center gap-2 text-teal-300 font-black mb-2"><i class="fa fa-window-maximize"></i> Web / PWA Install</div><p class="text-sm text-slate-400 mb-4">Use your browser's install prompt when supported. On mobile, you may also find “Add to Home Screen” in the browser menu.</p><button id="installPwaButton" class="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm"><i class="fa fa-download mr-2"></i>Install Web App</button><p id="installPwaStatus" class="text-xs text-slate-500 mt-3">Checking install options…</p></div>
+      <div class="rounded-2xl bg-slate-900/70 border border-white/10 p-5"><div class="flex items-center gap-2 text-indigo-300 font-black mb-2"><i class="fa-brands fa-android"></i> Android APK</div><p class="text-sm text-slate-400 mb-4">The APK download link will appear here once you add your official release URL to the app configuration.</p><button id="downloadApkButton" disabled class="px-5 py-3 rounded-xl bg-slate-800 border border-white/10 text-slate-500 font-black text-sm cursor-not-allowed"><i class="fa fa-link mr-2"></i>APK link not configured</button><p class="text-xs text-slate-500 mt-3">Configuration slot: <code>window.MSF_APP_CONFIG.androidApkUrl</code></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="profilePanel" class="hidden w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 flex-1">
+  <div class="bg-[#1E293B] border border-white/10 rounded-3xl p-6 sm:p-9 shadow-2xl">
+    <div class="flex items-center gap-4 mb-6"><img id="profilePanelAvatar" src="https://ui-avatars.com/api/?name=Candidate&background=0F172A&color=5eead4&bold=true" alt="Profile avatar" class="w-16 h-16 rounded-2xl object-cover border border-teal-500/30"><div class="min-w-0"><h2 id="profilePanelName" class="text-2xl font-black text-white truncate">Guest Candidate</h2><p id="profilePanelEmail" class="text-sm text-slate-400 truncate">Not signed in</p></div></div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+      <button onclick="showAppSection('leaderboard')" class="text-left rounded-2xl bg-slate-900/80 border border-teal-500/20 p-4 hover:border-teal-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-300 flex items-center justify-center mb-3"><i class="fa fa-chart-line"></i></span><span class="block text-sm font-black text-white group-hover:text-teal-200">Exam History</span><span class="block text-xs text-slate-400 mt-1">Review scores and attempts</span></button>
+      <button onclick="showAppSection('install')" class="text-left rounded-2xl bg-slate-900/80 border border-indigo-500/20 p-4 hover:border-indigo-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-300 flex items-center justify-center mb-3"><i class="fa fa-mobile-screen-button"></i></span><span class="block text-sm font-black text-white group-hover:text-indigo-200">App & Devices</span><span class="block text-xs text-slate-400 mt-1">Install or connect devices</span></button>
+      <button onclick="window.AppSync ? window.AppSync.openSyncModal() : showAppSection('install')" class="text-left rounded-2xl bg-slate-900/80 border border-purple-500/20 p-4 hover:border-purple-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-300 flex items-center justify-center mb-3"><i class="fa fa-rotate"></i></span><span class="block text-sm font-black text-white group-hover:text-purple-200">Sync & Backup</span><span class="block text-xs text-slate-400 mt-1">Manage cross-device sync</span></button>
+    </div>
+    <div class="rounded-2xl bg-slate-900/70 border border-white/10 p-5 mb-5"><p class="text-sm text-slate-300">Sign in with Google to sync exam history and ranking across devices. Your custom MCQ draft remains saved locally on this device.</p><div class="flex flex-wrap gap-3 mt-4"><button onclick="document.getElementById('authBtn')?.click()" class="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm"><i class="fa-brands fa-google mr-2"></i>Google Login</button><button id="profilePanelLogout" onclick="handleLogout()" class="hidden px-5 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-rose-300 font-bold text-sm"><i class="fa fa-arrow-right-from-bracket mr-2"></i>Sign out</button></div></div>
+    <div class="flex flex-wrap gap-3 text-xs text-slate-400"><button onclick="showAppSection('leaderboard')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 font-bold"><i class="fa fa-clock-rotate-left mr-1.5"></i>My Exam History</button><button onclick="showAppSection('model-tests')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 font-bold"><i class="fa fa-book-medical mr-1.5"></i>Back to Model Tests</button></div>
+  </div>
+</section>
+
+<!-- Live Preview Modal -->
+<div id="preview-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-[#1E293B] border border-white/10 rounded-3xl p-6 max-w-2xl w-full shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-150">
+        <div class="flex items-start justify-between border-b border-white/10 pb-4 mb-4">
+            <div>
+                <span id="preview-modal-category" class="px-2.5 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/30 text-purple-300 text-[10px] font-black uppercase tracking-wider">
+                    Medical Exam
+                </span>
+                <h3 id="preview-modal-title" class="text-lg font-black text-white mt-1">কোষ ও এর গঠন</h3>
+                <span id="preview-modal-code" class="text-xs text-slate-400 font-mono">Code: 1020325001</span>
+            </div>
+            <button onclick="window.closePreviewModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                <i class="fa fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+            <div class="p-3 rounded-2xl bg-slate-900/80 border border-white/5">
+                <p class="text-base font-black text-purple-400">100 MCQs</p>
+                <p class="text-[10px] uppercase font-bold text-slate-400">Total Questions</p>
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-900/80 border border-white/5">
+                <p class="text-base font-black text-emerald-400">50 Minutes</p>
+                <p class="text-[10px] uppercase font-bold text-slate-400">Standard Time</p>
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-900/80 border border-white/5">
+                <p class="text-base font-black text-rose-400">-0.25</p>
+                <p class="text-[10px] uppercase font-bold text-slate-400">Negative Mark</p>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto pr-1 space-y-3 mb-4" id="preview-questions-sample"></div>
+
+        <div class="flex gap-3 pt-3 border-t border-white/10">
+            <button onclick="window.closePreviewModal()" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition-all">
+                Close
+            </button>
+            <button id="btn-start-from-preview" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-900/40 transition-all flex items-center justify-center gap-2">
+                <i class="fa fa-play text-xs"></i> Start Full Exam Now
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- LEADERBOARD & EXAM HISTORY MODAL (Exact Requested Structure) -->
+<div id="resultsModal" class="hidden w-full max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-5 flex-1">
+    <div class="bg-[#1E293B] border border-white/10 rounded-3xl p-5 sm:p-7 max-w-6xl w-full shadow-2xl flex flex-col min-h-[70vh] animate-in fade-in duration-150">
+        
+        <!-- Header with User Profile, Badges & Close Button -->
+        <div class="flex items-start justify-between border-b border-white/10 pb-4 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-md flex-shrink-0" id="leaderboardAvatar">
+                    S
+                </div>
+                <div>
+                    <h3 id="leaderboardUserName" class="text-base font-black text-white">Guest Candidate</h3>
+                    <p id="leaderboardUserSub" class="text-xs text-purple-300">Sign in with Gmail to save & rank</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-[11px] font-bold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Firebase
+                </span>
+                <span class="px-2 py-1 rounded-full bg-slate-800 text-slate-400 text-[11px] font-mono font-bold">
+                    v2.5.0
+                </span>
+                <button onclick="closeResultsModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center ml-1 text-lg font-bold">
+                    &times;
+                </button>
+            </div>
+        </div>
+
+        <!-- 2 Mode Tabs: My Exam History & Global Leaderboard -->
+        <div class="flex items-center bg-slate-900 border border-white/10 rounded-2xl p-1 mb-4">
+            <button id="btnPersonal" onclick="switchResultMode('personal')" class="flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all bg-purple-600 text-white shadow-md">
+                My Exam History (<span id="historyCountBadge">0</span>)
+            </button>
+            <button id="btnGlobal" onclick="switchResultMode('global')" class="flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-400 hover:text-white">
+                Global Leaderboard
+            </button>
+        </div>
+
+        <!-- Filter Controls: Subject & Chapter Dropdowns + Reset Button -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 mb-3.5 items-end">
+            <div class="sm:col-span-5">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Subject / Category</label>
+                <select id="leaderboardSubjectFilter" onchange="onLeaderboardSubjectChange()" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-semibold focus:outline-none focus:border-purple-500">
+                    <option value="all">All Subjects (সব বিষয়)</option>
+                    <option value="উদ্ভিদবিজ্ঞান">উদ্ভিদবিজ্ঞান (Botany)</option>
+                    <option value="প্রাণিবিজ্ঞান">প্রাণিবিজ্ঞান (Zoology)</option>
+                    <option value="পদার্থবিজ্ঞান প্রথম পত্র">পদার্থবিজ্ঞান প্রথম পত্র (Physics 1st)</option>
+                    <option value="পদার্থবিজ্ঞান দ্বিতীয় পত্র">পদার্থবিজ্ঞান দ্বিতীয় পত্র (Physics 2nd)</option>
+                    <option value="রসায়ন প্রথম পত্র">রসায়ন প্রথম পত্র (Chemistry 1st)</option>
+                    <option value="রসায়ন দ্বিতীয় পত্র">রসায়ন দ্বিতীয় পত্র (Chemistry 2nd)</option>
+                    <option value="সাধারণ জ্ঞান">সাধারণ জ্ঞান (General Knowledge)</option>
+                    <option value="ইংরেজি">ইংরেজি (English)</option>
+                    <option value="সাবজেক্ট ফাইনাল">সাবজেক্ট ফাইনাল (Subject Final)</option>
+                    <option value="পূর্ণাঙ্গ মডেল টেস্ট">পূর্ণাঙ্গ মডেল টেস্ট (Model Tests)</option>
+                    <option value="মেডিকেল প্রশ্ন">মেডিকেল প্রশ্নব্যাংক (Medical Question Papers 2013-2025)</option>
+                </select>
+            </div>
+            <div class="sm:col-span-5">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Chapter / Exam Paper</label>
+                <select id="leaderboardTopicFilter" onchange="applyLeaderboardFilter()" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-semibold focus:outline-none focus:border-purple-500">
+                    <option value="all">All Chapters (সকল অধ্যায়)</option>
+                </select>
+            </div>
+            <div class="sm:col-span-2">
+                <button onclick="resetLeaderboardFilters()" class="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm" title="Reset Filters">
+                    <i class="fa fa-rotate-left text-purple-400 text-xs"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Showing Counter & Database Refresh Button -->
+        <div class="flex items-center justify-between text-xs text-slate-400 font-semibold mb-3 px-1">
+            <span id="leaderboardResultCounter">Showing 0 of 0 total attempts</span>
+            <button onclick="refreshLeaderboardData(this)" title="Fetch latest results from database" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-purple-900/50 border border-purple-500/30 text-purple-300 hover:text-purple-200 font-bold flex items-center gap-1.5 transition-all text-xs shadow-sm">
+                <i class="fa fa-rotate text-purple-400 text-xs"></i> <span>Refresh</span>
+            </button>
+        </div>
+
+        <!-- Attempt Cards Stream -->
+        <div id="resultsList" class="flex-1 overflow-y-auto space-y-3.5 pr-1 scrollbar-thin">
+            <!-- Dynamically populated with Exact Card Structure -->
+        </div>
+    </div>
+</div>
+
+<nav id="bottomAppNav" aria-label="Main navigation" class="fixed bottom-0 inset-x-0 z-40 bg-[#0B1220]/95 backdrop-blur-xl border-t border-white/10 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+  <div class="max-w-4xl mx-auto grid grid-cols-4 gap-1">
+    <button data-app-section="model-tests" onclick="showAppSection('model-tests')" class="bottom-nav-item active flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-teal-300"><i class="fa fa-book-medical text-base"></i><span class="text-[10px] sm:text-xs font-bold">Model Tests</span></button>
+    <button data-app-section="leaderboard" onclick="showAppSection('leaderboard')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-trophy text-base"></i><span class="text-[10px] sm:text-xs font-bold">Leaderboard</span></button>
+    <button data-app-section="install" onclick="showAppSection('install')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-download text-base"></i><span class="text-[10px] sm:text-xs font-bold">Install App</span></button>
+    <button data-app-section="profile" onclick="showAppSection('profile')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-user text-base"></i><span class="text-[10px] sm:text-xs font-bold">Profile</span></button>
+  </div>
+</nav>
+<footer id="appFooter" class="w-full text-center px-4 pt-4 pb-5 text-sm sm:text-base text-slate-400 border-t border-white/5">
+  <p class="font-semibold text-slate-300">Made by Tausif Rahaman Raiyan</p><p class="mt-1">© 2026 Medical Secret Files • All Rights Reserved</p>
+  <div class="flex items-center justify-center gap-4 mt-3"><a href="https://github.com/tausif-rahaman-raiyan" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-400 hover:text-white text-lg"><i class="fa-brands fa-github"></i></a><a href="https://www.instagram.com/tausifrahamanraiyan/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="text-slate-400 hover:text-pink-300 text-lg"><i class="fa-brands fa-instagram"></i></a></div>
+</footer>
+
+<!-- Scripts -->
+<script src="assets/science-formatter.js"></script>
+<script src="assets/confetti.browser.min.js"></script>
+<script src="assets/firebase-app-compat.js"></script>
+<script src="assets/firebase-auth-compat.js"></script>
+<script src="assets/firebase-firestore-compat.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/exam-engine.js"></script>
+<script src="assets/app-sync.js"></script>
+<script src="assets/custom-mcq.js"></script>
+<script src="assets/pwa.js"></script>
+
+<script>
+    // Initial UI Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            // Clean any legacy mock dummy entries
+            const raw = localStorage.getItem('msf_exam_history_v2');
+            if (raw && (raw.includes('1020325008') || raw.includes('06:49 AM'))) {
+                localStorage.removeItem('msf_exam_history_v2');
+            }
+        } catch {}
+
+        if (window.SubjectDataManager && window.SubjectDataManager.buildModuleUI) {
+            window.SubjectDataManager.buildModuleUI();
+        }
+        populateLeaderboardChapters();
+        updateHistoryCount();
+        showAppSection('model-tests');
+    });
+
+    // Accordion Toggle Handler
+    window.toggleSubjectAccordion = function(button) {
+        const parentCard = button.closest('.subject-card');
+        if (!parentCard) return;
+        const content = parentCard.querySelector('.accordion-content');
+        const icon = button.querySelector('.accordion-icon');
+        if (content) {
+            content.classList.toggle('open');
+            if (icon) icon.classList.toggle('rotate-180');
+        }
+    };
+
+    window.closePreviewModal = function() {
+        const modal = document.getElementById('preview-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    };
+
+    // Main view navigation. The five bottom tabs are full page sections, not popups.
+    function showAppSection(section) {
+        const main = document.getElementById('mainContent');
+        const results = document.getElementById('resultsModal');
+        const install = document.getElementById('installPanel');
+        const profile = document.getElementById('profilePanel');
+        const home = document.getElementById('home-view');
+        const creator = document.getElementById('creator-view');
+        const builder = document.getElementById('custom-mcq-builder');
+        const isMain = section === 'model-tests' || section === 'custom-mcq' || section === 'custom-paste';
+        main?.classList.toggle('hidden', !isMain);
+        results?.classList.toggle('hidden', section !== 'leaderboard');
+        install?.classList.toggle('hidden', section !== 'install');
+        profile?.classList.toggle('hidden', section !== 'profile');
+        home?.classList.toggle('hidden', section !== 'model-tests');
+        creator?.classList.toggle('hidden', section !== 'custom-paste');
+        builder?.classList.toggle('hidden', section !== 'custom-mcq');
+        document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+            const active = btn.getAttribute('data-app-section') === section || (section === 'custom-paste' && btn.getAttribute('data-app-section') === 'custom-mcq');
+            btn.classList.toggle('active', active);
+            btn.classList.toggle('text-teal-300', active);
+            btn.classList.toggle('text-slate-500', !active);
+        });
+        const tabQB = document.getElementById('tabQuestionBank');
+        const tabCC = document.getElementById('tabCustomCreator');
+        if (tabQB && tabCC) {
+            tabQB.className = section === 'model-tests' ? 'px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-purple-600 text-white shadow-lg shadow-purple-600/30 transition-all' : 'px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition-all';
+            tabCC.className = section === 'custom-paste' ? 'px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-purple-600 text-white shadow-lg shadow-purple-600/30 transition-all' : 'px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition-all';
+        }
+        if (section === 'leaderboard') fetchAndRenderLeaderboard();
+        if (section === 'profile') window.refreshProfilePanel?.();
+        if (section === 'install') window.refreshInstallPanel?.();
+        window.activeAppSection = section;
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+    window.showAppSection = showAppSection;
+
+    function switchMainTab(tab) {
+        if (tab === 'bank') showAppSection('model-tests');
+        else if (tab === 'paste') showAppSection('custom-paste');
+        else showAppSection('custom-paste');
+    }
+    window.switchMainTab = switchMainTab;
+
+    // Demo High-Yield Medical Questions for Custom Creator
+    const DEMO_QUESTIONS_TEXT = `১. আমাদের প্রধান খাদ্যশস্য ধানে (Oryza sativa) ক্রোমোসোম (2n) থাকে কয়টি?
+A. ২৪ টি
+B. ৪২ টি
+C. ২০ টি
+D. ৪৪ টি
+Ans: A
+ব্যাখ্যা: রেফারেন্স: ক্রোমোজোম, কোষ ও এর গঠন, জীববিজ্ঞান প্রথম পত্র, হাসান স্যার। কনসেপ্ট: Poaceae গোত্রের অন্তর্গত মানুষের প্রধান খাদ্যশস্য ধানে (Oryza sativa) ক্রোমোসোম (2n) থাকে ২৪টি। ভুট্টার ২৪টি, গমের ৪২টি এবং কলা উদ্ভিদে ৪৪টি ক্রোমোজোম থাকে।
+
+২. মানুষের হৃৎপিণ্ডের কোন কপাটিকায় ৩টি কাস্প (Trifoliate) থাকে?
+A. মাইট্রাল কপাটিকা
+B. ট্রাইকাসপিড কপাটিকা
+C. বাইকাসপিড কপাটিকা
+D. থিবেসিয়ান কপাটিকা
+Ans: B
+ব্যাখ্যা: রেফারেন্স: রক্ত সংবহনতন্ত্র, জীববিজ্ঞান ২য় পত্র, গাজী আজমল স্যার। কনসেপ্ট: ডান অলিন্দ ও ডান নিলয়ের সংযোগস্থলে অবস্থিত ট্রাইকাসপিড কপাটিকা ৩টি কাস্পযুক্ত। বাম অলিন্দ ও বাম নিলয়ের সংযোগস্থলে বাইকাসপিড (মাইট্রাল) কপাটিকা ২টি কাস্পযুক্ত।
+
+৩. সালোকসংশ্লেষণের আলোক-নির্ভর পর্যায়ে উৎপন্ন মূল শক্তি উপাদান কোনটি?
+A. গ্লুকোজ ও ফ্রুক্টোজ
+B. ATP ও NADPH2
+C. পাইরুভিক অ্যাসিড
+D. ল্যাকটিক অ্যাসিড
+Ans: B
+ব্যাখ্যা: রেফারেন্স: উদ্ভিদ শারীরতত্ত্ব, অধ্যায় ৯, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: থাইলাকয়েড পর্দায় ফটোফসফোরাইলেশনের মাধ্যমে আলোক শক্তি রাসায়নিক শক্তিতে রূপান্তরিত হয়ে ATP এবং NADPH2 তৈরি হয়।
+
+৪. মস্তিষ্কের কোন অংশ মানবদেহের ভারসাম্য (Equilibrium) নিয়ন্ত্রণে প্রধান ভূমিকা পালন করে?
+A. সেরিব্রাম (Cerebrum)
+B. সেরেবেলাম (Cerebellum)
+C. মেডুলা অবলংগাটা
+D. থ্যালামাস
+Ans: B
+ব্যাখ্যা: রেফারেন্স: স্নায়বিক সমন্বয়, জীববিজ্ঞান ২য় পত্র। কনসেপ্ট: লঘুমস্তিষ্ক বা সেরেবেলাম মানবদেহের পেশিটান নিয়ন্ত্রণ করে এবং দৈহিক ভারসাম্য রক্ষা করে।
+
+৫. কোষঝিল্লির সবচেয়ে গ্রহণযোগ্য 'ফ্লুইড মোজাইক মডেল' কত সালে প্রবর্তিত হয়?
+A. ১৯৭২ সালে
+B. ১৯৩৫ সালে
+C. ১৯৫৩ সালে
+D. ১৯৬২ সালে
+Ans: A
+ব্যাখ্যা: রেফারেন্স: কোষ ও এর গঠন, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: বিজ্ঞানী এস. জে. সিঙ্গার এবং জি. এল. নিকোলসন ১৯৭২ সালে কোষঝিল্লির গঠন ব্যাখ্যার জন্য বহুল প্রচলিত Fluid Mosaic Model প্রস্তাব করেন।`;
+
+    function loadDemoQuestions() {
+        const titleEl = document.getElementById('customExamTitle');
+        const textEl = document.getElementById('customQuestionsRaw');
+        if (titleEl) titleEl.value = 'Medical High-Yield Demo Test (নমুনা প্রশ্ন)';
+        if (textEl) {
+            textEl.value = DEMO_QUESTIONS_TEXT;
+            textEl.focus();
+        }
+    }
+
+    async function copyDemoQuestions() {
+        try {
+            await navigator.clipboard.writeText(DEMO_QUESTIONS_TEXT);
+            const btn = document.getElementById('btnCopyDemo');
+            if (btn) {
+                const oldHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-check text-emerald-400"></i> Copied!';
+                setTimeout(() => { btn.innerHTML = oldHTML; }, 2000);
+            }
+        } catch (e) {
+            const textEl = document.getElementById('customQuestionsRaw');
+            if (textEl) {
+                textEl.value = DEMO_QUESTIONS_TEXT;
+                textEl.select();
+                document.execCommand('copy');
+                const btn = document.getElementById('btnCopyDemo');
+                if (btn) {
+                    const oldHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa fa-check text-emerald-400"></i> Copied!';
+                    setTimeout(() => { btn.innerHTML = oldHTML; }, 2000);
+                }
+            }
+        }
+    }
+
+    // Custom Exam Parser & Launcher
+    function launchCustomExam() {
+        const title = document.getElementById('customExamTitle')?.value || 'Custom Practice Exam';
+        const raw = document.getElementById('customQuestionsRaw')?.value || '';
+        if (!raw.trim()) {
+            alert('Please paste at least one question.');
+            return;
+        }
+
+        const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+        const parsed = [];
+        let cur = null;
+        const fmt = window.cleanAndFormatScience || ((s) => s);
+
+        lines.forEach(line => {
+            if (/^\d+[\.\)]\s*/.test(line) || (!cur && line.length > 5)) {
+                if (cur && cur.q && cur.a) parsed.push(cur);
+                cur = {
+                    id: parsed.length + 1,
+                    q: fmt(line.replace(/^\d+[\.\)]\s*/, '')),
+                    a: '', b: '', c: '', d: '',
+                    ans: 'a',
+                    exp: 'রেফারেন্স: কাস্টম প্রশ্নব্যাংক। কনসেপ্ট: স্ব-মূল্যায়ন ও অনুশীলন সমাধান।'
+                };
+            } else if (cur) {
+                if (/^[A|a][\.\)]\s*/.test(line)) cur.a = fmt(line.replace(/^[A|a][\.\)]\s*/, ''));
+                else if (/^[B|b][\.\)]\s*/.test(line)) cur.b = fmt(line.replace(/^[B|b][\.\)]\s*/, ''));
+                else if (/^[C|c][\.\)]\s*/.test(line)) cur.c = fmt(line.replace(/^[C|c][\.\)]\s*/, ''));
+                else if (/^[D|d][\.\)]\s*/.test(line)) cur.d = fmt(line.replace(/^[D|d][\.\)]\s*/, ''));
+                else if (/^Ans[:\s]+/i.test(line)) cur.ans = line.replace(/^Ans[:\s]+/i, '').trim().toLowerCase()[0] || 'a';
+                else if (/^(Exp|ব্যাখ্যা|Expl|Explanation)[:\s]+/i.test(line)) {
+                    cur.exp = fmt(line.replace(/^(Exp|ব্যাখ্যা|Expl|Explanation)[:\s]+/i, '').trim());
+                } else if (/^রেফারেন্স[:\s]+/i.test(line) || /^কনসেপ্ট[:\s]+/i.test(line)) {
+                    if (cur.exp && cur.exp.startsWith('রেফারেন্স: কাস্টম প্রশ্নব্যাংক')) cur.exp = line;
+                    else if (cur.exp) cur.exp += ' ' + line;
+                    else cur.exp = line;
+                }
+            }
+        });
+        if (cur && cur.q) parsed.push(cur);
+
+        if (parsed.length === 0) {
+            parsed.push({
+                id: 1, q: fmt('কাস্টম প্রশ্ন ১: নিম্নের কোনটি সঠিক?'),
+                a: fmt('অপশন ক'), b: fmt('অপশন খ'), c: fmt('অপশন গ'), d: fmt('অপশন ঘ'),
+                ans: 'a', exp: 'রেফারেন্স: কাস্টম প্রশ্নব্যাংক। কনসেপ্ট: অনুশীলন সমাধান।'
+            });
+        }
+
+        window.ExamEngine.launchExam({
+            title: title,
+            category: 'Custom Practice',
+            code: 'CUSTOM_' + Date.now().toString().slice(-6),
+            durationMinutes: Math.max(10, Math.ceil(parsed.length * 0.5)),
+            customQuestions: parsed
+        });
+    }
+
+    // Fullscreen API Helper
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+            const icon = document.getElementById('fullscreen-icon');
+            if (icon) icon.className = 'fa fa-compress';
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+            const icon = document.getElementById('fullscreen-icon');
+            if (icon) icon.className = 'fa fa-expand';
+        }
+    }
+
+    // Profile Dropdown
+    const profileBtn = document.getElementById('profileBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    profileBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        userDropdown?.classList.toggle('hidden');
+    });
+    userDropdown?.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', (e) => {
+        if (userDropdown && !userDropdown.contains(e.target) && !profileBtn?.contains(e.target)) userDropdown.classList.add('hidden');
+    });
+
+    // Header is intentionally never auto-hidden. Keep it visible on every scroll position.
+    const mainHeader = document.getElementById('mainHeader');
+    mainHeader?.classList.remove('-translate-y-full');
+    if (mainHeader) {
+        mainHeader.style.transform = 'none';
+        mainHeader.style.visibility = 'visible';
+    }
+
+    // Dynamic Chapter Dropdown population based on selected Subject
+    function populateLeaderboardChapters(selectedSubject = 'all') {
+        const chapterSelect = document.getElementById('leaderboardTopicFilter');
+        if (!chapterSelect || !window.SubjectDataManager?.subjectData) return;
+
+        chapterSelect.innerHTML = '<option value="all">All Chapters (সকল অধ্যায়)</option>';
+
+        window.SubjectDataManager.subjectData.forEach(sub => {
+            const isMatch = selectedSubject === 'all' ||
+                            sub.cat === selectedSubject ||
+                            sub.cat.includes(selectedSubject) ||
+                            (selectedSubject.includes('মেডিকেল') && sub.cat.includes('মেডিকেল')) ||
+                            (selectedSubject.includes('মডেল') && sub.cat.includes('মডেল'));
+
+            if (isMatch) {
+                sub.items.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.t;
+                    opt.textContent = `${item.t} (${item.c})`;
+                    chapterSelect.appendChild(opt);
+                });
+            }
+        });
+    }
+
+    function onLeaderboardSubjectChange() {
+        const sub = document.getElementById('leaderboardSubjectFilter')?.value || 'all';
+        populateLeaderboardChapters(sub);
+        fetchAndRenderLeaderboard();
+    }
+
+    function resetLeaderboardFilters() {
+        const sub = document.getElementById('leaderboardSubjectFilter');
+        if (sub) sub.value = 'all';
+        populateLeaderboardChapters('all');
+        const topic = document.getElementById('leaderboardTopicFilter');
+        if (topic) topic.value = 'all';
+        fetchAndRenderLeaderboard();
+    }
+
+    // Font Size Customizer for Explanation (Reference & Concept)
+    function changeExplanationFontSize(size) {
+        const s = parseInt(size, 10) || 17;
+        localStorage.setItem('msf_explanation_font_size', s);
+        applyExplanationFontSize(s);
+    }
+
+    function applyExplanationFontSize(size) {
+        const s = parseInt(size || localStorage.getItem('msf_explanation_font_size') || '17', 10);
+        document.documentElement.style.setProperty('--concept-font-size', s + 'px');
+        document.documentElement.style.setProperty('--reference-font-size', Math.max(13, s - 1) + 'px');
+        
+        const disp = document.getElementById('fontSizeDisplay');
+        if (disp) disp.textContent = s + 'px';
+        
+        document.querySelectorAll('.font-size-btn').forEach(btn => {
+            const btnSize = parseInt(btn.getAttribute('data-size'), 10);
+            if (btnSize === s) {
+                btn.className = 'font-size-btn px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-purple-600 text-white transition-all text-center shadow-md shadow-purple-900/50';
+            } else {
+                btn.className = 'font-size-btn px-1.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 hover:text-white transition-all text-center';
+            }
+        });
+    }
+
+    // Apply font size immediately on load
+    applyExplanationFontSize();
+
+    function updateHistoryCount() {
+        try {
+            const rawLocal = localStorage.getItem('msf_exam_history_v2');
+            let data = rawLocal ? JSON.parse(rawLocal) : [];
+            data = data.filter(i => i.userName !== 'Medical Candidate' && i.userName !== 'Guest Candidate' && i.userId !== 'guest');
+            const badge = document.getElementById('historyCountBadge');
+            if (badge) badge.textContent = data.length;
+        } catch {}
+    }
+
+    // Realtime Leaderboard & History
+    let currentResultsTab = 'personal';
+
+    function openResultsModal() {
+        userDropdown?.classList.add('hidden');
+        showAppSection('leaderboard');
+    }
+
+    function closeResultsModal() {
+        showAppSection('model-tests');
+    }
+
+    function switchResultMode(mode) {
+        currentResultsTab = mode;
+        const btnP = document.getElementById('btnPersonal');
+        const btnG = document.getElementById('btnGlobal');
+        if (mode === 'personal') {
+            btnP.className = 'flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all bg-purple-600 text-white shadow-md';
+            btnG.className = 'flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-400 hover:text-white';
+        } else {
+            btnG.className = 'flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all bg-purple-600 text-white shadow-md';
+            btnP.className = 'flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all text-slate-400 hover:text-white';
+        }
+        fetchAndRenderLeaderboard();
+    }
+
+    function applyLeaderboardFilter() {
+        fetchAndRenderLeaderboard();
+    }
+
+    async function refreshLeaderboardData(btn) {
+        const icon = btn ? btn.querySelector('i') : null;
+        if (icon) icon.classList.add('fa-spin');
+        await fetchAndRenderLeaderboard();
+        updateHistoryCount();
+        setTimeout(() => {
+            if (icon) icon.classList.remove('fa-spin');
+        }, 500);
+    }
+
+    async function fetchAndRenderLeaderboard() {
+        const list = document.getElementById('resultsList');
+        const counterEl = document.getElementById('leaderboardResultCounter');
+        const subFilter = document.getElementById('leaderboardSubjectFilter')?.value || 'all';
+        const topicFilter = document.getElementById('leaderboardTopicFilter')?.value || 'all';
+        if (!list) return;
+
+        list.innerHTML = '<p class="text-center text-xs text-slate-400 py-10"><i class="fa fa-spinner fa-spin mr-2 text-purple-400"></i>Loading realtime results...</p>';
+
+        let data = [];
+
+        if (currentResultsTab === 'personal') {
+            let profile = null;
+            try {
+                const raw = localStorage.getItem('msf_user_profile');
+                if (raw) profile = JSON.parse(raw);
+            } catch {}
+            const user = window.firebaseAuth?.currentUser;
+            const currentUid = profile?.uid || (user ? user.uid : null);
+            const currentEmail = profile?.email || (user ? user.email : null);
+
+            if (!currentUid || currentUid === 'guest') {
+                list.innerHTML = `
+                    <div class="text-center py-12 px-4">
+                        <div class="w-12 h-12 rounded-2xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center text-purple-400 mx-auto mb-3 shadow-lg">
+                            <i class="fa-brands fa-google text-xl"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-white mb-1">Sign in to view your Exam History</h4>
+                        <p class="text-xs text-slate-400 max-w-sm mx-auto mb-4">Your real scores and exam performances will sync live with the cloud database across your devices.</p>
+                        <button onclick="handleLogin()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-purple-900/40 transition-all">
+                            Sign In with Google
+                        </button>
+                    </div>
+                `;
+                if (counterEl) counterEl.textContent = '0 Records';
+                const historyBadge = document.getElementById('historyCountBadge');
+                if (historyBadge) historyBadge.textContent = '0';
+                return;
+            }
+
+            let fetchedFromFirestore = false;
+            if (window.firebaseDB && (currentUid || currentEmail) && navigator.onLine) {
+                try {
+                    let queryRef = window.firebaseDB.collection('exam_results');
+                    if (currentUid && currentUid !== 'guest') {
+                        queryRef = queryRef.where('userId', '==', currentUid);
+                    } else if (currentEmail) {
+                        queryRef = queryRef.where('userEmail', '==', currentEmail);
+                    }
+                    const snap = await queryRef.limit(100).get();
+                    if (!snap.empty) {
+                        data = snap.docs.map(doc => doc.data());
+                        fetchedFromFirestore = true;
+                    }
+                } catch (err) {
+                    console.warn('Personal Firestore fetch error:', err);
+                }
+            }
+
+            if (!fetchedFromFirestore) {
+                try {
+                    const rawLocal = localStorage.getItem('msf_exam_history_v2');
+                    if (rawLocal) {
+                        data = JSON.parse(rawLocal).filter(i => (i.userId === currentUid || i.userEmail === currentEmail) && i.userId !== 'guest');
+                    }
+                } catch {}
+            }
+        } else {
+            // Global Realtime Leaderboard (Live from Firebase Firestore ONLY)
+            try {
+                if (window.firebaseDB && navigator.onLine) {
+                    const snap = await window.firebaseDB.collection('exam_results').orderBy('score', 'desc').limit(100).get();
+                    data = snap.docs.map(doc => doc.data());
+                }
+            } catch (err) {
+                console.warn('Firestore global fetch note:', err);
+            }
+        }
+
+        // Strict Purge of all demo / dummy / mock records
+        data = data.filter(item => {
+            if (!item || !item.userName) return false;
+            const name = String(item.userName).trim();
+            const isDummyName = name === 'Medical Candidate' || name === 'Guest Candidate' || name === 'Test User' || name === 'Candidate' || name === 'demo';
+            const isDummyMock = item.examCode === '1020325001' && String(item.date).includes('03:08 AM');
+            const isGuest = item.userId === 'guest' || !item.userId;
+            return !isDummyName && !isDummyMock && !isGuest;
+        });
+
+        // Deduplicate records to ensure no duplicate entry is shown twice
+        const seenKeys = new Set();
+        data = data.filter(item => {
+            const key = `${item.userId || item.userEmail || ''}_${item.examCode || item.topicName || ''}_${item.date || ''}_${item.score || ''}`;
+            if (seenKeys.has(key)) return false;
+            seenKeys.add(key);
+            return true;
+        });
+
+        const totalAttempts = data.length;
+        const historyBadge = document.getElementById('historyCountBadge');
+        if (historyBadge && currentResultsTab === 'personal') historyBadge.textContent = totalAttempts;
+
+        // Compute accurate sequential attempt number for each candidate per exam topic
+        const attemptTracker = {};
+        // Clone and sort chronologically by date/timestamp to assign 1, 2, 3...
+        const chronological = [...data].sort((a, b) => {
+            const timeA = a.timestamp?.seconds ? a.timestamp.seconds * 1000 : (a.date ? new Date(a.date).getTime() : 0);
+            const timeB = b.timestamp?.seconds ? b.timestamp.seconds * 1000 : (b.date ? new Date(b.date).getTime() : 0);
+            return timeA - timeB;
+        });
+
+        chronological.forEach((entry) => {
+            const key = `${entry.userId || entry.userEmail || entry.userName || 'user'}_${entry.examCode || entry.topicName || 'exam'}`;
+            attemptTracker[key] = (attemptTracker[key] || 0) + 1;
+            entry.calculatedAttempt = attemptTracker[key];
+        });
+
+        // Filter by Subject & Topic
+        let filtered = data.filter(item => {
+            const matchesSub = subFilter === 'all' || 
+                               (item.category && item.category.includes(subFilter)) ||
+                               (subFilter.includes('মেডিকেল') && item.category && item.category.includes('মেডিকেল')) ||
+                               (subFilter.includes('মডেল') && item.category && item.category.includes('মডেল'));
+
+            const matchesTopic = topicFilter === 'all' || (item.topicName && item.topicName.includes(topicFilter));
+            return matchesSub && matchesTopic;
+        });
+
+        // Always sort highest score first for leaderboard rankings
+        filtered.sort((a, b) => b.score - a.score);
+
+        if (counterEl) {
+            counterEl.textContent = `Showing ${filtered.length} of ${totalAttempts} total attempts`;
+        }
+
+        if (filtered.length === 0) {
+            list.innerHTML = `
+                <div class="p-8 text-center text-slate-400">
+                    <i class="fa fa-clipboard-list text-2xl text-purple-400/40 mb-2 block"></i>
+                    <p class="text-xs font-bold text-slate-300">No matching test attempts recorded</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Take an exam from the question bank to record your scores.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Render Enhanced High-End Glassmorphism Card
+        list.innerHTML = filtered.map((item, idx) => {
+            const isNegative = item.score < 0;
+            const rankNumber = idx + 1;
+            const isGlobal = currentResultsTab === 'global';
+            const attemptNum = item.calculatedAttempt || item.attemptNumber || 1;
+            const attemptDisplay = `Attempt #${attemptNum}`;
+            const avatarSrc = item.userPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.userName || 'Candidate')}&background=0F172A&color=c084fc&bold=true`;
+
+            // Top Rank Medals & Glow
+            let rankBadgeHTML = '';
+            let cardBorderGlow = 'border-white/10 hover:border-purple-500/50';
+
+            if (isGlobal) {
+                if (rankNumber === 1) {
+                    rankBadgeHTML = `<span class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs shadow-md shadow-amber-500/30 flex items-center gap-1"><i class="fa fa-crown text-[11px]"></i> 1st Rank</span>`;
+                    cardBorderGlow = 'border-amber-500/40 bg-gradient-to-r from-amber-950/20 via-slate-900 to-slate-900 shadow-lg shadow-amber-950/20';
+                } else if (rankNumber === 2) {
+                    rankBadgeHTML = `<span class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-slate-200 to-slate-400 text-slate-950 font-black text-xs shadow-md flex items-center gap-1"><i class="fa fa-medal text-[11px]"></i> 2nd Rank</span>`;
+                    cardBorderGlow = 'border-slate-400/30';
+                } else if (rankNumber === 3) {
+                    rankBadgeHTML = `<span class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 text-white font-black text-xs shadow-md flex items-center gap-1"><i class="fa fa-medal text-[11px]"></i> 3rd Rank</span>`;
+                    cardBorderGlow = 'border-amber-700/30';
+                } else if (rankNumber <= 10) {
+                    rankBadgeHTML = `<span class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs">Top #${rankNumber}</span>`;
+                } else {
+                    rankBadgeHTML = `<span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-bold text-xs">Rank #${rankNumber}</span>`;
+                }
+            }
+
+            return `
+                <div class="p-4 sm:p-5 rounded-2xl bg-[#131E31] ${cardBorderGlow} border transition-all duration-200 shadow-md flex flex-col gap-3 group">
+                    
+                    <!-- Header Meta Row -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            ${rankBadgeHTML}
+                            
+                            <!-- Attempt Badge -->
+                            <span class="px-2.5 py-1 rounded-lg font-mono font-bold text-xs bg-indigo-950/90 border border-indigo-500/40 text-indigo-300 flex items-center gap-1.5">
+                                <i class="fa fa-rotate-right text-[10px] text-indigo-400"></i> ${attemptDisplay}
+                            </span>
+                            
+                            <!-- Candidate Avatar & Name -->
+                            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-900/90 border border-white/10 text-slate-200 text-xs font-bold shadow-inner">
+                                <img src="${avatarSrc}" class="w-4 h-4 rounded-full object-cover border border-purple-400/60 flex-shrink-0" alt="Avatar" />
+                                <span class="truncate max-w-[130px] sm:max-w-[180px]">${item.userName || 'Medical Candidate'}</span>
+                                <i class="fa fa-circle-check text-emerald-400 text-[10px]"></i>
+                            </div>
+
+                            <!-- Category Tag -->
+                            <span class="px-2 py-1 rounded-lg bg-purple-950/80 border border-purple-500/40 text-purple-300 font-bold text-xs">
+                                ${item.category || 'মেডিকেল প্রস্তুতি'}
+                            </span>
+                        </div>
+
+                        <!-- Date & Exam Code -->
+                        <div class="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                            <span class="bg-slate-900 px-2 py-0.5 rounded border border-white/5">#${item.examCode || item.examId || '1020325008'}</span>
+                            <span>${item.date || '29/09/2026'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Middle Content: Title & Score Display -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                        <div class="space-y-0.5 min-w-0">
+                            <h4 class="text-base sm:text-lg font-black text-white font-siliguri leading-snug tracking-wide group-hover:text-purple-300 transition-colors">
+                                ${item.topicName || 'মেডিকেল প্রশ্নব্যাংক'}
+                            </h4>
+                        </div>
+
+                        <!-- Big Score Capsule -->
+                        <div class="flex items-center sm:flex-col sm:items-end justify-between sm:justify-center p-3 sm:py-2 sm:px-4 rounded-xl bg-slate-900/90 border border-white/10 flex-shrink-0">
+                            <div class="text-2xl sm:text-3xl font-black ${isNegative ? 'text-rose-400' : (item.score >= 60 ? 'text-emerald-400' : 'text-amber-400')} tracking-tight">
+                                ${item.score} <span class="text-xs font-normal text-slate-500">/ ${item.totalQuestions || 100}</span>
+                            </div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 font-mono">
+                                ${isNegative ? 'Negative Marks' : 'Net Score'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Bottom 4-Metric Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/5 text-xs font-semibold">
+                        <div class="p-2 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-emerald-300 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa fa-circle-check text-emerald-400"></i> Correct</span>
+                            <strong class="font-bold text-white text-sm">${item.correctCount || 0}</strong>
+                        </div>
+                        <div class="p-2 rounded-xl bg-rose-950/30 border border-rose-500/20 text-rose-300 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa fa-circle-xmark text-rose-400"></i> Wrong</span>
+                            <strong class="font-bold text-white text-sm">${item.wrongCount || 0}</strong>
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-900/80 border border-white/5 text-slate-300 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa fa-forward text-slate-400"></i> Skipped</span>
+                            <strong class="font-bold text-white text-sm">${item.skippedCount !== undefined ? item.skippedCount : 0}</strong>
+                        </div>
+                        <div class="p-2 rounded-xl bg-purple-950/40 border border-purple-500/20 text-purple-300 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa fa-bullseye text-purple-400"></i> Accuracy</span>
+                            <strong class="font-bold text-purple-200 text-sm">${item.accuracy || '0.0%'}</strong>
+                        </div>
+                    </div>
+
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Google Sign-In Trigger & Auth State Observer
+    if (window.firebaseAuth) {
+        window.firebaseAuth.onAuthStateChanged((user) => {
+            if (user) {
+                const profile = {
+                    uid: user.uid,
+                    name: user.displayName || 'Medical Aspirant',
+                    email: user.email || '',
+                    photoURL: user.photoURL || ''
+                };
+                if (window.AppSync) {
+                    window.AppSync.applyUserProfile(profile, false);
+                }
+            }
+        });
+    }
+
+    const authBtn = document.getElementById('authBtn');
+    authBtn?.addEventListener('click', async () => {
+        const isDesktop = window.navigator.userAgent.includes('Electron') || window.location.protocol === 'file:';
+        if (isDesktop && window.AppSync) {
+            window.AppSync.openSyncModal();
+            return;
+        }
+
+        try {
+            if (window.firebaseAuth && window.googleProvider) {
+                const res = await window.firebaseAuth.signInWithPopup(window.googleProvider);
+                if (res.user) {
+                    const profile = {
+                        uid: res.user.uid,
+                        name: res.user.displayName || 'Medical Aspirant',
+                        email: res.user.email || '',
+                        photoURL: res.user.photoURL || ''
+                    };
+                    if (window.AppSync) {
+                        window.AppSync.applyUserProfile(profile, true);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Google sign-in popup handled in guest/local mode', e);
+        }
+    });
+
+    function handleLogout() {
+        if (window.AppSync) {
+            window.AppSync.clearUserProfile();
+        } else {
+            if (window.firebaseAuth) {
+                window.firebaseAuth.signOut().catch(() => {});
+            }
+            try {
+                localStorage.removeItem('msf_user_profile');
+            } catch {}
+            document.getElementById('userName').textContent = 'Guest Candidate';
+            document.getElementById('userEmail').textContent = 'Not signed in';
+            document.getElementById('userImg').src = 'https://ui-avatars.com/api/?name=Candidate&background=0F172A&color=c084fc&bold=true';
+            document.getElementById('leaderboardUserName').textContent = 'Guest Candidate';
+            document.getElementById('leaderboardUserSub').textContent = 'Sign in with Gmail to save & rank';
+            document.getElementById('leaderboardAvatar').textContent = 'S';
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('authBtnText').textContent = 'Sign In with Google';
+        }
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    searchInput?.addEventListener('input', (e) => {
+        if (window.handleSearch) window.handleSearch(e.target.value);
+    });
+
+    // Cleanup legacy dummy/mock storage data once and for all
+    try {
+        localStorage.removeItem('msf_exam_history');
+        const rawLocal = localStorage.getItem('msf_exam_history_v2');
+        if (rawLocal) {
+            const parsed = JSON.parse(rawLocal);
+            const valid = parsed.filter(i => i.userName !== 'Medical Candidate' && i.userName !== 'Guest Candidate' && i.userId !== 'guest' && i.examCode !== '1020325001');
+            localStorage.setItem('msf_exam_history_v2', JSON.stringify(valid));
+        }
+    } catch {}
+</script>
 </body>
 </html>

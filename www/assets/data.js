@@ -223,22 +223,22 @@ function buildModuleUI(filteredData = subjectData, searchQuery = '') {
         wrapper.className = "subject-card bg-gradient-to-br from-slate-900 via-[#0F172A] to-slate-950 rounded-2xl sm:rounded-3xl border border-white/10 shadow-xl overflow-hidden mb-3 sm:mb-4 transition-all hover:border-purple-500/30";
         
         wrapper.innerHTML = `
-            <button onclick="window.toggleSubjectAccordion(this)" class="w-full p-3.5 sm:p-5 md:p-6 font-bold flex justify-between items-center gap-3 text-white hover:bg-purple-950/20 transition-colors">
-                <div class="flex items-center gap-2.5 sm:gap-3.5 text-left min-w-0">
-                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br ${subject.color || 'from-purple-600 to-indigo-600'} flex items-center justify-center text-white shadow-lg shadow-purple-900/40 flex-shrink-0">
+            <button onclick="window.toggleSubjectAccordion(this)" aria-label="Open ${subject.cat} exams" aria-expanded="${isOpen ? 'true' : 'false'}" class="w-full p-3.5 sm:p-5 md:p-6 font-bold flex justify-between items-center gap-3 text-white hover:bg-purple-950/20 transition-colors text-left">
+                <div class="flex items-start sm:items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br ${subject.color || 'from-purple-600 to-indigo-600'} flex items-center justify-center text-white shadow-lg shadow-purple-900/40 flex-shrink-0 mt-0.5 sm:mt-0">
                         <i class="fa ${subject.icon || 'fa-book-medical'} text-base"></i>
                     </div>
-                    <div>
-                        <span class="text-sm sm:text-base md:text-lg font-black block text-slate-100 leading-snug break-words">${subject.cat}</span>
-                        <span class="text-[11px] sm:text-xs font-semibold text-slate-400 block mt-0.5">${subject.items.length} Standard Exams • 100 MCQs Each</span>
+                    <div class="min-w-0 flex-1">
+                        <span class="text-sm sm:text-base md:text-lg font-black block text-slate-100 leading-snug break-words whitespace-normal">${subject.cat}</span>
+                        <span class="text-[11px] sm:text-xs font-semibold text-slate-300 block mt-1">${subject.items.length} topics available · 100 MCQs per exam</span>
+                        <span class="mt-2 inline-flex max-w-full flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] font-black tracking-wide px-2.5 py-1.5 rounded-lg bg-purple-950/80 border border-purple-700/60 text-purple-200">
+                            <span>100 Questions</span><span class="text-purple-400">•</span><span>50 Minutes</span><span class="text-purple-400">•</span><span>-0.25 Negative Marking</span>
+                        </span>
                     </div>
                 </div>
-                <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-                    <span class="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-purple-950/70 border border-purple-800/40 text-purple-300 hidden md:inline-block">
-                        100 Q • 50 Min • -0.25 Neg
-                    </span>
-                    <i class="fa fa-chevron-down text-xs text-purple-400/80 transition-transform duration-300 accordion-icon ${isOpen ? 'rotate-180' : ''}"></i>
-                </div>
+                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex-shrink-0 mt-0.5">
+                    <i class="fa fa-chevron-down text-xs text-purple-300 transition-transform duration-300 accordion-icon ${isOpen ? 'rotate-180' : ''}"></i>
+                </span>
             </button>
             <div class="accordion-content ${isOpen ? 'open' : ''}">
                 <div class="p-2 sm:p-3 md:p-4 space-y-2 border-t border-white/5 bg-slate-900/50">
@@ -283,8 +283,10 @@ function buildModuleUI(filteredData = subjectData, searchQuery = '') {
 function toggleSubjectAccordion(btn) {
     const content = btn.nextElementSibling;
     const icon = btn.querySelector('.accordion-icon');
-    if (content) content.classList.toggle('open');
-    if (icon) icon.classList.toggle('rotate-180');
+    const willOpen = !!content && !content.classList.contains('open');
+    if (content) content.classList.toggle('open', willOpen);
+    if (icon) icon.classList.toggle('rotate-180', willOpen);
+    btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
 }
 
 function handleSearch(query) {

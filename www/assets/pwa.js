@@ -52,13 +52,14 @@
     refresh();
     setStatus('Install completed. Welcome!');
   });
+  // Do not infer fullscreen from window dimensions: maximized browser windows are not fullscreen.
+  // The header and footer stay visible regardless of window size.
   function syncFullscreenLayout() {
-    var fullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || (window.screen && window.outerHeight >= window.screen.height - 2 && window.outerWidth >= window.screen.width - 2));
+    var fullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
     document.body.classList.toggle('is-fullscreen', fullscreen);
   }
   document.addEventListener('fullscreenchange', syncFullscreenLayout);
   document.addEventListener('webkitfullscreenchange', syncFullscreenLayout);
-  window.addEventListener('resize', syncFullscreenLayout);
   document.addEventListener('DOMContentLoaded', function () {
     syncFullscreenLayout();
     refresh();
