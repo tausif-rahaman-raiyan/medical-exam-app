@@ -1,6 +1,6 @@
 /* Versioned, same-origin PWA cache. Do not cache Firebase writes or cross-origin requests. */
 'use strict';
-const CACHE_NAME = 'medical-secret-files-shell-v6';
+const CACHE_NAME = 'medical-secret-files-shell-v7';
 const SHELL = [
   './',
   './index.html',
