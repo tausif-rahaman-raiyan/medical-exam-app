@@ -157,6 +157,12 @@
         .review-explanation .reference-box-text, .review-explanation .concept-box-text { line-height: 1.45 !important; }
         .question-card p { overflow-wrap: anywhere; }
         @media (min-width: 1024px) { #bottomAppNav { display: none !important; } }
+        @media (max-width: 640px) {
+          #userDropdown { position: fixed !important; top: 4.25rem !important; right: .5rem !important; left: auto !important; margin-top: 0 !important; width: min(20rem, calc(100vw - 1rem)) !important; }
+        }
+        @media (min-width: 641px) and (max-width: 1023px) {
+          #userDropdown { width: min(20rem, calc(100vw - 2rem)); }
+        }
         html:fullscreen #bottomAppNav, html:fullscreen #appFooter,
         html:fullscreen #mainHeader, body.is-fullscreen #bottomAppNav,
         body.is-fullscreen #appFooter, body.is-fullscreen #mainHeader { display: none !important; }
@@ -169,7 +175,7 @@
         }
     </style>
 </head>
-<body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full">
+<body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24 sm:pb-0">
 
 <!-- Top Sticky Command Header with Smooth Auto-Hide on Scroll -->
 <header id="mainHeader" class="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 py-3 transition-transform duration-300 ease-in-out will-change-transform w-full">
@@ -212,7 +218,7 @@
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 rounded-2xl bg-[#1E293B] border border-white/10 shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-2xl bg-[#1E293B] border border-white/10 shadow-2xl p-3 z-[100] animate-in fade-in slide-in-from-top-2 duration-150">
                     <div class="p-2 border-b border-white/10 mb-2">
                         <p id="userName" class="text-sm font-bold text-white truncate">Guest Candidate</p>
                         <p id="userEmail" class="text-xs text-slate-400 truncate">Not signed in</p>
@@ -227,6 +233,11 @@
                         <i class="fa fa-chart-line text-emerald-400"></i>
                         <span>My Exam Attempts</span>
                     </button>
+
+                    <button onclick="showAppSection('model-tests'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-book-medical text-teal-300"></i><span>Model Tests</span></button>
+                    <button onclick="showAppSection('leaderboard'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-trophy text-amber-300"></i><span>Leaderboard</span></button>
+                    <button onclick="showAppSection('install'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-download text-teal-300"></i><span>Install App</span></button>
+                    <button onclick="showAppSection('profile'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-user text-teal-300"></i><span>Profile & Settings</span></button>
 
                     <!-- Interactive Font Size Controller for Concept & Reference -->
                     <div class="p-2.5 my-2 rounded-xl bg-slate-900/90 border border-white/10 shadow-inner">
@@ -579,10 +590,9 @@ Ans: A
 </div>
 
 <nav id="bottomAppNav" aria-label="Main navigation" class="fixed bottom-0 inset-x-0 z-40 bg-[#0B1220]/95 backdrop-blur-xl border-t border-white/10 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-  <div class="max-w-4xl mx-auto grid grid-cols-5 gap-1">
+  <div class="max-w-4xl mx-auto grid grid-cols-4 gap-1">
     <button data-app-section="model-tests" onclick="showAppSection('model-tests')" class="bottom-nav-item active flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-teal-300"><i class="fa fa-book-medical text-base"></i><span class="text-[10px] sm:text-xs font-bold">Model Tests</span></button>
     <button data-app-section="leaderboard" onclick="showAppSection('leaderboard')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-trophy text-base"></i><span class="text-[10px] sm:text-xs font-bold">Leaderboard</span></button>
-    <button data-app-section="custom-mcq" onclick="showAppSection('custom-mcq')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-list-check text-base"></i><span class="text-[10px] sm:text-xs font-bold">Custom MCQ</span></button>
     <button data-app-section="install" onclick="showAppSection('install')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-download text-base"></i><span class="text-[10px] sm:text-xs font-bold">Install App</span></button>
     <button data-app-section="profile" onclick="showAppSection('profile')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-user text-base"></i><span class="text-[10px] sm:text-xs font-bold">Profile</span></button>
   </div>
@@ -839,10 +849,14 @@ Ans: A
     const profileBtn = document.getElementById('profileBtn');
     const userDropdown = document.getElementById('userDropdown');
     profileBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         userDropdown?.classList.toggle('hidden');
     });
-    document.addEventListener('click', () => userDropdown?.classList.add('hidden'));
+    userDropdown?.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', (e) => {
+        if (userDropdown && !userDropdown.contains(e.target) && !profileBtn?.contains(e.target)) userDropdown.classList.add('hidden');
+    });
 
     // Smart Auto-Hide Top Header on Scroll Down & Reveal on Scroll Up / Back to Top
     let lastScrollY = window.scrollY;
@@ -851,11 +865,6 @@ Ans: A
     window.addEventListener('scroll', () => {
         const currentScrollY = window.scrollY;
         
-        // Auto-close user menu when scrolling
-        if (userDropdown && !userDropdown.classList.contains('hidden')) {
-            userDropdown.classList.add('hidden');
-        }
-
         if (currentScrollY <= 15) {
             // At top: always show header
             mainHeader?.classList.remove('-translate-y-full');
