@@ -75,6 +75,58 @@
     a.href=url; a.download='medical-secret-files-custom-mcq.json'; a.click();
     setTimeout(function(){URL.revokeObjectURL(url);},1000);
   }
+  function loadDemoQuestions() {
+    var demos = [
+      {q:'মানুষের হৃৎপিণ্ডে প্রকোষ্ঠ কয়টি?',a:'২টি',b:'৩টি',c:'৪টি',d:'৫টি',ans:'c',exp:'রেফারেন্স: মানব শারীরতত্ত্ব, জীববিজ্ঞান ২য় পত্র। কনসেপ্ট: মানুষের হৃৎপিণ্ডে ৪টি প্রকোষ্ঠ থাকে।'},
+      {q:'সালোকসংশ্লেষণের আলোক-নির্ভর পর্যায়ে কোন দুটি উপাদান তৈরি হয়?',a:'গ্লুকোজ ও অক্সিজেন',b:'ATP ও NADPH₂',c:'প্রোটিন ও লিপিড',d:'পাইরুভেট ও ল্যাকটেট',ans:'b',exp:'রেফারেন্স: উদ্ভিদ শারীরতত্ত্ব, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: আলোক-নির্ভর বিক্রিয়ায় ATP ও NADPH₂ উৎপন্ন হয়।'},
+      {q:'ধানে (Oryza sativa) ডিপ্লয়েড ক্রোমোজোম সংখ্যা কত?',a:'১৪',b:'২০',c:'২৪',d:'৪২',ans:'c',exp:'রেফারেন্স: কোষ ও এর গঠন, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: ধানের ডিপ্লয়েড ক্রোমোজোম সংখ্যা ২৪।'}
+    ];
+    questions = demos.map(function(q,i){ return Object.assign(blankQuestion(i),q,{id:i+1}); });
+    while (questions.length < 100) questions.push(blankQuestion(questions.length));
+    $('customMcqTitle').value = 'Demo Medical MCQ Test';
+    $('customMcqCards').innerHTML = questions.map(cardMarkup).join('');
+    $('customMcqCount').value = questions.length;
+    saveDraft();
+    if ($('customMcqStatus')) $('customMcqStatus').textContent = 'Demo loaded: 3 sample questions + blank cards · Edit before starting';
+    $('customMcqCards').querySelector('.custom-mcq-card')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function importJsonFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(String(reader.result || ''));
+        var source = Array.isArray(data) ? data : (Array.isArray(data.questions) ? data.questions : null);
+        if (!source) throw new Error('Expected a JSON array or an object with a questions array.');
+        var normalized = source.slice(0,100).map(function (q,i) {
+          var answer = String(q.ans || q.answer || q.correctAnswer || 'a').trim().toLowerCase();
+          var match = answer.match(/[abcd]/);
+          return {
+            id:i+1,
+            q:String(q.q || q.question || q.text || ''),
+            a:String(q.a || q.optionA || q.options && q.options[0] || ''),
+            b:String(q.b || q.optionB || q.options && q.options[1] || ''),
+            c:String(q.c || q.optionC || q.options && q.options[2] || ''),
+            d:String(q.d || q.optionD || q.options && q.options[3] || ''),
+            ans:match ? match[0] : 'a',
+            exp:String(q.exp || q.explanation || q.reference || '')
+          };
+        });
+        if (!normalized.length) throw new Error('No questions found in this JSON file.');
+        questions = normalized;
+        while (questions.length < 100) questions.push(blankQuestion(questions.length));
+        if (!Array.isArray(data) && data.title) $('customMcqTitle').value = String(data.title);
+        $('customMcqCount').value = questions.length;
+        $('customMcqCards').innerHTML = questions.map(cardMarkup).join('');
+        saveDraft();
+        if ($('customMcqStatus')) $('customMcqStatus').textContent = 'Imported ' + normalized.filter(function(q){return q.q.trim();}).length + ' question(s) from JSON. Review before starting.';
+      } catch (error) {
+        alert('Could not import this JSON: ' + error.message);
+      }
+    };
+    reader.onerror = function () { alert('Could not read this file. Please choose a valid JSON file.'); };
+    reader.readAsText(file);
+  }
   function clearDraft() {
     if (!confirm('Clear all custom MCQ cards and the saved draft on this device?')) return;
     localStorage.removeItem(STORAGE_KEY); $('customMcqTitle').value='My Custom MCQ Test';
@@ -94,6 +146,9 @@
     $('customMcqTitle').addEventListener('input',scheduleSave);
     $('launchMcqBuilderTest').addEventListener('click',launchTest);
     $('exportCustomMcqDraft').addEventListener('click',exportDraft);
+    $('importCustomMcqJson')?.addEventListener('click',function(){ $('customMcqJsonFile')?.click(); });
+    $('customMcqJsonFile')?.addEventListener('change',function(event){ importJsonFile(event.target.files && event.target.files[0]); event.target.value=''; });
     $('clearCustomMcqDraft').addEventListener('click',clearDraft);
+    $('loadDemoCustomMcq')?.addEventListener('click',loadDemoQuestions);
   });
 })();

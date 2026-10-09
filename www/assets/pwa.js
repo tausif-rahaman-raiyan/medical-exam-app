@@ -52,7 +52,15 @@
     refresh();
     setStatus('Install completed. Welcome!');
   });
+  function syncFullscreenLayout() {
+    var fullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || (window.screen && window.outerHeight >= window.screen.height - 2 && window.outerWidth >= window.screen.width - 2));
+    document.body.classList.toggle('is-fullscreen', fullscreen);
+  }
+  document.addEventListener('fullscreenchange', syncFullscreenLayout);
+  document.addEventListener('webkitfullscreenchange', syncFullscreenLayout);
+  window.addEventListener('resize', syncFullscreenLayout);
   document.addEventListener('DOMContentLoaded', function () {
+    syncFullscreenLayout();
     refresh();
     window.refreshProfilePanel();
     if (window.firebaseAuth && window.firebaseAuth.onAuthStateChanged) window.firebaseAuth.onAuthStateChanged(function(){ window.refreshProfilePanel(); });

@@ -220,34 +220,34 @@ function buildModuleUI(filteredData = subjectData, searchQuery = '') {
     filteredData.forEach((subject) => {
         const isOpen = Boolean(searchQuery && searchQuery.trim().length > 0);
         const wrapper = document.createElement('div');
-        wrapper.className = "subject-card bg-[#0F172A] rounded-3xl border border-white/10 shadow-xl overflow-hidden mb-4 transition-all hover:border-purple-500/30";
+        wrapper.className = "subject-card bg-gradient-to-br from-slate-900 via-[#0F172A] to-slate-950 rounded-2xl sm:rounded-3xl border border-white/10 shadow-xl overflow-hidden mb-3 sm:mb-4 transition-all hover:border-purple-500/30";
         
         wrapper.innerHTML = `
-            <button onclick="window.toggleSubjectAccordion(this)" class="w-full p-5 sm:p-6 font-bold flex justify-between items-center text-white hover:bg-purple-950/20 transition-colors">
-                <div class="flex items-center space-x-3.5 text-left">
-                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br ${subject.color || 'from-purple-600 to-indigo-600'} flex items-center justify-center text-white shadow-lg shadow-purple-900/40 flex-shrink-0">
+            <button onclick="window.toggleSubjectAccordion(this)" class="w-full p-3.5 sm:p-5 md:p-6 font-bold flex justify-between items-center gap-3 text-white hover:bg-purple-950/20 transition-colors">
+                <div class="flex items-center gap-2.5 sm:gap-3.5 text-left min-w-0">
+                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br ${subject.color || 'from-purple-600 to-indigo-600'} flex items-center justify-center text-white shadow-lg shadow-purple-900/40 flex-shrink-0">
                         <i class="fa ${subject.icon || 'fa-book-medical'} text-base"></i>
                     </div>
                     <div>
-                        <span class="text-base sm:text-lg font-black block text-slate-100">${subject.cat}</span>
-                        <span class="text-xs font-semibold text-slate-400">${subject.items.length} Standard Exams • 100 MCQs Each</span>
+                        <span class="text-sm sm:text-base md:text-lg font-black block text-slate-100 leading-snug break-words">${subject.cat}</span>
+                        <span class="text-[11px] sm:text-xs font-semibold text-slate-400 block mt-0.5">${subject.items.length} Standard Exams • 100 MCQs Each</span>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-purple-950/70 border border-purple-800/40 text-purple-300 hidden sm:inline-block">
+                <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+                    <span class="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-purple-950/70 border border-purple-800/40 text-purple-300 hidden md:inline-block">
                         100 Q • 50 Min • -0.25 Neg
                     </span>
                     <i class="fa fa-chevron-down text-xs text-purple-400/80 transition-transform duration-300 accordion-icon ${isOpen ? 'rotate-180' : ''}"></i>
                 </div>
             </button>
             <div class="accordion-content ${isOpen ? 'open' : ''}">
-                <div class="p-3 sm:p-4 space-y-2 border-t border-white/5 bg-slate-900/50">
+                <div class="p-2 sm:p-3 md:p-4 space-y-2 border-t border-white/5 bg-slate-900/50">
                     ${subject.items.map(item => `
-                        <div class="exam-row flex flex-col sm:flex-row sm:items-center justify-between p-4.5 sm:p-5 rounded-2xl bg-[#1E293B] border border-white/10 hover:border-purple-500/50 hover:bg-[#243248] transition-all gap-4 shadow-sm mb-3">
+                        <div class="exam-row flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#1E293B] to-slate-900 border border-white/10 hover:border-purple-500/50 hover:bg-[#243248] transition-all gap-3 sm:gap-4 shadow-sm mb-2.5 sm:mb-3 min-w-0">
                             <div class="flex flex-col min-w-0 flex-1">
-                                <span class="text-base sm:text-lg font-black text-white leading-snug font-siliguri mb-1.5">${item.t}</span>
-                                <div class="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
-                                    <span class="text-xs text-purple-200 font-mono font-black uppercase tracking-wider bg-purple-950/90 border border-purple-600/50 px-2.5 py-1 rounded-lg">
+                                <span class="text-sm sm:text-base md:text-lg font-black text-white leading-snug font-siliguri mb-1.5 break-words">${item.t}</span>
+                                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2.5 text-[11px] sm:text-xs md:text-sm">
+                                    <span class="text-xs text-purple-200 font-mono font-black uppercase tracking-wider bg-purple-950/90 border border-purple-600/50 px-2 py-1 rounded-lg">
                                         Code: ${item.c}
                                     </span>
                                     <span class="text-slate-300 font-semibold flex items-center gap-1">
@@ -263,11 +263,11 @@ function buildModuleUI(filteredData = subjectData, searchQuery = '') {
                                     </span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2.5 self-end sm:self-auto flex-shrink-0">
-                                <button onclick="window.showPreview('${item.c}')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold transition-all border border-white/10 flex items-center gap-1.5 shadow-sm">
+                            <div class="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto sm:self-auto flex-shrink-0">
+                                <button onclick="window.showPreview('${item.c}')" class="w-full sm:w-auto justify-center px-3 sm:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold transition-all border border-white/10 flex items-center gap-1.5 shadow-sm">
                                     <i class="fa fa-eye text-purple-400"></i> Preview
                                 </button>
-                                <button onclick="window.startExamByCode('${item.c}')" class="px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg shadow-purple-900/40 transition-all flex items-center gap-2 transform active:scale-95">
+                                <button onclick="window.startExamByCode('${item.c}')" class="w-full sm:w-auto justify-center px-3 sm:px-5 md:px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg shadow-purple-900/40 transition-all flex items-center gap-2 transform active:scale-95">
                                     <i class="fa fa-play text-xs"></i> Start Exam
                                 </button>
                             </div>

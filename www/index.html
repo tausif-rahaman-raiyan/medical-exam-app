@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Medical Secret Files</title>
     <meta name="description" content="Comprehensive medical admission exam preparation platform with interactive question banks, OMR sheet scanner, practice tests, and detailed answer explanations.">
     <meta property="og:title" content="Medical Secret Files">
@@ -150,12 +150,58 @@
         .bottom-nav-item { transition: color .18s ease, background-color .18s ease; }
         .bottom-nav-item.active { background: rgba(20, 184, 166, .10); box-shadow: inset 0 0 0 1px rgba(45, 212, 191, .16); }
         #resultsModal { min-height: 60vh; }
+        #appFooter { line-height: 1.55; margin-top: auto; }
+        #appFooter p { margin-block: 2px; }
+        .review-explanation > div { margin-top: 0 !important; margin-bottom: 0 !important; }
+        .review-explanation > div + div { margin-top: .35rem !important; }
+        .review-explanation .reference-box-text, .review-explanation .concept-box-text { line-height: 1.45 !important; }
+        .question-card p { overflow-wrap: anywhere; }
+        @media (min-width: 1024px) { #bottomAppNav { display: none !important; } }
+        @media (max-width: 640px) {
+          #userDropdown { position: fixed !important; top: 4.25rem !important; right: .5rem !important; left: auto !important; margin-top: 0 !important; width: min(20rem, calc(100vw - 1rem)) !important; }
+        }
+        @media (min-width: 641px) and (max-width: 1023px) {
+          #userDropdown { width: min(20rem, calc(100vw - 2rem)); }
+        }
+        html:fullscreen #bottomAppNav, html:fullscreen #appFooter,
+        html:fullscreen #mainHeader, body.is-fullscreen #bottomAppNav,
+        body.is-fullscreen #appFooter, body.is-fullscreen #mainHeader { display: none !important; }
+        @media (max-width: 640px) {
+          #appFooter { font-size: 14px; padding-top: 14px; padding-bottom: 16px; }
+          #mainContent { padding-top: 12px; }
+          #mainHeader > div { gap: .5rem !important; }
+          #mainHeader a.group { gap: .5rem !important; max-width: 46%; }
+          #mainHeader a.group img { width: 2rem; height: 2rem; }
+          #mainHeader a.group p { display: none; }
+          #mainHeader > div > div { gap: .35rem !important; }
+          #headerGoogleLogin, #btnFullscreen { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          #mainHeader button[title="Leaderboard & My Results"] { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          #mainHeader button[title="Leaderboard & My Results"] span { display: none !important; }
+          #profileBtn { width: 2.15rem !important; height: 2.15rem !important; }
+          #home-view .text-center.max-w-4xl { padding-left: .25rem; padding-right: .25rem; }
+          #home-view h1 { font-size: clamp(1.35rem, 6vw, 2rem); line-height: 1.2; }
+          #home-view .mt-5.flex.flex-wrap { gap: .5rem; padding: .75rem; }
+          #home-view .flex.items-center.justify-center.gap-3.mb-6 { flex-direction: column; align-items: stretch; gap: .5rem; }
+          #tabQuestionBank, #tabCustomCreator { width: 100%; }
+          #searchInput { font-size: 16px; }
+          .subject-card { border-radius: 1rem !important; }
+          .subject-card > button { align-items: center; }
+          .exam-row .flex.flex-wrap { row-gap: .4rem; }
+          .exam-row button { min-height: 42px; }
+          #custom-mcq-builder input, #custom-mcq-builder textarea, #custom-mcq-builder select { font-size: 16px; }
+          #bottomAppNav { padding-left: .25rem; padding-right: .25rem; }
+          .bottom-nav-item { min-width: 0; min-height: 48px; }
+          .bottom-nav-item span { font-size: 10px; white-space: nowrap; }
+        }
+        @media (min-width: 641px) and (max-width: 1023px) {
+          #appFooter { font-size: 15px; }
+        }
     </style>
 </head>
-<body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24">
+<body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24 sm:pb-0">
 
-<!-- Top Sticky Command Header with Smooth Auto-Hide on Scroll -->
-<header id="mainHeader" class="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 py-3 transition-transform duration-300 ease-in-out will-change-transform w-full">
+<!-- Top command header: stay visible while loading and while navigating -->
+<header id="mainHeader" class="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 px-2.5 sm:px-6 py-2.5 sm:py-3 w-full">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-4 w-full">
         <!-- Left Side: Logo & Branding -->
         <a href="#" onclick="location.reload()" class="flex items-center space-x-3 group min-w-0 flex-shrink-0 text-left">
@@ -195,7 +241,7 @@
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 rounded-2xl bg-[#1E293B] border border-white/10 shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-2xl bg-[#1E293B] border border-white/10 shadow-2xl p-3 z-[100] animate-in fade-in slide-in-from-top-2 duration-150">
                     <div class="p-2 border-b border-white/10 mb-2">
                         <p id="userName" class="text-sm font-bold text-white truncate">Guest Candidate</p>
                         <p id="userEmail" class="text-xs text-slate-400 truncate">Not signed in</p>
@@ -210,6 +256,11 @@
                         <i class="fa fa-chart-line text-emerald-400"></i>
                         <span>My Exam Attempts</span>
                     </button>
+
+                    <button onclick="showAppSection('model-tests'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-book-medical text-teal-300"></i><span>Model Tests</span></button>
+                    <button onclick="showAppSection('leaderboard'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-trophy text-amber-300"></i><span>Leaderboard</span></button>
+                    <button onclick="showAppSection('install'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-download text-teal-300"></i><span>Install App</span></button>
+                    <button onclick="showAppSection('profile'); userDropdown?.classList.add('hidden')" class="w-full text-left px-3 py-2 rounded-xl hover:bg-teal-950/50 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all mb-1"><i class="fa fa-user text-teal-300"></i><span>Profile & Settings</span></button>
 
                     <!-- Interactive Font Size Controller for Concept & Reference -->
                     <div class="p-2.5 my-2 rounded-xl bg-slate-900/90 border border-white/10 shadow-inner">
@@ -387,14 +438,14 @@ Ans: A
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                 <div class="sm:col-span-2"><label for="customMcqTitle" class="block text-xs font-bold text-slate-300 mb-1.5">Test title</label><input id="customMcqTitle" type="text" value="My Custom MCQ Test" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-teal-400"></div>
-                <div class="flex items-end"><button id="clearCustomMcqDraft" class="w-full px-4 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-slate-300 hover:text-rose-300 font-bold text-xs"><i class="fa fa-eraser mr-1.5"></i>Clear draft</button></div>
+                <div class="flex flex-col justify-end gap-2"><button id="loadDemoCustomMcq" class="w-full px-4 py-3 rounded-xl bg-teal-950/50 hover:bg-teal-900/60 border border-teal-500/20 text-teal-200 font-bold text-xs"><i class="fa fa-wand-magic-sparkles mr-1.5"></i>Load demo questions</button><button id="clearCustomMcqDraft" class="w-full px-4 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-slate-300 hover:text-rose-300 font-bold text-xs"><i class="fa fa-eraser mr-1.5"></i>Clear draft</button></div>
             </div>
             <div id="customMcqCards" class="space-y-4"></div>
             <div class="sticky bottom-20 z-20 mt-6 p-3 rounded-2xl bg-[#0F172A]/95 backdrop-blur border border-teal-500/20 flex flex-wrap items-center justify-between gap-3 shadow-xl">
                 <p id="customMcqStatus" class="text-xs text-slate-400">100 question cards ready · Draft saves on this device</p>
                 <div class="flex flex-wrap gap-2">
                     <button onclick="switchMainTab('paste')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs"><i class="fa fa-paste mr-1.5"></i>Paste questions</button>
-                    <button id="exportCustomMcqDraft" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs"><i class="fa fa-download mr-1.5"></i>Export JSON</button>
+                    <button id="importCustomMcqJson" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs"><i class="fa fa-file-import mr-1.5"></i>Import JSON</button><input id="customMcqJsonFile" type="file" accept=".json,application/json" class="hidden"><button id="exportCustomMcqDraft" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 font-bold text-xs"><i class="fa fa-download mr-1.5"></i>Export JSON</button>
                     <button id="launchMcqBuilderTest" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 hover:from-teal-300 hover:to-cyan-300 text-slate-950 font-black text-xs shadow-lg shadow-teal-950/40"><i class="fa fa-play mr-1.5"></i>Start Test</button>
                 </div>
             </div>
@@ -425,6 +476,11 @@ Ans: A
 <section id="profilePanel" class="hidden w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 flex-1">
   <div class="bg-[#1E293B] border border-white/10 rounded-3xl p-6 sm:p-9 shadow-2xl">
     <div class="flex items-center gap-4 mb-6"><img id="profilePanelAvatar" src="https://ui-avatars.com/api/?name=Candidate&background=0F172A&color=5eead4&bold=true" alt="Profile avatar" class="w-16 h-16 rounded-2xl object-cover border border-teal-500/30"><div class="min-w-0"><h2 id="profilePanelName" class="text-2xl font-black text-white truncate">Guest Candidate</h2><p id="profilePanelEmail" class="text-sm text-slate-400 truncate">Not signed in</p></div></div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+      <button onclick="showAppSection('leaderboard')" class="text-left rounded-2xl bg-slate-900/80 border border-teal-500/20 p-4 hover:border-teal-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-300 flex items-center justify-center mb-3"><i class="fa fa-chart-line"></i></span><span class="block text-sm font-black text-white group-hover:text-teal-200">Exam History</span><span class="block text-xs text-slate-400 mt-1">Review scores and attempts</span></button>
+      <button onclick="showAppSection('install')" class="text-left rounded-2xl bg-slate-900/80 border border-indigo-500/20 p-4 hover:border-indigo-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-300 flex items-center justify-center mb-3"><i class="fa fa-mobile-screen-button"></i></span><span class="block text-sm font-black text-white group-hover:text-indigo-200">App & Devices</span><span class="block text-xs text-slate-400 mt-1">Install or connect devices</span></button>
+      <button onclick="window.AppSync ? window.AppSync.openSyncModal() : showAppSection('install')" class="text-left rounded-2xl bg-slate-900/80 border border-purple-500/20 p-4 hover:border-purple-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-300 flex items-center justify-center mb-3"><i class="fa fa-rotate"></i></span><span class="block text-sm font-black text-white group-hover:text-purple-200">Sync & Backup</span><span class="block text-xs text-slate-400 mt-1">Manage cross-device sync</span></button>
+    </div>
     <div class="rounded-2xl bg-slate-900/70 border border-white/10 p-5 mb-5"><p class="text-sm text-slate-300">Sign in with Google to sync exam history and ranking across devices. Your custom MCQ draft remains saved locally on this device.</p><div class="flex flex-wrap gap-3 mt-4"><button onclick="document.getElementById('authBtn')?.click()" class="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm"><i class="fa-brands fa-google mr-2"></i>Google Login</button><button id="profilePanelLogout" onclick="handleLogout()" class="hidden px-5 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-rose-300 font-bold text-sm"><i class="fa fa-arrow-right-from-bracket mr-2"></i>Sign out</button></div></div>
     <div class="flex flex-wrap gap-3 text-xs text-slate-400"><button onclick="showAppSection('leaderboard')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 font-bold"><i class="fa fa-clock-rotate-left mr-1.5"></i>My Exam History</button><button onclick="showAppSection('model-tests')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 font-bold"><i class="fa fa-book-medical mr-1.5"></i>Back to Model Tests</button></div>
   </div>
@@ -562,15 +618,14 @@ Ans: A
 </div>
 
 <nav id="bottomAppNav" aria-label="Main navigation" class="fixed bottom-0 inset-x-0 z-40 bg-[#0B1220]/95 backdrop-blur-xl border-t border-white/10 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-  <div class="max-w-4xl mx-auto grid grid-cols-5 gap-1">
+  <div class="max-w-4xl mx-auto grid grid-cols-4 gap-1">
     <button data-app-section="model-tests" onclick="showAppSection('model-tests')" class="bottom-nav-item active flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-teal-300"><i class="fa fa-book-medical text-base"></i><span class="text-[10px] sm:text-xs font-bold">Model Tests</span></button>
     <button data-app-section="leaderboard" onclick="showAppSection('leaderboard')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-trophy text-base"></i><span class="text-[10px] sm:text-xs font-bold">Leaderboard</span></button>
-    <button data-app-section="custom-mcq" onclick="showAppSection('custom-mcq')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-list-check text-base"></i><span class="text-[10px] sm:text-xs font-bold">Custom MCQ</span></button>
     <button data-app-section="install" onclick="showAppSection('install')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-download text-base"></i><span class="text-[10px] sm:text-xs font-bold">Install App</span></button>
     <button data-app-section="profile" onclick="showAppSection('profile')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-user text-base"></i><span class="text-[10px] sm:text-xs font-bold">Profile</span></button>
   </div>
 </nav>
-<footer id="appFooter" class="w-full text-center px-4 pt-5 pb-28 text-xs text-slate-500 border-t border-white/5">
+<footer id="appFooter" class="w-full text-center px-4 pt-4 pb-5 text-sm sm:text-base text-slate-400 border-t border-white/5">
   <p class="font-semibold text-slate-300">Made by Tausif Rahaman Raiyan</p><p class="mt-1">© 2026 Medical Secret Files • All Rights Reserved</p>
   <div class="flex items-center justify-center gap-4 mt-3"><a href="https://github.com/tausif-rahaman-raiyan" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-400 hover:text-white text-lg"><i class="fa-brands fa-github"></i></a><a href="https://www.instagram.com/tausifrahamanraiyan/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="text-slate-400 hover:text-pink-300 text-lg"><i class="fa-brands fa-instagram"></i></a></div>
 </footer>
@@ -822,34 +877,24 @@ Ans: A
     const profileBtn = document.getElementById('profileBtn');
     const userDropdown = document.getElementById('userDropdown');
     profileBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         userDropdown?.classList.toggle('hidden');
     });
-    document.addEventListener('click', () => userDropdown?.classList.add('hidden'));
+    userDropdown?.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', (e) => {
+        if (userDropdown && !userDropdown.contains(e.target) && !profileBtn?.contains(e.target)) userDropdown.classList.add('hidden');
+    });
 
-    // Smart Auto-Hide Top Header on Scroll Down & Reveal on Scroll Up / Back to Top
+    // Keep the top command header stable during loading and scrolling
     let lastScrollY = window.scrollY;
     const mainHeader = document.getElementById('mainHeader');
 
     window.addEventListener('scroll', () => {
         const currentScrollY = window.scrollY;
         
-        // Auto-close user menu when scrolling
-        if (userDropdown && !userDropdown.classList.contains('hidden')) {
-            userDropdown.classList.add('hidden');
-        }
-
-        if (currentScrollY <= 15) {
-            // At top: always show header
-            mainHeader?.classList.remove('-translate-y-full');
-        } else if (currentScrollY > lastScrollY && currentScrollY > 70) {
-            // Scrolling down: auto-hide header
-            mainHeader?.classList.add('-translate-y-full');
-        } else if (currentScrollY < lastScrollY) {
-            // Scrolling up / back to top: reveal header
-            mainHeader?.classList.remove('-translate-y-full');
-        }
-
+        // Keep the top command bar visible on both mobile and desktop.
+        mainHeader?.classList.remove('-translate-y-full');
         lastScrollY = currentScrollY;
     }, { passive: true });
 

@@ -156,10 +156,10 @@
 
     container.innerHTML = `
       <!-- Sticky Command Header -->
-      <div class="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 py-3 mb-6 w-full">
-        <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+      <div class="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 py-2 sm:py-2.5 mb-3 sm:mb-4 w-full">
+        <div class="relative flex flex-nowrap items-center justify-between gap-2 sm:gap-3 w-full min-h-10">
           <!-- Left: Title and Exam info -->
-          <div class="flex items-center gap-3 min-w-0">
+          <div class="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[48%] sm:max-w-[55%]">
             <button onclick="window.ExamEngine.confirmExit()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all">
               <i class="fa fa-arrow-left"></i> Exit
             </button>
@@ -172,25 +172,16 @@
           </div>
 
           <!-- Middle & Right Controls -->
-          <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-            <!-- Mode Switcher -->
-            <div class="flex items-center bg-slate-900 border border-white/10 rounded-xl p-1">
-              <button id="btn-mode-card" onclick="window.ExamEngine.setMode('card')" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all ${ExamState.mode === 'card' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}">
-                <i class="fa fa-layer-group mr-1"></i> Quiz Mode
-              </button>
-              <button id="btn-mode-omr" onclick="window.ExamEngine.setMode('omr')" class="px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all ${ExamState.mode === 'omr' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}">
-                <i class="fa fa-circle-dot mr-1"></i> OMR Mode
-              </button>
-            </div>
-
+          <div class="relative flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
+            <!-- Quiz mode is the default; no mode switcher is shown -->
             <!-- Timer Badge -->
-            <div class="px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-500/40 text-purple-300 font-mono font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-inner">
+            <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-500/40 text-purple-300 font-mono font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-inner whitespace-nowrap">
               <i class="fa fa-stopwatch text-purple-400 animate-pulse"></i>
               <span id="exam-live-timer">00:00</span>
             </div>
 
             <!-- Submit Button -->
-            <button onclick="window.ExamEngine.confirmSubmit()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-1.5">
+            <button onclick="window.ExamEngine.confirmSubmit()" class="ml-auto flex-shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-1.5">
               <i class="fa fa-paper-plane"></i> Submit
             </button>
           </div>
@@ -208,11 +199,11 @@
       </div>
 
       <!-- 2-Column Responsive Layout: Left Questions, Right Sticky Palette -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 w-full items-start">
         
         <!-- Left Column: Main Questions Stream -->
-        <div class="lg:col-span-8 xl:col-span-8 space-y-6 pb-20">
-          <div id="questions-stream" class="space-y-6 w-full">
+        <div class="lg:col-span-8 xl:col-span-8 space-y-3 pb-8 sm:pb-12 min-w-0">
+          <div id="questions-stream" class="space-y-3 w-full">
             ${renderQuestionsList()}
           </div>
         </div>
@@ -268,7 +259,7 @@
       if (ExamState.mode === 'card') {
         // Quiz Card Mode (Default) - Compact 2-Column / 2-Line Options Grid
         return `
-          <div id="q-card-${idx}" class="question-card bg-[#1E293B] border ${isLocked ? 'border-purple-500/50 shadow-purple-900/10' : 'border-white/10'} rounded-2xl p-4 sm:p-5 transition-all shadow-md w-full mb-4">
+          <div id="q-card-${idx}" class="question-card bg-[#1E293B] border ${isLocked ? 'border-purple-500/50 shadow-purple-900/10' : 'border-white/10'} rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all shadow-md w-full mb-2">
             <div class="flex items-center justify-between mb-2.5">
               <span class="px-2.5 py-0.5 rounded-lg bg-purple-950/90 border border-purple-600/50 text-purple-200 text-xs font-black font-mono tracking-wider">
                 QUESTION #${q.id}
@@ -740,7 +731,7 @@
     const isNegative = result.score < 0;
 
     container.innerHTML = `
-      <div class="max-w-6xl mx-auto px-3 sm:px-6 md:px-8 py-4 sm:py-6 w-full">
+      <div class="max-w-6xl mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-5 w-full">
         <!-- Result Summary Hero Card -->
         <div class="bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl mb-8 w-full">
           <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6 mb-6">
@@ -932,7 +923,7 @@
           </div>
 
           <!-- Distinct 2 Lines for রেফারেন্স and কনসেপ্ট in 2 Colors (Uniform 10-11px) -->
-          <div class="mt-3 pt-2.5 border-t border-white/10 space-y-1.5">
+          <div class="review-explanation mt-2 pt-2 border-t border-white/10">
             ${fmtExp(q.exp)}
           </div>
         </div>
