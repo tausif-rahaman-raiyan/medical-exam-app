@@ -825,7 +825,7 @@
       </div>
     `;
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Every exam result opens at the top, regardless of where the final question was scrolled.\n    window.scrollTo({ top: 0, behavior: 'instant' });\n    document.documentElement.scrollTop = 0;\n    document.body.scrollTop = 0;
   }
 
   function filterReview(filterType) {
