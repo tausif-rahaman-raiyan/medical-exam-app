@@ -165,10 +165,11 @@
           #userDropdown { width: min(20rem, calc(100vw - 2rem)); }
         }
         /* Keep site chrome visible even when the browser is maximized/fullscreen. */
-        html:fullscreen #bottomAppNav, body.is-fullscreen #bottomAppNav { display: none !important; }
         #mainHeader { position: sticky !important; top: 0 !important; z-index: 100 !important; transform: none !important; visibility: visible !important; }
         #appFooter { display: block !important; visibility: visible !important; }
         @media (max-width: 640px) {
+          /* The compact bottom navigation replaces the full header on phones. */
+          #mainHeader { display: none !important; }
           #appFooter { font-size: 14px; padding-top: 14px; padding-bottom: 16px; }
           #mainContent { padding-top: 12px; }
           #mainHeader > div { gap: .5rem !important; }
@@ -176,7 +177,6 @@
           #mainHeader a.group img { width: 2rem; height: 2rem; }
           #mainHeader a.group p { display: none; }
           #mainHeader > div > div { gap: .35rem !important; }
-          #headerGoogleLogin, #btnFullscreen { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
           #mainHeader button[title="Leaderboard & My Results"] { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
           #mainHeader button[title="Leaderboard & My Results"] span { display: none !important; }
           #profileBtn { width: 2.15rem !important; height: 2.15rem !important; }
@@ -220,12 +220,7 @@
 
         <!-- Right Side: Controls Group -->
         <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 ml-auto">
-            <!-- Always-visible Google Login -->
-            <button id="headerGoogleLogin" onclick="document.getElementById('authBtn')?.click()" title="Sign in with Google" class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-white/10 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all">
-                <i class="fa-brands fa-google text-blue-300"></i><span class="hidden md:inline">Google Login</span>
-            </button>
-
-            <!-- Fullscreen Button -->
+<!-- Fullscreen Button -->
             <button id="btnFullscreen" onclick="toggleFullScreen()" title="Toggle Fullscreen" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-all">
                 <i id="fullscreen-icon" class="fa fa-expand text-xs sm:text-sm"></i>
             </button>
@@ -620,9 +615,10 @@ Ans: A
 </div>
 
 <nav id="bottomAppNav" aria-label="Main navigation" class="fixed bottom-0 inset-x-0 z-40 bg-[#0B1220]/95 backdrop-blur-xl border-t border-white/10 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-  <div class="max-w-4xl mx-auto grid grid-cols-4 gap-1">
+  <div class="max-w-4xl mx-auto grid grid-cols-5 gap-1">
     <button data-app-section="model-tests" onclick="showAppSection('model-tests')" class="bottom-nav-item active flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-teal-300"><i class="fa fa-book-medical text-base"></i><span class="text-[10px] sm:text-xs font-bold">Model Tests</span></button>
     <button data-app-section="leaderboard" onclick="showAppSection('leaderboard')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-trophy text-base"></i><span class="text-[10px] sm:text-xs font-bold">Leaderboard</span></button>
+    <button id="mobileFullscreenBtn" onclick="toggleFullScreen()" title="Toggle Fullscreen" aria-label="Toggle Fullscreen" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i id="mobile-fullscreen-icon" class="fa fa-expand text-base"></i><span class="text-[10px] sm:text-xs font-bold">Fullscreen</span></button>
     <button data-app-section="install" onclick="showAppSection('install')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-download text-base"></i><span class="text-[10px] sm:text-xs font-bold">Install App</span></button>
     <button data-app-section="profile" onclick="showAppSection('profile')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-user text-base"></i><span class="text-[10px] sm:text-xs font-bold">Profile</span></button>
   </div>
@@ -862,18 +858,25 @@ Ans: A
         });
     }
 
-    // Fullscreen API Helper
+    // Fullscreen API Helper: keep desktop and mobile navigation icons in sync.
+    function syncFullscreenIcons() {
+        const isFullscreen = Boolean(document.fullscreenElement);
+        const iconClass = isFullscreen ? 'fa fa-compress text-xs sm:text-sm' : 'fa fa-expand text-xs sm:text-sm';
+        const desktopIcon = document.getElementById('fullscreen-icon');
+        const mobileIcon = document.getElementById('mobile-fullscreen-icon');
+        if (desktopIcon) desktopIcon.className = iconClass;
+        if (mobileIcon) mobileIcon.className = isFullscreen ? 'fa fa-compress text-base' : 'fa fa-expand text-base';
+    }
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {});
-            const icon = document.getElementById('fullscreen-icon');
-            if (icon) icon.className = 'fa fa-compress';
-        } else {
-            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-            const icon = document.getElementById('fullscreen-icon');
-            if (icon) icon.className = 'fa fa-expand';
+            const request = document.documentElement.requestFullscreen?.();
+            if (request && request.catch) request.catch(() => {});
+        } else if (document.exitFullscreen) {
+            const request = document.exitFullscreen();
+            if (request && request.catch) request.catch(() => {});
         }
     }
+    document.addEventListener('fullscreenchange', syncFullscreenIcons);
 
     // Profile Dropdown
     const profileBtn = document.getElementById('profileBtn');
