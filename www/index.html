@@ -177,8 +177,8 @@
 </head>
 <body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24 sm:pb-0">
 
-<!-- Top Sticky Command Header with Smooth Auto-Hide on Scroll -->
-<header id="mainHeader" class="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 py-3 transition-transform duration-300 ease-in-out will-change-transform w-full">
+<!-- Top command header: stay visible while loading and while navigating -->
+<header id="mainHeader" class="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 px-2.5 sm:px-6 py-2.5 sm:py-3 w-full">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-4 w-full">
         <!-- Left Side: Logo & Branding -->
         <a href="#" onclick="location.reload()" class="flex items-center space-x-3 group min-w-0 flex-shrink-0 text-left">
@@ -863,24 +863,15 @@ Ans: A
         if (userDropdown && !userDropdown.contains(e.target) && !profileBtn?.contains(e.target)) userDropdown.classList.add('hidden');
     });
 
-    // Smart Auto-Hide Top Header on Scroll Down & Reveal on Scroll Up / Back to Top
+    // Keep the top command header stable during loading and scrolling
     let lastScrollY = window.scrollY;
     const mainHeader = document.getElementById('mainHeader');
 
     window.addEventListener('scroll', () => {
         const currentScrollY = window.scrollY;
         
-        if (currentScrollY <= 15) {
-            // At top: always show header
-            mainHeader?.classList.remove('-translate-y-full');
-        } else if (currentScrollY > lastScrollY && currentScrollY > 70) {
-            // Scrolling down: auto-hide header
-            mainHeader?.classList.add('-translate-y-full');
-        } else if (currentScrollY < lastScrollY) {
-            // Scrolling up / back to top: reveal header
-            mainHeader?.classList.remove('-translate-y-full');
-        }
-
+        // Keep the top command bar visible on both mobile and desktop.
+        mainHeader?.classList.remove('-translate-y-full');
         lastScrollY = currentScrollY;
     }, { passive: true });
 
