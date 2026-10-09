@@ -174,8 +174,6 @@
           #mainHeader a.group img { width: 2rem; height: 2rem; }
           #mainHeader a.group p { display: none; }
           #mainHeader > div > div { gap: .35rem !important; }
-          /* Keep Google Login out of the compact phone header; sign-in remains in Profile. */
-          #headerGoogleLogin { display: none !important; }
           #btnFullscreen { display: none !important; }
           #mainHeader button[title="Leaderboard & My Results"] { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
           #mainHeader button[title="Leaderboard & My Results"] span { display: none !important; }
@@ -220,10 +218,7 @@
 
         <!-- Right Side: Controls Group -->
         <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 ml-auto">
-            <!-- Always-visible Google Login -->
-            <button id="headerGoogleLogin" onclick="document.getElementById('authBtn')?.click()" title="Sign in with Google" class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-white/10 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-all">
-                <i class="fa-brands fa-google text-blue-300"></i><span class="hidden md:inline">Google Login</span>
-            </button>
+
 
             <!-- Fullscreen Button -->
             <button id="btnFullscreen" onclick="toggleFullScreen()" title="Toggle Fullscreen" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-all">
