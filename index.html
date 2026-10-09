@@ -198,6 +198,38 @@
         @media (min-width: 641px) and (max-width: 1023px) {
           #appFooter { font-size: 15px; }
         }
+        /* Fullscreen should be an immersive exam/app view on phones. */
+        body.is-fullscreen { padding-bottom: 0 !important; }
+        body.is-fullscreen #bottomAppNav,
+        :fullscreen #bottomAppNav { display: none !important; }
+        body.is-fullscreen #appFooter { display: none !important; }
+        #loginRequiredModal { padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)); }
+        @media (max-width: 640px) {
+          #resultsModal { padding: .5rem .5rem 1rem !important; }
+          #resultsModal > div { min-height: calc(100dvh - 5.5rem) !important; padding: .9rem !important; border-radius: 1.25rem !important; }
+          #resultsModal > div > div:first-child { flex-wrap: wrap; gap: .75rem !important; }
+          #resultsModal > div > div:first-child > div:last-child { width: 100%; justify-content: space-between; }
+          #resultsModal #btnPersonal, #resultsModal #btnGlobal { min-height: 46px; padding: .7rem .35rem; line-height: 1.25; }
+          #resultsModal #resultsList { overflow: visible; padding-right: 0; }
+          #resultsList > div { border-radius: 1rem !important; padding: .85rem !important; }
+          #leaderboardResultCounter { max-width: 68%; line-height: 1.4; }
+          #profilePanel { padding: .5rem .5rem 1.25rem !important; }
+          #profilePanel > div { padding: 1rem !important; border-radius: 1.25rem !important; }
+          #profilePanelAvatar { width: 3.5rem; height: 3.5rem; border-radius: 1rem; }
+          #profilePanelName { font-size: 1.25rem; line-height: 1.35; }
+          #profilePanel .grid { grid-template-columns: 1fr; }
+          #profilePanel .grid > button { display: grid; grid-template-columns: 2.5rem 1fr; column-gap: .75rem; align-items: center; padding: .9rem; }
+          #profilePanel .grid > button > span:first-child { grid-row: span 2; margin: 0; }
+          #profilePanel .grid > button > span:nth-child(2), #profilePanel .grid > button > span:nth-child(3) { margin: 0; }
+          .exam-result-page { padding: .35rem .15rem 1.25rem !important; }
+          .exam-result-summary { border-radius: 1.25rem !important; }
+          .exam-stat-card { min-height: 5.6rem; display: flex; flex-direction: column; justify-content: center; gap: .3rem; }
+          .exam-stat-card p:first-child { font-size: 1.45rem !important; line-height: 1.2; }
+          .exam-stat-card p:last-child { font-size: 10px !important; line-height: 1.35; overflow-wrap: anywhere; }
+          .exam-result-page #review-questions-stream > div { padding: .85rem !important; }
+          .exam-review-toolbar { padding: .85rem !important; }
+          #exam-render-container { scroll-margin-top: .5rem; }
+        }
     </style>
 </head>
 <body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24 sm:pb-0">
@@ -628,6 +660,18 @@ Ans: A
   <div class="flex items-center justify-center gap-4 mt-3"><a href="https://github.com/tausif-rahaman-raiyan" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-400 hover:text-white text-lg"><i class="fa-brands fa-github"></i></a><a href="https://www.instagram.com/tausifrahamanraiyan/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="text-slate-400 hover:text-pink-300 text-lg"><i class="fa-brands fa-instagram"></i></a></div>
 </footer>
 
+<!-- Google sign-in gate: exam content is not launched until authentication succeeds. -->
+<div id="loginRequiredModal" class="hidden fixed inset-0 z-[200] bg-slate-950/85 backdrop-blur-md items-center justify-center">
+  <div class="w-full max-w-md rounded-3xl border border-purple-400/25 bg-[#172033] p-5 sm:p-7 shadow-2xl">
+    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-400/30 bg-purple-500/10 text-2xl text-purple-300"><i class="fa-brands fa-google"></i></div>
+    <h2 class="text-center text-xl sm:text-2xl font-black text-white">Exam শুরু করতে Google Login করুন</h2>
+    <p class="mt-2 text-center text-sm leading-relaxed text-slate-300">আপনার exam score, history ও leaderboard account-এর সঙ্গে যুক্ত রাখতে Gmail/Google account দিয়ে sign in করতে হবে। Login না করা পর্যন্ত exam শুরু হবে না।</p>
+    <p id="loginRequiredError" class="hidden mt-3 rounded-xl border border-rose-500/30 bg-rose-950/30 p-3 text-xs text-rose-300"></p>
+    <button id="loginRequiredGoogleBtn" onclick="loginToStartExam()" class="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3.5 font-black text-slate-900 transition hover:bg-purple-100"><i class="fa-brands fa-google text-lg"></i><span>Continue with Google</span></button>
+    <button onclick="closeLoginRequiredModal()" class="mt-2 w-full rounded-xl px-4 py-3 text-sm font-bold text-slate-400 hover:bg-white/5 hover:text-white">এখন নয়</button>
+  </div>
+</div>
+
 <!-- Scripts -->
 <script src="assets/science-formatter.js"></script>
 <script src="assets/confetti.browser.min.js"></script>
@@ -867,16 +911,41 @@ Ans: A
         if (desktopIcon) desktopIcon.className = iconClass;
         if (mobileIcon) mobileIcon.className = isFullscreen ? 'fa fa-compress text-base' : 'fa fa-expand text-base';
     }
+    let fullscreenBackGuardActive = false;
+    let fullscreenExitTriggeredByBack = false;
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
-            const request = document.documentElement.requestFullscreen?.();
+            const root = document.documentElement;
+            const request = root.requestFullscreen?.() || root.webkitRequestFullscreen?.();
             if (request && request.catch) request.catch(() => {});
-        } else if (document.exitFullscreen) {
-            const request = document.exitFullscreen();
+        } else {
+            const request = document.exitFullscreen?.() || document.webkitExitFullscreen?.();
             if (request && request.catch) request.catch(() => {});
         }
     }
-    document.addEventListener('fullscreenchange', syncFullscreenIcons);
+    document.addEventListener('fullscreenchange', () => {
+        syncFullscreenIcons();
+        if (document.fullscreenElement && !fullscreenBackGuardActive) {
+            fullscreenBackGuardActive = true;
+            try { history.pushState({ msfFullscreenGuard: true }, '', location.href); } catch {}
+        } else if (!document.fullscreenElement && fullscreenBackGuardActive) {
+            fullscreenBackGuardActive = false;
+            if (!fullscreenExitTriggeredByBack) {
+                try { if (history.state?.msfFullscreenGuard) history.back(); } catch {}
+            }
+            fullscreenExitTriggeredByBack = false;
+        }
+    });
+    document.addEventListener('webkitfullscreenchange', syncFullscreenIcons);
+    window.addEventListener('popstate', () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            fullscreenExitTriggeredByBack = true;
+            try {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else document.webkitExitFullscreen?.();
+            } catch {}
+        }
+    });
 
     // Profile Dropdown
     const profileBtn = document.getElementById('profileBtn');
@@ -1287,33 +1356,47 @@ Ans: A
         });
     }
 
-    const authBtn = document.getElementById('authBtn');
-    authBtn?.addEventListener('click', async () => {
-        const isDesktop = window.navigator.userAgent.includes('Electron') || window.location.protocol === 'file:';
-        if (isDesktop && window.AppSync) {
-            window.AppSync.openSyncModal();
-            return;
-        }
-
+    // Shared Google sign-in flow for the profile button and the exam login gate.
+    let pendingExamAfterLogin = null;
+    window.showLoginRequiredModal = function(examItem) {
+        pendingExamAfterLogin = examItem || null;
+        const modal = document.getElementById('loginRequiredModal');
+        const error = document.getElementById('loginRequiredError');
+        if (error) { error.textContent = ''; error.classList.add('hidden'); }
+        if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    };
+    window.closeLoginRequiredModal = function() {
+        const modal = document.getElementById('loginRequiredModal');
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        pendingExamAfterLogin = null;
+    };
+    window.loginToStartExam = async function() {
+        const button = document.getElementById('loginRequiredGoogleBtn');
+        const error = document.getElementById('loginRequiredError');
+        if (button) { button.disabled = true; button.innerHTML = '<i class="fa fa-spinner fa-spin"></i><span>Signing in…</span>'; }
+        if (error) { error.textContent = ''; error.classList.add('hidden'); }
         try {
-            if (window.firebaseAuth && window.googleProvider) {
-                const res = await window.firebaseAuth.signInWithPopup(window.googleProvider);
-                if (res.user) {
-                    const profile = {
-                        uid: res.user.uid,
-                        name: res.user.displayName || 'Medical Aspirant',
-                        email: res.user.email || '',
-                        photoURL: res.user.photoURL || ''
-                    };
-                    if (window.AppSync) {
-                        window.AppSync.applyUserProfile(profile, true);
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn('Google sign-in popup handled in guest/local mode', e);
+            if (!window.firebaseAuth || !window.googleProvider) throw new Error('Google sign-in is not configured. Please try again later.');
+            const res = await window.firebaseAuth.signInWithPopup(window.googleProvider);
+            const user = res.user;
+            const isGoogleUser = !!(user && user.email && (user.providerData || []).some(p => p.providerId === 'google.com'));
+            if (!isGoogleUser) throw new Error('Please choose a Google account to continue.');
+            const profile = { uid: user.uid, name: user.displayName || 'Medical Aspirant', email: user.email || '', photoURL: user.photoURL || '' };
+            window.AppSync?.applyUserProfile(profile, true);
+            const examToLaunch = pendingExamAfterLogin;
+            const modal = document.getElementById('loginRequiredModal');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+            pendingExamAfterLogin = null;
+            if (examToLaunch) window.ExamEngine?.launchExam(examToLaunch);
+        } catch (err) {
+            console.warn('Google sign-in failed:', err);
+            if (error) { error.textContent = err?.message || 'Login হয়নি। আবার চেষ্টা করুন।'; error.classList.remove('hidden'); }
+        } finally {
+            if (button) { button.disabled = false; button.innerHTML = '<i class="fa-brands fa-google text-lg"></i><span>Continue with Google</span>'; }
         }
-    });
+    };
+    const authBtn = document.getElementById('authBtn');
+    authBtn?.addEventListener('click', () => window.loginToStartExam());
 
     function handleLogout() {
         if (window.AppSync) {
