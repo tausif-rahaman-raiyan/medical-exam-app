@@ -75,6 +75,21 @@
     a.href=url; a.download='medical-secret-files-custom-mcq.json'; a.click();
     setTimeout(function(){URL.revokeObjectURL(url);},1000);
   }
+  function loadDemoQuestions() {
+    var demos = [
+      {q:'মানুষের হৃৎপিণ্ডে প্রকোষ্ঠ কয়টি?',a:'২টি',b:'৩টি',c:'৪টি',d:'৫টি',ans:'c',exp:'রেফারেন্স: মানব শারীরতত্ত্ব, জীববিজ্ঞান ২য় পত্র। কনসেপ্ট: মানুষের হৃৎপিণ্ডে ৪টি প্রকোষ্ঠ থাকে।'},
+      {q:'সালোকসংশ্লেষণের আলোক-নির্ভর পর্যায়ে কোন দুটি উপাদান তৈরি হয়?',a:'গ্লুকোজ ও অক্সিজেন',b:'ATP ও NADPH₂',c:'প্রোটিন ও লিপিড',d:'পাইরুভেট ও ল্যাকটেট',ans:'b',exp:'রেফারেন্স: উদ্ভিদ শারীরতত্ত্ব, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: আলোক-নির্ভর বিক্রিয়ায় ATP ও NADPH₂ উৎপন্ন হয়।'},
+      {q:'ধানে (Oryza sativa) ডিপ্লয়েড ক্রোমোজোম সংখ্যা কত?',a:'১৪',b:'২০',c:'২৪',d:'৪২',ans:'c',exp:'রেফারেন্স: কোষ ও এর গঠন, জীববিজ্ঞান ১ম পত্র। কনসেপ্ট: ধানের ডিপ্লয়েড ক্রোমোজোম সংখ্যা ২৪।'}
+    ];
+    questions = demos.map(function(q,i){ return Object.assign(blankQuestion(i),q,{id:i+1}); });
+    while (questions.length < 100) questions.push(blankQuestion(questions.length));
+    $('customMcqTitle').value = 'Demo Medical MCQ Test';
+    $('customMcqCards').innerHTML = questions.map(cardMarkup).join('');
+    $('customMcqCount').value = questions.length;
+    saveDraft();
+    if ($('customMcqStatus')) $('customMcqStatus').textContent = 'Demo loaded: 3 sample questions + blank cards · Edit before starting';
+    $('customMcqCards').querySelector('.custom-mcq-card')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
   function clearDraft() {
     if (!confirm('Clear all custom MCQ cards and the saved draft on this device?')) return;
     localStorage.removeItem(STORAGE_KEY); $('customMcqTitle').value='My Custom MCQ Test';
@@ -95,5 +110,6 @@
     $('launchMcqBuilderTest').addEventListener('click',launchTest);
     $('exportCustomMcqDraft').addEventListener('click',exportDraft);
     $('clearCustomMcqDraft').addEventListener('click',clearDraft);
+    $('loadDemoCustomMcq')?.addEventListener('click',loadDemoQuestions);
   });
 })();
