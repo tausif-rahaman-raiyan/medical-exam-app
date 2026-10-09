@@ -147,6 +147,9 @@
             font-weight: 600 !important;
             font-family: 'Hind Siliguri', 'Kalpurush', sans-serif !important;
         }
+        .bottom-nav-item { transition: color .18s ease, background-color .18s ease; }
+        .bottom-nav-item.active { background: rgba(20, 184, 166, .10); box-shadow: inset 0 0 0 1px rgba(45, 212, 191, .16); }
+        #resultsModal { min-height: 60vh; }
     </style>
 </head>
 <body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24">
@@ -1239,7 +1242,6 @@ Ans: A
     }
 
     const authBtn = document.getElementById('authBtn');
-    document.getElementById('headerGoogleLogin')?.addEventListener('click', () => authBtn?.click());
     authBtn?.addEventListener('click', async () => {
         const isDesktop = window.navigator.userAgent.includes('Electron') || window.location.protocol === 'file:';
         if (isDesktop && window.AppSync) {
