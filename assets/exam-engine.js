@@ -167,7 +167,7 @@
 
     container.innerHTML = `
       <!-- Sticky Command Header: mobile has title left + timer/submit stacked right; desktop timer is centered in the full header -->
-      <div class="sticky top-[3.75rem] sm:top-[4.5rem] z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 py-2 sm:py-2.5 mb-3 sm:mb-4 w-full">
+      <div class="sticky top-0 z-50 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 pt-[env(safe-area-inset-top)] pb-2 sm:py-2.5 mb-3 sm:mb-4 w-full">
         <div class="relative grid grid-cols-[minmax(0,1fr)_auto] sm:flex sm:items-center sm:justify-between gap-2 sm:gap-3 w-full min-h-10">
           <!-- Left: Title and Exam info -->
           <div class="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 sm:max-w-[42%]">
