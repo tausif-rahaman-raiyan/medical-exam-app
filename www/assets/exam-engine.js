@@ -157,9 +157,9 @@
     container.innerHTML = `
       <!-- Sticky Command Header -->
       <div class="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 py-2 sm:py-2.5 mb-3 sm:mb-4 w-full">
-        <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+        <div class="relative flex flex-nowrap items-center justify-between gap-2 sm:gap-3 w-full min-h-10">
           <!-- Left: Title and Exam info -->
-          <div class="flex items-center gap-3 min-w-0">
+          <div class="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[48%] sm:max-w-[55%]">
             <button onclick="window.ExamEngine.confirmExit()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all">
               <i class="fa fa-arrow-left"></i> Exit
             </button>
@@ -172,16 +172,16 @@
           </div>
 
           <!-- Middle & Right Controls -->
-          <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+          <div class="relative flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
             <!-- Quiz mode is the default; no mode switcher is shown -->
             <!-- Timer Badge -->
-            <div class="px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-500/40 text-purple-300 font-mono font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-inner">
+            <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-500/40 text-purple-300 font-mono font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-inner whitespace-nowrap">
               <i class="fa fa-stopwatch text-purple-400 animate-pulse"></i>
               <span id="exam-live-timer">00:00</span>
             </div>
 
             <!-- Submit Button -->
-            <button onclick="window.ExamEngine.confirmSubmit()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-1.5">
+            <button onclick="window.ExamEngine.confirmSubmit()" class="ml-auto flex-shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-1.5">
               <i class="fa fa-paper-plane"></i> Submit
             </button>
           </div>
