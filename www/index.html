@@ -174,7 +174,8 @@
           #mainHeader a.group img { width: 2rem; height: 2rem; }
           #mainHeader a.group p { display: none; }
           #mainHeader > div > div { gap: .35rem !important; }
-          #headerGoogleLogin { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          /* Keep Google Login out of the compact phone header; sign-in remains in Profile. */
+          #headerGoogleLogin { display: none !important; }
           #btnFullscreen { display: none !important; }
           #mainHeader button[title="Leaderboard & My Results"] { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
           #mainHeader button[title="Leaderboard & My Results"] span { display: none !important; }
@@ -619,7 +620,7 @@ Ans: A
 </div>
 
 <nav id="bottomAppNav" aria-label="Main navigation" class="fixed bottom-0 inset-x-0 z-40 bg-[#0B1220]/95 backdrop-blur-xl border-t border-white/10 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-  <div class="max-w-4xl mx-auto grid grid-cols-4 gap-1">
+  <div class="max-w-4xl mx-auto grid grid-cols-5 gap-1">
     <button data-app-section="model-tests" onclick="showAppSection('model-tests')" class="bottom-nav-item active flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-teal-300"><i class="fa fa-book-medical text-base"></i><span class="text-[10px] sm:text-xs font-bold">Model Tests</span></button>
     <button data-app-section="leaderboard" onclick="showAppSection('leaderboard')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-trophy text-base"></i><span class="text-[10px] sm:text-xs font-bold">Leaderboard</span></button>
     <button id="mobileFullscreenBtn" onclick="toggleFullScreen()" title="Toggle Fullscreen" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i id="mobile-fullscreen-icon" class="fa fa-expand text-base"></i><span class="text-[10px] sm:text-xs font-bold">Fullscreen</span></button>
