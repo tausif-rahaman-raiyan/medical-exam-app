@@ -159,6 +159,9 @@
         .question-card p { overflow-wrap: anywhere; }
         @media (min-width: 1024px) { #bottomAppNav { display: none !important; } }
         @media (max-width: 640px) {
+          body:has(#exam-view:not(.hidden)) #mainHeader { display: none !important; }
+          body:has(#exam-view:not(.hidden)) #mainContent { padding-top: 0 !important; }
+
           #userDropdown { position: fixed !important; top: 4.25rem !important; right: .5rem !important; left: auto !important; margin-top: 0 !important; width: min(20rem, calc(100vw - 1rem)) !important; }
         }
         @media (min-width: 641px) and (max-width: 1023px) {
