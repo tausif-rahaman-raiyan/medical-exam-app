@@ -164,7 +164,6 @@
           #userDropdown { width: min(20rem, calc(100vw - 2rem)); }
         }
         /* Keep site chrome visible even when the browser is maximized/fullscreen. */
-        html:fullscreen #bottomAppNav, body.is-fullscreen #bottomAppNav { display: none !important; }
         #mainHeader { position: sticky !important; top: 0 !important; z-index: 100 !important; transform: none !important; visibility: visible !important; }
         #appFooter { display: block !important; visibility: visible !important; }
         @media (max-width: 640px) {
@@ -175,7 +174,8 @@
           #mainHeader a.group img { width: 2rem; height: 2rem; }
           #mainHeader a.group p { display: none; }
           #mainHeader > div > div { gap: .35rem !important; }
-          #headerGoogleLogin, #btnFullscreen { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          #headerGoogleLogin { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
+          #btnFullscreen { display: none !important; }
           #mainHeader button[title="Leaderboard & My Results"] { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
           #mainHeader button[title="Leaderboard & My Results"] span { display: none !important; }
           #profileBtn { width: 2.15rem !important; height: 2.15rem !important; }
@@ -622,6 +622,7 @@ Ans: A
   <div class="max-w-4xl mx-auto grid grid-cols-4 gap-1">
     <button data-app-section="model-tests" onclick="showAppSection('model-tests')" class="bottom-nav-item active flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-teal-300"><i class="fa fa-book-medical text-base"></i><span class="text-[10px] sm:text-xs font-bold">Model Tests</span></button>
     <button data-app-section="leaderboard" onclick="showAppSection('leaderboard')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-trophy text-base"></i><span class="text-[10px] sm:text-xs font-bold">Leaderboard</span></button>
+    <button id="mobileFullscreenBtn" onclick="toggleFullScreen()" title="Toggle Fullscreen" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i id="mobile-fullscreen-icon" class="fa fa-expand text-base"></i><span class="text-[10px] sm:text-xs font-bold">Fullscreen</span></button>
     <button data-app-section="install" onclick="showAppSection('install')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-download text-base"></i><span class="text-[10px] sm:text-xs font-bold">Install App</span></button>
     <button data-app-section="profile" onclick="showAppSection('profile')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-user text-base"></i><span class="text-[10px] sm:text-xs font-bold">Profile</span></button>
   </div>
@@ -861,18 +862,23 @@ Ans: A
         });
     }
 
-    // Fullscreen API Helper
+    // Fullscreen API Helper: keep desktop and mobile controls synchronized.
+    function syncFullscreenIcons() {
+        const active = Boolean(document.fullscreenElement);
+        [['fullscreen-icon', 'fa-expand', 'fa-compress'], ['mobile-fullscreen-icon', 'fa-expand', 'fa-compress']].forEach(([id, expand, compress]) => {
+            const icon = document.getElementById(id);
+            if (icon) icon.className = 'fa ' + (active ? compress : expand) + (id === 'fullscreen-icon' ? ' text-xs sm:text-sm' : ' text-base');
+        });
+    }
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {});
-            const icon = document.getElementById('fullscreen-icon');
-            if (icon) icon.className = 'fa fa-compress';
-        } else {
-            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-            const icon = document.getElementById('fullscreen-icon');
-            if (icon) icon.className = 'fa fa-expand';
+            const request = document.documentElement.requestFullscreen?.();
+            if (request && typeof request.catch === 'function') request.catch(() => {});
+        } else if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
         }
     }
+    document.addEventListener('fullscreenchange', syncFullscreenIcons);
 
     // Profile Dropdown
     const profileBtn = document.getElementById('profileBtn');
