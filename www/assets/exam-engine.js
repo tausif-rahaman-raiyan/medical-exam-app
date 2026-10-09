@@ -155,33 +155,29 @@
     const examCode = ExamState.examData?.c || ExamState.examData?.code || '1020325001';
 
     container.innerHTML = `
-      <!-- Sticky Command Header -->
+      <!-- Sticky Command Header: mobile has title left + timer/submit stacked right; desktop timer is centered in the full header -->
       <div class="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 py-2 sm:py-2.5 mb-3 sm:mb-4 w-full">
-        <div class="relative flex flex-nowrap items-center justify-between gap-2 sm:gap-3 w-full min-h-10">
+        <div class="relative grid grid-cols-[minmax(0,1fr)_auto] sm:flex sm:items-center sm:justify-between gap-2 sm:gap-3 w-full min-h-10">
           <!-- Left: Title and Exam info -->
-          <div class="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[48%] sm:max-w-[55%]">
-            <button onclick="window.ExamEngine.confirmExit()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all">
-              <i class="fa fa-arrow-left"></i> Exit
+          <div class="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 sm:max-w-[42%]">
+            <button onclick="window.ExamEngine.confirmExit()" class="flex-shrink-0 px-2 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs flex items-center gap-1.5 transition-all">
+              <i class="fa fa-arrow-left"></i><span>Exit</span>
             </button>
-            <div class="min-w-0">
-              <h2 class="text-base sm:text-lg md:text-xl font-black text-white truncate">${examTitle}</h2>
-              <p class="text-xs text-slate-400 font-mono flex items-center gap-2 truncate">
-                <span class="text-purple-400 font-semibold">${examCat}</span> • Code: ${examCode}
+            <div class="min-w-0 flex-1">
+              <h2 class="text-sm sm:text-lg md:text-xl font-black text-white leading-tight break-words sm:truncate">${examTitle}</h2>
+              <p class="text-[10px] sm:text-xs text-slate-400 font-mono flex flex-wrap sm:flex-nowrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
+                <span class="text-purple-400 font-semibold">${examCat}</span><span class="hidden sm:inline">•</span><span class="break-all">Code: ${examCode}</span>
               </p>
             </div>
           </div>
 
-          <!-- Middle & Right Controls -->
-          <div class="relative flex flex-1 items-center justify-end gap-2 sm:gap-3 min-w-0">
-            <!-- Quiz mode is the default; no mode switcher is shown -->
-            <!-- Timer Badge -->
-            <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-500/40 text-purple-300 font-mono font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-inner whitespace-nowrap">
+          <!-- Mobile: timer on first line and submit on second. Desktop: timer overlays the exact center of the full header row. -->
+          <div class="flex flex-col items-end justify-center gap-1 sm:contents min-w-0">
+            <div class="relative sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 px-2 sm:px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-500/40 text-purple-300 font-mono font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-inner whitespace-nowrap">
               <i class="fa fa-stopwatch text-purple-400 animate-pulse"></i>
               <span id="exam-live-timer">00:00</span>
             </div>
-
-            <!-- Submit Button -->
-            <button onclick="window.ExamEngine.confirmSubmit()" class="ml-auto flex-shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-1.5">
+            <button onclick="window.ExamEngine.confirmSubmit()" class="flex-shrink-0 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-[10px] sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-1.5">
               <i class="fa fa-paper-plane"></i> Submit
             </button>
           </div>
