@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Medical Secret Files</title>
     <meta name="description" content="Comprehensive medical admission exam preparation platform with interactive question banks, OMR sheet scanner, practice tests, and detailed answer explanations.">
     <meta property="og:title" content="Medical Secret Files">
@@ -163,9 +163,10 @@
         @media (min-width: 641px) and (max-width: 1023px) {
           #userDropdown { width: min(20rem, calc(100vw - 2rem)); }
         }
-        html:fullscreen #bottomAppNav, html:fullscreen #appFooter,
-        html:fullscreen #mainHeader, body.is-fullscreen #bottomAppNav,
-        body.is-fullscreen #appFooter, body.is-fullscreen #mainHeader { display: none !important; }
+        /* Keep site chrome visible even when the browser is maximized/fullscreen. */
+        html:fullscreen #bottomAppNav, body.is-fullscreen #bottomAppNav { display: none !important; }
+        #mainHeader { position: sticky !important; top: 0 !important; z-index: 100 !important; transform: none !important; visibility: visible !important; }
+        #appFooter { display: block !important; visibility: visible !important; }
         @media (max-width: 640px) {
           #appFooter { font-size: 14px; padding-top: 14px; padding-bottom: 16px; }
           #mainContent { padding-top: 12px; }
@@ -886,17 +887,13 @@ Ans: A
         if (userDropdown && !userDropdown.contains(e.target) && !profileBtn?.contains(e.target)) userDropdown.classList.add('hidden');
     });
 
-    // Keep the top command header stable during loading and scrolling
-    let lastScrollY = window.scrollY;
+    // Header is intentionally never auto-hidden. Keep it visible on every scroll position.
     const mainHeader = document.getElementById('mainHeader');
-
-    window.addEventListener('scroll', () => {
-        const currentScrollY = window.scrollY;
-        
-        // Keep the top command bar visible on both mobile and desktop.
-        mainHeader?.classList.remove('-translate-y-full');
-        lastScrollY = currentScrollY;
-    }, { passive: true });
+    mainHeader?.classList.remove('-translate-y-full');
+    if (mainHeader) {
+        mainHeader.style.transform = 'none';
+        mainHeader.style.visibility = 'visible';
+    }
 
     // Dynamic Chapter Dropdown population based on selected Subject
     function populateLeaderboardChapters(selectedSubject = 'all') {
