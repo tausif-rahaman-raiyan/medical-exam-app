@@ -27,7 +27,7 @@ app.use(express.static(wwwDir));
 
 // Health / Ping Route
 app.get('/api/health', (_req: Request, res: Response): void => {
-  res.json({ status: 'ok', app: 'Medical Secret Files', version: '2.0.0' });
+  res.json({ status: 'ok', app: 'Medical Secret Files', version: '3.0.0' });
 });
 
 // Secure Firebase Configuration Provider
