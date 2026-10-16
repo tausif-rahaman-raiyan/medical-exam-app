@@ -11,7 +11,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     title: 'Medical Secret Files',
-    icon: path.join(__dirname, 'www', 'assets', 'icon.svg'),
+    icon: path.join(__dirname, 'www', 'assets', 'icon.ico'),
     backgroundColor: '#0F172A',
     webPreferences: {
       nodeIntegration: false,
