@@ -611,38 +611,85 @@
     }
   }
 
-  function syncOfflinePendingResults() {
-    if (!navigator.onLine || !global.firebaseDB) return;
+  function createAttemptId() {
     try {
-      const rawPending = localStorage.getItem('msf_offline_pending_results');
-      if (!rawPending) return;
-      const pendingList = JSON.parse(rawPending);
-      if (!Array.isArray(pendingList) || pendingList.length === 0) return;
+      if (global.crypto && typeof global.crypto.randomUUID === 'function') {
+        return global.crypto.randomUUID();
+      }
+    } catch {}
+    return 'msf-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+  }
 
+  let pendingSyncInProgress = false;
+
+  async function syncOfflinePendingResults() {
+    if (!navigator.onLine || !global.firebaseDB || pendingSyncInProgress) return;
+    let profile;
+    let pendingList;
+    try {
+      const rawProfile = localStorage.getItem('msf_user_profile');
+      profile = rawProfile ? JSON.parse(rawProfile) : null;
+      const rawPending = localStorage.getItem('msf_offline_pending_results');
+      pendingList = rawPending ? JSON.parse(rawPending) : [];
+      if (!Array.isArray(pendingList) || pendingList.length === 0) return;
       const user = global.firebaseAuth?.currentUser;
-      const profileRaw = localStorage.getItem('msf_user_profile');
-      const profile = profileRaw ? JSON.parse(profileRaw) : null;
-      const uid = profile?.uid || (user ? user.uid : null);
+      const uid = profile?.uid || user?.uid;
       if (!uid || uid === 'guest') return;
 
-      const promises = pendingList.map(item => {
-        return global.firebaseDB.collection('exam_results').add({
-          ...item,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      });
-
-      Promise.all(promises).then(() => {
-        localStorage.removeItem('msf_offline_pending_results');
-        console.log(`Synced ${pendingList.length} offline exam results to Firestore.`);
-      }).catch(err => console.warn('Offline sync error:', err));
+      // Give legacy queued records a stable ID and persist it before attempting upload.
+      pendingList = pendingList.map(item => ({
+        ...item,
+        attemptId: item.attemptId || createAttemptId(),
+        userId: item.userId && item.userId !== 'guest' ? item.userId : uid
+      }));
+      localStorage.setItem('msf_offline_pending_results', JSON.stringify(pendingList));
     } catch (e) {
-      console.warn('Pending sync error:', e);
+      console.warn('Pending sync preparation error:', e);
+      return;
+    }
+
+    pendingSyncInProgress = true;
+    const successfulIds = [];
+    try {
+      await Promise.all(pendingList.map(async item => {
+        try {
+          // Deterministic document ID makes retries idempotent instead of creating duplicates.
+          await global.firebaseDB.collection('exam_results').doc(item.attemptId).set({
+            ...item,
+            timestamp: global.firebase?.firestore?.FieldValue?.serverTimestamp
+              ? global.firebase.firestore.FieldValue.serverTimestamp()
+              : new Date()
+          }, { merge: true });
+          successfulIds.push(item.attemptId);
+        } catch (err) {
+          console.warn('Result upload will retry later:', item.attemptId, err);
+        }
+      }));
+
+      const latest = JSON.parse(localStorage.getItem('msf_offline_pending_results') || '[]');
+      const remaining = Array.isArray(latest)
+        ? latest.filter(item => !successfulIds.includes(item.attemptId))
+        : [];
+      localStorage.setItem('msf_offline_pending_results', JSON.stringify(remaining));
+      if (successfulIds.length) {
+        console.log('Synced ' + successfulIds.length + ' pending exam result(s).');
+      }
+    } catch (e) {
+      console.warn('Offline sync error:', e);
+    } finally {
+      pendingSyncInProgress = false;
     }
   }
 
   if (typeof window !== 'undefined') {
     window.addEventListener('online', syncOfflinePendingResults);
+    window.addEventListener('focus', syncOfflinePendingResults);
+    // Also retry on startup when the account and database are ready.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', syncOfflinePendingResults, { once: true });
+    } else {
+      setTimeout(syncOfflinePendingResults, 1500);
+    }
   }
 
   function saveExamResult(payload) {
@@ -652,83 +699,107 @@
       if (raw) profile = JSON.parse(raw);
     } catch {}
     const user = global.firebaseAuth?.currentUser;
-    const isGoogleLoggedIn = !!((profile && profile.uid && profile.uid !== 'guest' && profile.email) || (user && user.email));
-
-    const candidateName = profile?.name || (user ? (user.displayName || user.email) : 'Guest Candidate');
-    const candidateEmail = profile?.email || (user ? user.email : '');
-    const candidatePhoto = profile?.photoURL || (user ? user.photoURL : '');
-    const candidateUid = profile?.uid || (user ? user.uid : 'guest');
-
-    let history = [];
-    try {
-      history = JSON.parse(localStorage.getItem(STORAGE_KEY_RESULTS) || '[]');
-      if (!Array.isArray(history)) history = [];
-    } catch (e) {
-      history = [];
-    }
-
-    // Calculate sequential attempt number for this candidate on this topic
-    const sameExamAttempts = history.filter(h => 
-      (h.examId === payload.examId || h.examCode === payload.examId || h.topicName === payload.topicName) &&
-      (h.userId === candidateUid || h.userEmail === candidateEmail)
+    const candidateUid = profile?.uid || user?.uid || 'guest';
+    const candidateName = profile?.name || user?.displayName || user?.email || 'Guest Candidate';
+    const candidateEmail = profile?.email || user?.email || '';
+    const candidatePhoto = profile?.photoURL || user?.photoURL || '';
+    const isGoogleLoggedIn = !!(
+      candidateUid !== 'guest' && candidateEmail &&
+      ((profile && profile.uid && profile.uid !== 'guest') ||
+       (user && user.email && Array.isArray(user.providerData) &&
+        user.providerData.some(provider => provider.providerId === 'google.com')))
     );
-    const attemptNumber = sameExamAttempts.length + 1;
 
-    payload.attemptNumber = attemptNumber;
+    // One ID per completed attempt: same exam can be taken multiple times without collision.
+    payload.attemptId = payload.attemptId || createAttemptId();
     payload.userName = candidateName;
     payload.userEmail = candidateEmail;
     payload.userPhoto = candidatePhoto;
     payload.userId = candidateUid;
     payload.isGoogleSaved = isGoogleLoggedIn;
+    payload.syncStatus = 'pending';
 
-    // Cache locally for instant attempt counting and offline fallback
+    let history = [];
     try {
-      const updatedHistory = [payload, ...history.filter(h => h.examId !== payload.examId || h.date !== payload.date)];
+      history = JSON.parse(localStorage.getItem(STORAGE_KEY_RESULTS) || '[]');
+      if (!Array.isArray(history)) history = [];
+    } catch { history = []; }
+
+    const sameExamAttempts = history.filter(h =>
+      (h.examId === payload.examId || h.examCode === payload.examId || h.topicName === payload.topicName) &&
+      (h.userId === candidateUid || h.userEmail === candidateEmail)
+    );
+    payload.attemptNumber = sameExamAttempts.length + 1;
+
+    // Dedupe only by stable attempt ID, never by exam/date (valid retakes must remain).
+    try {
+      const updatedHistory = [payload, ...history.filter(h => h.attemptId !== payload.attemptId)];
       localStorage.setItem(STORAGE_KEY_RESULTS, JSON.stringify(updatedHistory));
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Could not persist local exam history:', e);
+    }
 
     const firestoreRecord = {
+      attemptId: payload.attemptId,
       userId: candidateUid,
       userName: candidateName,
       userEmail: candidateEmail,
       userPhoto: candidatePhoto || '',
-      attemptNumber: attemptNumber,
+      attemptNumber: payload.attemptNumber,
+      examCode: payload.examId,
+      examId: payload.examId,
       topicName: payload.topicName,
       category: payload.category,
-      examCode: payload.examId,
       score: payload.score,
       correctCount: payload.correctCount,
       wrongCount: payload.wrongCount,
       skippedCount: payload.skippedCount,
+      totalQuestions: payload.totalQuestions,
       accuracy: payload.accuracy,
       timeSpentSeconds: payload.timeSpentSeconds,
-      date: payload.date
+      date: payload.date,
+      syncStatus: 'synced'
     };
 
-    // If online and authenticated with Google: Save directly to Firestore database
-    if (isGoogleLoggedIn && global.firebaseDB && navigator.onLine) {
-      global.firebaseDB.collection('exam_results').add({
-        ...firestoreRecord,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        console.log(`Exam result for ${candidateName} (Attempt #${attemptNumber}) saved directly to Firestore.`);
-        syncOfflinePendingResults();
-      }).catch((err) => {
-        console.warn('Firestore direct save error (caching offline):', err);
-        // Fallback: save to offline pending sync queue
-        try {
-          const pending = JSON.parse(localStorage.getItem('msf_offline_pending_results') || '[]');
-          pending.push(firestoreRecord);
-          localStorage.setItem('msf_offline_pending_results', JSON.stringify(pending));
-        } catch {}
-      });
-    } else {
-      // Offline or guest: save ONLY to offline queue so it syncs when internet is available
+    const queuePending = () => {
       try {
         const pending = JSON.parse(localStorage.getItem('msf_offline_pending_results') || '[]');
-        pending.push(firestoreRecord);
-        localStorage.setItem('msf_offline_pending_results', JSON.stringify(pending));
+        const safePending = Array.isArray(pending) ? pending : [];
+        if (!safePending.some(item => item.attemptId === payload.attemptId)) {
+          safePending.push({ ...firestoreRecord, syncStatus: 'pending' });
+        }
+        localStorage.setItem('msf_offline_pending_results', JSON.stringify(safePending));
+      } catch (e) {
+        console.warn('Could not queue result for sync:', e);
+      }
+    };
+
+    const markLocalSynced = () => {
+      try {
+        const current = JSON.parse(localStorage.getItem(STORAGE_KEY_RESULTS) || '[]');
+        if (!Array.isArray(current)) return;
+        localStorage.setItem(STORAGE_KEY_RESULTS, JSON.stringify(current.map(item =>
+          item.attemptId === payload.attemptId ? { ...item, syncStatus: 'synced' } : item
+        )));
       } catch {}
+    };
+
+    if (isGoogleLoggedIn && global.firebaseDB && navigator.onLine) {
+      global.firebaseDB.collection('exam_results').doc(payload.attemptId).set({
+        ...firestoreRecord,
+        timestamp: global.firebase?.firestore?.FieldValue?.serverTimestamp
+          ? global.firebase.firestore.FieldValue.serverTimestamp()
+          : new Date()
+      }, { merge: true }).then(() => {
+        markLocalSynced();
+        syncOfflinePendingResults();
+      }).catch(err => {
+        console.warn('Firestore result save failed; queued for retry:', err);
+        queuePending();
+      });
+    } else {
+      // Offline profile is allowed to complete exams; queue safely for later sync.
+      queuePending();
     }
   }
 
