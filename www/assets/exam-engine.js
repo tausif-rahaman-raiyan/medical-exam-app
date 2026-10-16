@@ -28,12 +28,24 @@
   async function launchExam(examItem) {
     if (!examItem) return;
 
-    // All exams require a real Google-authenticated account. Never start in guest mode.
+    // On the website, require a live Google-authenticated Firebase session.
+    // The Windows app uses the already-verified Google profile synced from the website;
+    // Firebase's browser session does not automatically carry over to Electron's local file origin.
     const signedInUser = global.firebaseAuth?.currentUser;
-    const hasGoogleAccount = !!(signedInUser && signedInUser.email &&
+    const isDesktopApp = global.navigator?.userAgent?.includes('Electron') ||
+      global.location?.protocol === 'file:';
+    let savedProfile = null;
+    try {
+      const rawProfile = global.localStorage?.getItem('msf_user_profile');
+      if (rawProfile) savedProfile = JSON.parse(rawProfile);
+    } catch {}
+
+    const hasLiveGoogleAccount = !!(signedInUser && signedInUser.email &&
       Array.isArray(signedInUser.providerData) &&
       signedInUser.providerData.some(provider => provider.providerId === 'google.com'));
-    if (!hasGoogleAccount) {
+    const hasSyncedGoogleAccount = !!(isDesktopApp && savedProfile &&
+      savedProfile.uid && savedProfile.uid !== 'guest' && savedProfile.email);
+    if (!hasLiveGoogleAccount && !hasSyncedGoogleAccount) {
       if (typeof global.showLoginRequiredModal === 'function') global.showLoginRequiredModal(examItem);
       else alert('Please sign in with Google before starting an exam.');
       return;
