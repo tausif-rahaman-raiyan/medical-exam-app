@@ -322,7 +322,7 @@
 
         <!-- Footer -->
         <div class="p-4 bg-slate-950/60 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
-          <span class="font-mono text-[11px]">Medical Secret Files v2.0</span>
+          <span class="font-mono text-[11px]">Medical Secret Files v3.0.0</span>
           <button onclick="document.getElementById('sync-hub-modal').remove()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
             Done
           </button>
