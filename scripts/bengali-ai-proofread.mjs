@@ -18,6 +18,9 @@ async function walk(dir) {
   }
 }
 await walk('www');
+for (const file of ['index.html', 'login.html', 'sync.html']) {
+  try { if ((await fs.stat(file)).isFile()) htmlFiles.push(file); } catch {}
+}
 
 function visibleText(html) {
   return html
