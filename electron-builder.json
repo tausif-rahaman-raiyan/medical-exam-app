@@ -20,12 +20,6 @@
         "arch": [
           "x64"
         ]
-      },
-      {
-        "target": "portable",
-        "arch": [
-          "x64"
-        ]
       }
     ],
     "icon": "www/assets/icon.ico"
@@ -39,5 +33,6 @@
     "createStartMenuShortcut": true,
     "shortcutName": "Medical Secret Files",
     "uninstallDisplayName": "Medical Secret Files"
-  }
+  },
+  "artifactName": "Medical Secret Files Setup 1.0.0.${ext}"
 }
