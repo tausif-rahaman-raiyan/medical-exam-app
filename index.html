@@ -1057,7 +1057,6 @@ Ans: A
                 return;
             }
 
-            let fetchedFromFirestore = false;
             if (window.firebaseDB && (currentUid || currentEmail) && navigator.onLine) {
                 try {
                     let queryRef = window.firebaseDB.collection('exam_results');
@@ -1069,22 +1068,20 @@ Ans: A
                     const snap = await queryRef.limit(100).get();
                     if (!snap.empty) {
                         data = snap.docs.map(doc => ({ ...doc.data(), _source: 'cloud' }));
-                        fetchedFromFirestore = true;
                     }
                 } catch (err) {
                     console.warn('Personal Firestore fetch error:', err);
                 }
             }
 
-            if (!fetchedFromFirestore) {
-                try {
-                    const rawLocal = localStorage.getItem('msf_exam_history_v2');
-                    if (rawLocal) {
-                        const localRows = JSON.parse(rawLocal).filter(i => (i.userId === currentUid || i.userEmail === currentEmail) && i.userId !== 'guest');
-                        data = [...data, ...localRows.map(item => ({ ...item, _source: 'local' }))];
-                    }
-                } catch {}
-            }
+            // Always include local attempts, even when cloud history loaded, so pending/offline records remain visible.
+            try {
+                const rawLocal = localStorage.getItem('msf_exam_history_v2');
+                if (rawLocal) {
+                    const localRows = JSON.parse(rawLocal).filter(i => (i.userId === currentUid || i.userEmail === currentEmail) && i.userId !== 'guest');
+                    data = [...data, ...localRows.map(item => ({ ...item, _source: 'local' }))];
+                }
+            } catch {}
         } else {
             // Global Realtime Leaderboard (Live from Firebase Firestore ONLY)
             try {
