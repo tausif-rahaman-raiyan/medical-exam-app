@@ -1,0 +1,41 @@
+name: Cleanup Old Workflow History
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_delete:
+        description: "Type DELETE to remove all workflow runs except this cleanup run"
+        required: true
+        type: string
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup:
+    name: Delete previous workflow runs
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm_delete == 'DELETE'
+    steps:
+      - name: Delete all other workflow run history
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          KEEP_RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Listing workflow runs in $REPO..."
+          gh api --paginate "repos/$REPO/actions/runs?per_page=100" --jq '.workflow_runs[].id' |
+            while read -r run_id; do
+              [ -n "$run_id" ] || continue
+              if [ "$run_id" = "$KEEP_RUN_ID" ]; then
+                echo "Keeping current cleanup run: $run_id"
+                continue
+              fi
+              echo "Deleting workflow run: $run_id"
+              gh api --method DELETE "repos/$REPO/actions/runs/$run_id" || {
+                echo "Could not delete run $run_id; continuing."
+              }
+            done
+          echo "Cleanup finished."
