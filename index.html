@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <base href="www/">
     <title>Medical Secret Files</title>
     <meta name="description" content="Comprehensive medical admission exam preparation platform with interactive question banks, OMR sheet scanner, practice tests, and detailed answer explanations.">
     <meta property="og:title" content="Medical Secret Files">
@@ -159,9 +158,6 @@
         .question-card p { overflow-wrap: anywhere; }
         @media (min-width: 1024px) { #bottomAppNav { display: none !important; } }
         @media (max-width: 640px) {
-          body:has(#exam-view:not(.hidden)) #mainHeader { display: none !important; }
-          body:has(#exam-view:not(.hidden)) #mainContent { padding-top: 0 !important; }
-
           #userDropdown { position: fixed !important; top: 4.25rem !important; right: .5rem !important; left: auto !important; margin-top: 0 !important; width: min(20rem, calc(100vw - 1rem)) !important; }
         }
         @media (min-width: 641px) and (max-width: 1023px) {
@@ -171,7 +167,7 @@
         #mainHeader { position: sticky !important; top: 0 !important; z-index: 100 !important; transform: none !important; visibility: visible !important; }
         #appFooter { display: block !important; visibility: visible !important; }
         @media (max-width: 640px) {
-          /* The compact bottom navigation replaces the full header on phones. */
+          /* Use the compact bottom navigation on phones; keep the full command header for larger screens. */
           #mainHeader { display: none !important; }
           #appFooter { font-size: 14px; padding-top: 14px; padding-bottom: 16px; }
           #mainContent { padding-top: 12px; }
@@ -180,6 +176,7 @@
           #mainHeader a.group img { width: 2rem; height: 2rem; }
           #mainHeader a.group p { display: none; }
           #mainHeader > div > div { gap: .35rem !important; }
+          #btnFullscreen { display: none !important; }
           #mainHeader button[title="Leaderboard & My Results"] { width: 2.15rem; height: 2.15rem; padding: 0; justify-content: center; }
           #mainHeader button[title="Leaderboard & My Results"] span { display: none !important; }
           #profileBtn { width: 2.15rem !important; height: 2.15rem !important; }
@@ -201,38 +198,6 @@
         @media (min-width: 641px) and (max-width: 1023px) {
           #appFooter { font-size: 15px; }
         }
-        /* Fullscreen should be an immersive exam/app view on phones. */
-        body.is-fullscreen { padding-bottom: 0 !important; }
-        body.is-fullscreen #bottomAppNav,
-        :fullscreen #bottomAppNav { display: none !important; }
-        body.is-fullscreen #appFooter { display: none !important; }
-        #loginRequiredModal { padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)); }
-        @media (max-width: 640px) {
-          #resultsModal { padding: .5rem .5rem 1rem !important; }
-          #resultsModal > div { min-height: calc(100dvh - 5.5rem) !important; padding: .9rem !important; border-radius: 1.25rem !important; }
-          #resultsModal > div > div:first-child { flex-wrap: wrap; gap: .75rem !important; }
-          #resultsModal > div > div:first-child > div:last-child { width: 100%; justify-content: space-between; }
-          #resultsModal #btnPersonal, #resultsModal #btnGlobal { min-height: 46px; padding: .7rem .35rem; line-height: 1.25; }
-          #resultsModal #resultsList { overflow: visible; padding-right: 0; }
-          #resultsList > div { border-radius: 1rem !important; padding: .85rem !important; }
-          #leaderboardResultCounter { max-width: 68%; line-height: 1.4; }
-          #profilePanel { padding: .5rem .5rem 1.25rem !important; }
-          #profilePanel > div { padding: 1rem !important; border-radius: 1.25rem !important; }
-          #profilePanelAvatar { width: 3.5rem; height: 3.5rem; border-radius: 1rem; }
-          #profilePanelName { font-size: 1.25rem; line-height: 1.35; }
-          #profilePanel .grid { grid-template-columns: 1fr; }
-          #profilePanel .grid > button { display: grid; grid-template-columns: 2.5rem 1fr; column-gap: .75rem; align-items: center; padding: .9rem; }
-          #profilePanel .grid > button > span:first-child { grid-row: span 2; margin: 0; }
-          #profilePanel .grid > button > span:nth-child(2), #profilePanel .grid > button > span:nth-child(3) { margin: 0; }
-          .exam-result-page { padding: .35rem .15rem 1.25rem !important; }
-          .exam-result-summary { border-radius: 1.25rem !important; }
-          .exam-stat-card { min-height: 5.6rem; display: flex; flex-direction: column; justify-content: center; gap: .3rem; }
-          .exam-stat-card p:first-child { font-size: 1.45rem !important; line-height: 1.2; }
-          .exam-stat-card p:last-child { font-size: 10px !important; line-height: 1.35; overflow-wrap: anywhere; }
-          .exam-result-page #review-questions-stream > div { padding: .85rem !important; }
-          .exam-review-toolbar { padding: .85rem !important; }
-          #exam-render-container { scroll-margin-top: .5rem; }
-        }
     </style>
 </head>
 <body class="bg-[#0F172A] text-slate-100 antialiased selection:bg-purple-600 selection:text-white flex flex-col min-h-screen overflow-x-hidden w-full pb-24 sm:pb-0">
@@ -241,7 +206,7 @@
 <header id="mainHeader" class="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 px-2.5 sm:px-6 py-2.5 sm:py-3 w-full">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-4 w-full">
         <!-- Left Side: Logo & Branding -->
-        <a href="../" onclick="event.preventDefault(); location.reload()" class="flex items-center space-x-3 group min-w-0 flex-shrink-0 text-left">
+        <a href="#" onclick="location.reload()" class="flex items-center space-x-3 group min-w-0 flex-shrink-0 text-left">
             <img src="assets/icon.svg" alt="Medical Secret Files" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl object-cover shadow-lg shadow-purple-500/25 flex-shrink-0 border border-white/10 group-hover:scale-105 transition-transform" />
             <div class="min-w-0">
                 <h1 class="text-sm sm:text-base md:text-lg font-black tracking-tight text-white leading-tight truncate">
@@ -255,7 +220,9 @@
 
         <!-- Right Side: Controls Group -->
         <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 ml-auto">
-<!-- Fullscreen Button -->
+
+
+            <!-- Fullscreen Button -->
             <button id="btnFullscreen" onclick="toggleFullScreen()" title="Toggle Fullscreen" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-all">
                 <i id="fullscreen-icon" class="fa fa-expand text-xs sm:text-sm"></i>
             </button>
@@ -513,7 +480,7 @@ Ans: A
       <button onclick="showAppSection('install')" class="text-left rounded-2xl bg-slate-900/80 border border-indigo-500/20 p-4 hover:border-indigo-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-300 flex items-center justify-center mb-3"><i class="fa fa-mobile-screen-button"></i></span><span class="block text-sm font-black text-white group-hover:text-indigo-200">App & Devices</span><span class="block text-xs text-slate-400 mt-1">Install or connect devices</span></button>
       <button onclick="window.AppSync ? window.AppSync.openSyncModal() : showAppSection('install')" class="text-left rounded-2xl bg-slate-900/80 border border-purple-500/20 p-4 hover:border-purple-400/50 hover:bg-slate-900 transition-all group"><span class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-300 flex items-center justify-center mb-3"><i class="fa fa-rotate"></i></span><span class="block text-sm font-black text-white group-hover:text-purple-200">Sync & Backup</span><span class="block text-xs text-slate-400 mt-1">Manage cross-device sync</span></button>
     </div>
-    <div class="rounded-2xl bg-slate-900/70 border border-white/10 p-5 mb-5"><p class="text-sm text-slate-300">Sign in with Google to sync exam history and ranking across devices. Your custom MCQ draft remains saved locally on this device.</p><div class="flex flex-wrap gap-3 mt-4"><button onclick="document.getElementById('authBtn')?.click()" class="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm"><i class="fa-brands fa-google mr-2"></i>Google Login</button><button id="profilePanelLogout" onclick="handleLogout()" class="hidden px-5 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-rose-300 font-bold text-sm"><i class="fa fa-arrow-right-from-bracket mr-2"></i>Sign out</button></div></div>
+    <div class="rounded-2xl bg-slate-900/70 border border-white/10 p-5 mb-5"><p class="text-sm text-slate-300">Sign in with Google to sync exam history and ranking across devices. Your custom MCQ draft remains saved locally on this device.</p><div class="flex flex-wrap gap-3 mt-4"><button id="profilePanelGoogleLogin" onclick="document.getElementById('authBtn')?.click()" class="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm"><i class="fa-brands fa-google mr-2"></i>Google Login</button><button id="profilePanelLogout" onclick="handleLogout()" class="hidden px-5 py-3 rounded-xl bg-slate-800 hover:bg-rose-950/50 border border-white/10 text-rose-300 font-bold text-sm"><i class="fa fa-arrow-right-from-bracket mr-2"></i>Sign out</button></div></div>
     <div class="flex flex-wrap gap-3 text-xs text-slate-400"><button onclick="showAppSection('leaderboard')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 font-bold"><i class="fa fa-clock-rotate-left mr-1.5"></i>My Exam History</button><button onclick="showAppSection('model-tests')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 font-bold"><i class="fa fa-book-medical mr-1.5"></i>Back to Model Tests</button></div>
   </div>
 </section>
@@ -653,7 +620,7 @@ Ans: A
   <div class="max-w-4xl mx-auto grid grid-cols-5 gap-1">
     <button data-app-section="model-tests" onclick="showAppSection('model-tests')" class="bottom-nav-item active flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-teal-300"><i class="fa fa-book-medical text-base"></i><span class="text-[10px] sm:text-xs font-bold">Model Tests</span></button>
     <button data-app-section="leaderboard" onclick="showAppSection('leaderboard')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-trophy text-base"></i><span class="text-[10px] sm:text-xs font-bold">Leaderboard</span></button>
-    <button id="mobileFullscreenBtn" onclick="toggleFullScreen()" title="Toggle Fullscreen" aria-label="Toggle Fullscreen" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i id="mobile-fullscreen-icon" class="fa fa-expand text-base"></i><span class="text-[10px] sm:text-xs font-bold">Fullscreen</span></button>
+    <button id="mobileFullscreenBtn" onclick="toggleFullScreen()" title="Toggle Fullscreen" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i id="mobile-fullscreen-icon" class="fa fa-expand text-base"></i><span class="text-[10px] sm:text-xs font-bold">Fullscreen</span></button>
     <button data-app-section="install" onclick="showAppSection('install')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-download text-base"></i><span class="text-[10px] sm:text-xs font-bold">Install App</span></button>
     <button data-app-section="profile" onclick="showAppSection('profile')" class="bottom-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-slate-500 hover:text-slate-200"><i class="fa fa-user text-base"></i><span class="text-[10px] sm:text-xs font-bold">Profile</span></button>
   </div>
@@ -662,18 +629,6 @@ Ans: A
   <p class="font-semibold text-slate-300">Made by Tausif Rahaman Raiyan</p><p class="mt-1">© 2026 Medical Secret Files • All Rights Reserved</p>
   <div class="flex items-center justify-center gap-4 mt-3"><a href="https://github.com/tausif-rahaman-raiyan" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-400 hover:text-white text-lg"><i class="fa-brands fa-github"></i></a><a href="https://www.instagram.com/tausifrahamanraiyan/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="text-slate-400 hover:text-pink-300 text-lg"><i class="fa-brands fa-instagram"></i></a></div>
 </footer>
-
-<!-- Google sign-in gate: exam content is not launched until authentication succeeds. -->
-<div id="loginRequiredModal" class="hidden fixed inset-0 z-[200] bg-slate-950/85 backdrop-blur-md items-center justify-center">
-  <div class="w-full max-w-md rounded-3xl border border-purple-400/25 bg-[#172033] p-5 sm:p-7 shadow-2xl">
-    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-400/30 bg-purple-500/10 text-2xl text-purple-300"><i class="fa-brands fa-google"></i></div>
-    <h2 class="text-center text-xl sm:text-2xl font-black text-white">Exam শুরু করতে Google Login করুন</h2>
-    <p class="mt-2 text-center text-sm leading-relaxed text-slate-300">আপনার exam score, history ও leaderboard account-এর সঙ্গে যুক্ত রাখতে Gmail/Google account দিয়ে sign in করতে হবে। Login না করা পর্যন্ত exam শুরু হবে না।</p>
-    <p id="loginRequiredError" class="hidden mt-3 rounded-xl border border-rose-500/30 bg-rose-950/30 p-3 text-xs text-rose-300"></p>
-    <button id="loginRequiredGoogleBtn" onclick="loginToStartExam()" class="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3.5 font-black text-slate-900 transition hover:bg-purple-100"><i class="fa-brands fa-google text-lg"></i><span>Continue with Google</span></button>
-    <button onclick="closeLoginRequiredModal()" class="mt-2 w-full rounded-xl px-4 py-3 text-sm font-bold text-slate-400 hover:bg-white/5 hover:text-white">এখন নয়</button>
-  </div>
-</div>
 
 <!-- Scripts -->
 <script src="assets/science-formatter.js"></script>
@@ -905,50 +860,23 @@ Ans: A
         });
     }
 
-    // Fullscreen API Helper: keep desktop and mobile navigation icons in sync.
+    // Fullscreen API Helper: keep desktop and mobile controls synchronized.
     function syncFullscreenIcons() {
-        const isFullscreen = Boolean(document.fullscreenElement);
-        const iconClass = isFullscreen ? 'fa fa-compress text-xs sm:text-sm' : 'fa fa-expand text-xs sm:text-sm';
-        const desktopIcon = document.getElementById('fullscreen-icon');
-        const mobileIcon = document.getElementById('mobile-fullscreen-icon');
-        if (desktopIcon) desktopIcon.className = iconClass;
-        if (mobileIcon) mobileIcon.className = isFullscreen ? 'fa fa-compress text-base' : 'fa fa-expand text-base';
+        const active = Boolean(document.fullscreenElement);
+        [['fullscreen-icon', 'fa-expand', 'fa-compress'], ['mobile-fullscreen-icon', 'fa-expand', 'fa-compress']].forEach(([id, expand, compress]) => {
+            const icon = document.getElementById(id);
+            if (icon) icon.className = 'fa ' + (active ? compress : expand) + (id === 'fullscreen-icon' ? ' text-xs sm:text-sm' : ' text-base');
+        });
     }
-    let fullscreenBackGuardActive = false;
-    let fullscreenExitTriggeredByBack = false;
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
-            const root = document.documentElement;
-            const request = root.requestFullscreen?.() || root.webkitRequestFullscreen?.();
-            if (request && request.catch) request.catch(() => {});
-        } else {
-            const request = document.exitFullscreen?.() || document.webkitExitFullscreen?.();
-            if (request && request.catch) request.catch(() => {});
+            const request = document.documentElement.requestFullscreen?.();
+            if (request && typeof request.catch === 'function') request.catch(() => {});
+        } else if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
         }
     }
-    document.addEventListener('fullscreenchange', () => {
-        syncFullscreenIcons();
-        if (document.fullscreenElement && !fullscreenBackGuardActive) {
-            fullscreenBackGuardActive = true;
-            try { history.pushState({ msfFullscreenGuard: true }, '', location.href); } catch {}
-        } else if (!document.fullscreenElement && fullscreenBackGuardActive) {
-            fullscreenBackGuardActive = false;
-            if (!fullscreenExitTriggeredByBack) {
-                try { if (history.state?.msfFullscreenGuard) history.back(); } catch {}
-            }
-            fullscreenExitTriggeredByBack = false;
-        }
-    });
-    document.addEventListener('webkitfullscreenchange', syncFullscreenIcons);
-    window.addEventListener('popstate', () => {
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
-            fullscreenExitTriggeredByBack = true;
-            try {
-                if (document.exitFullscreen) document.exitFullscreen();
-                else document.webkitExitFullscreen?.();
-            } catch {}
-        }
-    });
+    document.addEventListener('fullscreenchange', syncFullscreenIcons);
 
     // Profile Dropdown
     const profileBtn = document.getElementById('profileBtn');
@@ -1342,9 +1270,23 @@ Ans: A
         }).join('');
     }
 
+    // Reflect authentication state consistently across every Google Login entry point.
+    function updateGoogleLoginVisibility(user) {
+        const signedIn = Boolean(user);
+        document.getElementById('headerGoogleLogin')?.classList.toggle('hidden', signedIn);
+        document.getElementById('authBtn')?.classList.toggle('hidden', signedIn);
+        document.getElementById('profilePanelGoogleLogin')?.classList.toggle('hidden', signedIn);
+        document.getElementById('profilePanelLogout')?.classList.toggle('hidden', !signedIn);
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.style.display = signedIn ? 'flex' : 'none';
+        const authBtnText = document.getElementById('authBtnText');
+        if (authBtnText) authBtnText.textContent = signedIn ? 'Signed in with Google' : 'Sign In with Google';
+    }
+
     // Google Sign-In Trigger & Auth State Observer
     if (window.firebaseAuth) {
         window.firebaseAuth.onAuthStateChanged((user) => {
+            updateGoogleLoginVisibility(user);
             if (user) {
                 const profile = {
                     uid: user.uid,
@@ -1357,49 +1299,37 @@ Ans: A
                 }
             }
         });
+    } else {
+        updateGoogleLoginVisibility(null);
     }
 
-    // Shared Google sign-in flow for the profile button and the exam login gate.
-    let pendingExamAfterLogin = null;
-    window.showLoginRequiredModal = function(examItem) {
-        pendingExamAfterLogin = examItem || null;
-        const modal = document.getElementById('loginRequiredModal');
-        const error = document.getElementById('loginRequiredError');
-        if (error) { error.textContent = ''; error.classList.add('hidden'); }
-        if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
-    };
-    window.closeLoginRequiredModal = function() {
-        const modal = document.getElementById('loginRequiredModal');
-        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-        pendingExamAfterLogin = null;
-    };
-    window.loginToStartExam = async function() {
-        const button = document.getElementById('loginRequiredGoogleBtn');
-        const error = document.getElementById('loginRequiredError');
-        if (button) { button.disabled = true; button.innerHTML = '<i class="fa fa-spinner fa-spin"></i><span>Signing in…</span>'; }
-        if (error) { error.textContent = ''; error.classList.add('hidden'); }
-        try {
-            if (!window.firebaseAuth || !window.googleProvider) throw new Error('Google sign-in is not configured. Please try again later.');
-            const res = await window.firebaseAuth.signInWithPopup(window.googleProvider);
-            const user = res.user;
-            const isGoogleUser = !!(user && user.email && (user.providerData || []).some(p => p.providerId === 'google.com'));
-            if (!isGoogleUser) throw new Error('Please choose a Google account to continue.');
-            const profile = { uid: user.uid, name: user.displayName || 'Medical Aspirant', email: user.email || '', photoURL: user.photoURL || '' };
-            window.AppSync?.applyUserProfile(profile, true);
-            const examToLaunch = pendingExamAfterLogin;
-            const modal = document.getElementById('loginRequiredModal');
-            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-            pendingExamAfterLogin = null;
-            if (examToLaunch) window.ExamEngine?.launchExam(examToLaunch);
-        } catch (err) {
-            console.warn('Google sign-in failed:', err);
-            if (error) { error.textContent = err?.message || 'Login হয়নি। আবার চেষ্টা করুন।'; error.classList.remove('hidden'); }
-        } finally {
-            if (button) { button.disabled = false; button.innerHTML = '<i class="fa-brands fa-google text-lg"></i><span>Continue with Google</span>'; }
-        }
-    };
     const authBtn = document.getElementById('authBtn');
-    authBtn?.addEventListener('click', () => window.loginToStartExam());
+    authBtn?.addEventListener('click', async () => {
+        const isDesktop = window.navigator.userAgent.includes('Electron') || window.location.protocol === 'file:';
+        if (isDesktop && window.AppSync) {
+            window.AppSync.openSyncModal();
+            return;
+        }
+
+        try {
+            if (window.firebaseAuth && window.googleProvider) {
+                const res = await window.firebaseAuth.signInWithPopup(window.googleProvider);
+                if (res.user) {
+                    const profile = {
+                        uid: res.user.uid,
+                        name: res.user.displayName || 'Medical Aspirant',
+                        email: res.user.email || '',
+                        photoURL: res.user.photoURL || ''
+                    };
+                    if (window.AppSync) {
+                        window.AppSync.applyUserProfile(profile, true);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Google sign-in popup handled in guest/local mode', e);
+        }
+    });
 
     function handleLogout() {
         if (window.AppSync) {
@@ -1419,6 +1349,7 @@ Ans: A
             document.getElementById('leaderboardAvatar').textContent = 'S';
             document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('authBtnText').textContent = 'Sign In with Google';
+            updateGoogleLoginVisibility(null);
         }
     }
 
