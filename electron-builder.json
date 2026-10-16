@@ -24,17 +24,5 @@
     ],
     "icon": "www/assets/icon.ico"
   },
-  "nsis": {
-    "oneClick": false,
-    "allowToChangeInstallationDirectory": true,
-    "allowElevation": true,
-    "perMachine": false,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true,
-    "shortcutName": "Medical Secret Files",
-    "uninstallDisplayName": "Medical Secret Files",
-    "deleteAppData": false,
-    "differentialPackage": false
-  },
   "artifactName": "Medical Secret Files Setup 3.0.0.${ext}"
 }
