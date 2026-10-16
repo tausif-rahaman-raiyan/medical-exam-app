@@ -1,24 +1,25 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error('GEMINI_API_KEY is not configured. Add it in GitHub Settings > Secrets and variables > Actions.');
-}
+const root = process.cwd();
+const htmlFiles = new Set();
 
-const htmlFiles = [];
 async function walk(dir) {
   let entries;
   try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return; }
   for (const entry of entries) {
+    if (['node_modules', '.git', 'dist', 'dist-win', 'deploy_out'].includes(entry.name)) continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) await walk(full);
-    else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) htmlFiles.push(full);
+    else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) htmlFiles.add(full);
   }
 }
-await walk('www');
+await walk(path.join(root, 'www'));
 for (const file of ['index.html', 'login.html', 'sync.html']) {
-  try { if ((await fs.stat(file)).isFile()) htmlFiles.push(file); } catch {}
+  const full = path.join(root, file);
+  try { if ((await fs.stat(full)).isFile()) htmlFiles.add(full); } catch {}
 }
 
 function visibleText(html) {
@@ -29,71 +30,61 @@ function visibleText(html) {
     .replace(/&nbsp;|&#160;/gi, ' ')
     .replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'")
-    .replace(/[\t\r ]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
+    .replace(/[\t\r ]+/g, ' ').trim();
+}
+
+const sections = [];
+for (const file of [...htmlFiles].sort()) {
+  const content = visibleText(await fs.readFile(file, 'utf8'));
+  const lines = content.split(/(?<=[।!?])\s+|\n+/).map(s => s.trim())
+    .filter(s => /[\u0980-\u09FF]/.test(s) && s.length >= 2);
+  if (lines.length) sections.push({ file: path.relative(root, file).split(path.sep).join('/'), text: lines.join('\n') });
 }
 
 const report = [
-  '# Bengali AI Proofreading Report',
+  '# Offline Bengali Spelling Review',
   '',
-  'This report flags possible spelling, grammar, and sentence-clarity issues. It does not modify source files.',
+  'This report is generated locally with the open-source Bengali dictionary. No external AI API, network request, or API key is used by the checker itself.',
+  '',
+  'Scope: dictionary-based spelling suggestions only. This is not a full grammar/meaning model; Bengali grammar and context-sensitive corrections still require human review.',
+  '',
+  '## Files scanned',
+  ...(sections.length ? sections.map(s => '- ' + s.file) : ['- No visible Bengali text was found in the scanned HTML files.']),
   ''
 ];
-const sections = [];
-for (const file of [...new Set(htmlFiles)]) {
-  const text = visibleText(await fs.readFile(file, 'utf8'));
-  const sentences = text.split(/(?<=[।!?])\s+|\n+/).map(s => s.trim())
-    .filter(s => /[\u0980-\u09FF]/.test(s) && s.length >= 8);
-  if (sentences.length) sections.push({ file, text: sentences.join('\n') });
-}
 
-if (!sections.length) {
-  report.push('No Bengali text of sufficient length was found in the scanned HTML files.');
-} else {
-  // One Gemini request per workflow run avoids exhausting the free-tier request quota
-  // by sending a separate request for every file/chunk.
-  const maxChars = 26000;
-  let remaining = maxChars;
-  const included = [];
-  const omitted = [];
-  for (const section of sections) {
-    const block = 'FILE: ' + section.file + '\n' + section.text;
-    if (block.length <= remaining) {
-      included.push(block);
-      remaining -= block.length;
-    } else {
-      const partial = remaining > 500 ? block.slice(0, remaining) : '';
-      if (partial) included.push(partial + '\n[NOTE: this file was truncated to fit the single-request limit.]');
-      omitted.push(section.file);
-      remaining = 0;
-      break;
-    }
+const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'msf-bengali-proofread-'));
+try {
+  const fileMap = [];
+  for (let i = 0; i < sections.length; i++) {
+    const name = String(i + 1).padStart(4, '0') + '.txt';
+    await fs.writeFile(path.join(tempDir, name), sections[i].text, 'utf8');
+    fileMap.push({ name, source: sections[i].file });
   }
 
-  const prompt = 'তুমি একজন সতর্ক বাংলা প্রুফরিডার। নিচের UI/ওয়েবসাইটের বাংলা লেখাগুলোতে শুধু স্পষ্ট বানান, ব্যাকরণ, যতিচিহ্ন ও বাক্যগঠনের ভুল শনাক্ত করো। মেডিকেল/বৈজ্ঞানিক শব্দ, নাম বা ব্র্যান্ড অনুমান করে বদলাবে না। প্রতিটি সমস্যার জন্য ফাইলের নাম, মূল অংশ, প্রস্তাবিত সংশোধন এবং সংক্ষিপ্ত কারণ দাও। ভুল না থাকলে সেটি বলো। সোর্স কোড নয়, কেবল দৃশ্যমান লেখার অংশ পর্যালোচনা করো.\n\n' +
-    included.join('\n\n---\n\n');
+  if (fileMap.length) {
+    const files = fileMap.map(item => path.join(tempDir, item.name));
+    const executable = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+    const result = spawnSync(executable, [
+      '--no-install', 'cspell', 'lint',
+      '--config', path.join(root, 'cspell.json'),
+      '--no-progress', '--no-summary', '--format', 'default',
+      ...files
+    ], { cwd: root, encoding: 'utf8', maxBuffer: 12 * 1024 * 1024 });
 
-  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
-    })
-  });
-
-  if (!response.ok) {
-    const details = (await response.text()).slice(0, 1200);
-    if (response.status === 429) {
-      throw new Error('Gemini quota/rate limit reached (429). This workflow now uses only ONE Gemini request per run, but the current quota is already exhausted. Wait until the reset time in the error message, then rerun. Details: ' + details);
+    if (result.error) throw result.error;
+    if (result.status !== 0 && result.status !== 1) {
+      throw new Error('cspell could not run (exit ' + result.status + '): ' + (result.stderr || result.stdout || 'no details'));
     }
-    throw new Error('Gemini request failed (' + response.status + '): ' + details);
+    const output = [result.stdout, result.stderr].filter(Boolean).join('\n').trim();
+    report.push('## Possible spelling issues', '');
+    report.push(output || 'No spelling issues were reported by the local dictionary.', '');
+    report.push('## Temporary-file mapping', '', ...fileMap.map(item => '- ' + item.name + ' → ' + item.source), '');
+    report.push('Dictionary findings are suggestions, not proof of an error. Names, medical terms, borrowed words and valid regional variants may be flagged.');
   }
-
-  const data = await response.json();
-  const answer = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('\n') || 'No response text returned.';
-  report.push(answer, '');
-  report.push('Scanned ' + sections.length + ' HTML file(s); sent one combined request covering up to ' + maxChars + ' characters.');
-  if (omitted.length) report.push('WARNING: content exceeded the request limit; some text was not reviewed. Files at/after the limit include: ' + omitted.join(', '));
+} finally {
+  await fs.rm(tempDir, { recursive: true, force: true });
 }
-await fs.writeFile('bengali-proofreading-report.md', report.join('\n'), 'utf8');
-console.log('Bengali AI proofreading finished. See bengali-proofreading-report.md');
+
+await fs.writeFile(path.join(root, 'bengali-proofreading-report.md'), report.join('\n'), 'utf8');
+console.log('Offline Bengali dictionary review finished. See bengali-proofreading-report.md');
