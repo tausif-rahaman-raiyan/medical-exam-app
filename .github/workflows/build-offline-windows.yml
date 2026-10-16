@@ -1,0 +1,52 @@
+name: Build Offline Windows Exam App
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-offline-windows:
+    name: Package Windows offline exam app
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install app and Windows packaging dependencies
+        shell: pwsh
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund electron@^37 electron-builder@^26 sharp png-to-ico
+
+      - name: Generate Windows app icon
+        shell: pwsh
+        run: node scripts/create-windows-icon.mjs
+
+      - name: Validate local offline app files
+        shell: pwsh
+        run: |
+          if (!(Test-Path "www/index.html")) { throw "www/index.html is missing" }
+          if (!(Test-Path "electron-main.cjs")) { throw "electron-main.cjs is missing" }
+          if (!(Test-Path "electron-builder.json")) { throw "electron-builder.json is missing" }
+          if (!(Test-Path "www/assets/icon.ico")) { throw "Windows icon was not generated" }
+
+      - name: Build Windows installer and portable app
+        shell: pwsh
+        run: npx electron-builder --windows --x64 --config electron-builder.json --publish never
+
+      - name: Upload Windows app installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: Medical-Secret-Files-Offline-Windows-x64
+          path: |
+            dist-win/*.exe
+            dist-win/*.blockmap
+          if-no-files-found: error
+          retention-days: 30
