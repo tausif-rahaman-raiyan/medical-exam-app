@@ -1,0 +1,38 @@
+{
+  "version": "0.2",
+  "language": "en,bn",
+  "import": [
+    "@cspell/dict-bn/cspell-ext.json"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "dist-win/**",
+    "deploy_out/**",
+    "*.lock"
+  ],
+  "words": [
+    "Firebase",
+    "Firestore",
+    "Electron",
+    "GitHub",
+    "JavaScript",
+    "TypeScript",
+    "Medical",
+    "MCQ",
+    "MCQs",
+    "OMR",
+    "Bangladesh",
+    "Bengali",
+    "API",
+    "URL",
+    "HTML",
+    "CSS",
+    "UI",
+    "UID",
+    "Google",
+    "Gemini",
+    "Flowspace",
+    "CSpell"
+  ]
+}
