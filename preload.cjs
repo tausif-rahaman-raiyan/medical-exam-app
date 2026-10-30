@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('msfUpdater', {
+  getVersion: () => ipcRenderer.invoke('msf:app:version'),
   checkForUpdates: () => ipcRenderer.invoke('msf:update:check'),
   downloadUpdate: () => ipcRenderer.invoke('msf:update:download'),
   installUpdate: () => ipcRenderer.invoke('msf:update:install'),

@@ -11,6 +11,7 @@ function configureAutoUpdater() {
   autoUpdater.on('download-progress', p => sendUpdateStatus('downloading', { percent: Math.round(p.percent || 0) }));
   autoUpdater.on('update-downloaded', info => sendUpdateStatus('downloaded', { version: info.version }));
   autoUpdater.on('error', error => sendUpdateStatus('error', { message: error?.message || 'Update check failed.' }));
+  ipcMain.handle('msf:app:version', () => app.getVersion());
   ipcMain.handle('msf:update:check', async () => { if (!app.isPackaged) return {status:'development'}; try { await autoUpdater.checkForUpdates(); return {status:'checking'}; } catch (e) { sendUpdateStatus('error',{message:e?.message||'Could not check for updates.'}); return {status:'error'}; } });
   ipcMain.handle('msf:update:download', async () => { try { await autoUpdater.downloadUpdate(); return {status:'downloading'}; } catch (e) { sendUpdateStatus('error',{message:e?.message||'Download failed.'}); return {status:'error'}; } });
   ipcMain.handle('msf:update:install', () => { autoUpdater.quitAndInstall(); return {status:'installing'}; });

@@ -13,6 +13,8 @@ const SHELL = [
   './assets/app-sync.js',
   './assets/custom-mcq.js',
   './assets/pwa.js',
+  './assets/updater.js',
+  './version.json',
   './assets/science-formatter.js',
   './assets/firebase-app-compat.js',
   './assets/firebase-auth-compat.js',
