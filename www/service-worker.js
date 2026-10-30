@@ -14,6 +14,8 @@ const SHELL = [
   './assets/custom-mcq.js',
   './assets/pwa.js',
   './assets/updater.js',
+  './assets/omr-processor.js',
+  './assets/gemini-omr-proxy.js',
   './version.json',
   './assets/science-formatter.js',
   './assets/firebase-app-compat.js',
@@ -25,7 +27,7 @@ self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('medical-secret-files-shell-') && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
   const request = event.request;
