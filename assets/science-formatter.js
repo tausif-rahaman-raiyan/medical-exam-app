@@ -40,6 +40,10 @@
     // Decode HTML entities & normalize Bengali glyphs
     s = decodeHTMLEntities(s);
 
+    // Clean legacy font tags and conflicting inline styles that cause Bengali numerals like ১ to clip or overlap
+    s = s.replace(/<\/?font[^>]*>/gi, '');
+    s = s.replace(/style=(["'])[^"']*(?:margin|letter-spacing|font-family)[^"']*\1/gi, '');
+
     // 1. MathML Multi-scripts & Nuclear Physics Isotopes
     s = s.replace(/<mmultiscripts>([\s\S]*?)<\/mmultiscripts>/gi, (match, inner) => {
       const parts = inner.split(/<mprescripts\s*(?:><\/mprescripts>|\/?>)/i);
