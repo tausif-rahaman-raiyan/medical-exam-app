@@ -1,6 +1,6 @@
 {
   "name": "medical-exam-app",
-  "version": "5.10.11",
+  "version": "5.10.12",
   "author": "Medical Secret Files",
   "type": "module",
   "main": "electron-main.cjs",
