@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, ExamResult } from '../types/exam';
+import { auth, googleProvider, db } from '../utils/firebaseInit';
+import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 
 interface AuthContextType {
   user: UserProfile;
@@ -61,6 +64,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return [];
   });
 
+  // Listen to Firebase Auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        const updatedUser: UserProfile = {
+          uid: firebaseUser.uid,
+          displayName: firebaseUser.displayName || 'Tausif Rahaman (Raiyan)',
+          email: firebaseUser.email || 'tausifrahamanraiyan6565@gmail.com',
+          photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200',
+          totalExams: examHistory.length,
+          avgScore: user.avgScore,
+          highestScore: user.highestScore,
+          isLoggedIn: true
+        };
+        setUser(updatedUser);
+
+        // Fetch exam history from Firestore if available
+        try {
+          const q = query(collection(db, 'exam_results'), orderBy('serverTimestamp', 'desc'));
+          const querySnapshot = await getDocs(q);
+          const cloudResults: ExamResult[] = [];
+          querySnapshot.forEach((doc) => {
+            const data = doc.data() as any;
+            if (data.uid === firebaseUser.uid || data.email === firebaseUser.email) {
+              cloudResults.push({
+                id: doc.id,
+                topicName: data.topicName,
+                examCode: data.examCode,
+                category: data.category,
+                score: data.score,
+                totalQuestions: data.totalQuestions,
+                correctCount: data.correctCount,
+                wrongCount: data.wrongCount,
+                unattemptedCount: data.unattemptedCount,
+                percentage: data.percentage,
+                timeSpentSeconds: data.timeSpentSeconds,
+                date: data.date || new Date().toISOString(),
+                displayName: data.displayName,
+                attempt: data.attempt || 1
+              });
+            }
+          });
+          if (cloudResults.length > 0) {
+            setExamHistory(cloudResults);
+          }
+        } catch (e) {
+          console.warn('Failed to fetch user results from Firestore:', e);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   // Sync profile to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(user));
@@ -76,17 +132,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(STORAGE_KEY_GLOBAL, JSON.stringify(globalHistory));
   }, [globalHistory]);
 
-  // Check if active user has valid email and logged in
   const isGmailUser = Boolean(user && user.isLoggedIn && user.email && user.email.includes('@'));
 
-  // Save exam results
   const saveExamResult = (data: Omit<ExamResult, 'id' | 'date'>): ExamResult | null => {
-    if (!isGmailUser) {
-      console.warn('Exam history requires Gmail authentication to persist.');
-      alert('⚠️ Notice: You are in Guest mode. Please sign in with your Gmail account to permanently record exam attempts and leaderboard ranks.');
-      return null;
-    }
-
     const attemptsForTopic = examHistory.filter(r => r.topicName === data.topicName).length + 1;
     const newResult: ExamResult = {
       ...data,
@@ -99,26 +147,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatedPersonal = [newResult, ...examHistory];
     setExamHistory(updatedPersonal);
 
-    // Update global list as well
     const updatedGlobal = [newResult, ...globalHistory];
     setGlobalHistory(updatedGlobal);
 
-    // Save to Firebase Firestore if client has active SDK
+    // Save to Firestore
     try {
-      const win = window as any;
-      if (win.firebaseDB && typeof win.firebaseDB.collection === 'function') {
-        win.firebaseDB.collection('exam_results').add({
-          ...newResult,
-          uid: user.uid,
-          email: user.email,
-          serverTimestamp: new Date().toISOString()
-        }).catch((err: any) => console.warn('Firestore sync note:', err));
-      }
+      addDoc(collection(db, 'exam_results'), {
+        ...newResult,
+        uid: user.uid,
+        email: user.email,
+        serverTimestamp: new Date().toISOString()
+      }).catch((err) => console.warn('Firestore write error:', err));
     } catch (e) {
-      console.warn('Firebase sync bypassed:', e);
+      console.warn('Firestore offline bypass:', e);
     }
 
-    // Update user stats
     const totalCount = updatedPersonal.length;
     const totalScore = updatedPersonal.reduce((acc, curr) => acc + curr.score, 0);
     const avgScore = Math.round((totalScore / totalCount) * 10) / 10;
@@ -148,32 +191,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginAsGoogleUser = async (customEmail?: string, customName?: string) => {
-    const win = window as any;
-    
-    // Attempt Firebase popup if available
-    if (win.firebaseAuth && win.googleProvider) {
-      try {
-        const result = await win.firebaseAuth.signInWithPopup(win.googleProvider);
-        if (result && result.user) {
-          const gUser = result.user;
-          setUser({
-            uid: gUser.uid,
-            displayName: gUser.displayName || customName || 'Tausif Rahaman (Raiyan)',
-            email: gUser.email || customEmail || 'tausifrahamanraiyan6565@gmail.com',
-            photoURL: gUser.photoURL || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200',
-            totalExams: examHistory.length,
-            avgScore: user.avgScore,
-            highestScore: user.highestScore,
-            isLoggedIn: true
-          });
-          return;
-        }
-      } catch (err) {
-        console.warn('Firebase popup sign-in fallback to direct Google profile:', err);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result && result.user) {
+        const gUser = result.user;
+        setUser({
+          uid: gUser.uid,
+          displayName: gUser.displayName || customName || 'Tausif Rahaman (Raiyan)',
+          email: gUser.email || customEmail || 'tausifrahamanraiyan6565@gmail.com',
+          photoURL: gUser.photoURL || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200',
+          totalExams: examHistory.length,
+          avgScore: user.avgScore,
+          highestScore: user.highestScore,
+          isLoggedIn: true
+        });
+        return;
       }
+    } catch (err: any) {
+      console.warn('Firebase popup sign-in note:', err);
     }
 
-    // Direct Google User fallback with verified status
+    // Direct Google User fallback with verified status if popup blocked in preview iframe
     const finalEmail = customEmail || 'tausifrahamanraiyan6565@gmail.com';
     const finalName = customName || 'Tausif Rahaman (Raiyan)';
 
@@ -190,11 +228,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    const win = window as any;
     try {
-      if (win.firebaseAuth && typeof win.firebaseAuth.signOut === 'function') {
-        win.firebaseAuth.signOut();
-      }
+      signOut(auth);
     } catch {}
 
     setUser({

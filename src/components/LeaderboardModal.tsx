@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { subjectData } from '../data/subjectData';
-import { X, RotateCcw, CheckCircle2, XCircle, FastForward, Target, RefreshCw } from 'lucide-react';
+import { X, RotateCcw, CheckCircle2, XCircle, FastForward, Target, RefreshCw, Sparkles } from 'lucide-react';
 
 interface LeaderboardModalProps {
   isOpen: boolean;
@@ -282,38 +282,38 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
                     </div>
                   </div>
 
-                  {/* Bottom Line: The 4 Metrics Bar (Correct, Wrong, Skipped, Accuracy) */}
+                  {/* Bottom Line: The 4 Metrics Bar as requested */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs font-bold font-mono">
-                    {/* Correct */}
+                    {/* Correct (+1) */}
                     <div className="p-2.5 rounded-2xl bg-[#091F26] border border-emerald-500/30 flex items-center justify-between px-3.5">
                       <span className="text-emerald-400 flex items-center gap-1.5 text-xs">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Correct
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Correct (+1)
                       </span>
                       <span className="text-white font-black text-sm">{res.correctCount || 0}</span>
                     </div>
 
-                    {/* Wrong */}
+                    {/* Wrong (-0.25 Neg) */}
                     <div className="p-2.5 rounded-2xl bg-[#260F1A] border border-rose-500/30 flex items-center justify-between px-3.5">
                       <span className="text-rose-400 flex items-center gap-1.5 text-xs">
-                        <XCircle className="w-4 h-4 text-rose-400" /> Wrong
+                        <XCircle className="w-4 h-4 text-rose-400" /> Wrong (-0.25 Neg)
                       </span>
                       <span className="text-white font-black text-sm">{res.wrongCount || 0}</span>
                     </div>
 
-                    {/* Skipped */}
-                    <div className="p-2.5 rounded-2xl bg-[#080D1A] border border-white/5 flex items-center justify-between px-3.5">
-                      <span className="text-slate-400 flex items-center gap-1.5 text-xs">
-                        <FastForward className="w-4 h-4 text-slate-400" /> Skipped
-                      </span>
-                      <span className="text-white font-black text-sm">{skippedCount}</span>
-                    </div>
-
-                    {/* Accuracy */}
+                    {/* Accuracy Rate */}
                     <div className="p-2.5 rounded-2xl bg-[#21123D] border border-purple-500/30 flex items-center justify-between px-3.5">
                       <span className="text-purple-300 flex items-center gap-1.5 text-xs">
-                        <Target className="w-4 h-4 text-purple-400" /> Accuracy
+                        <Target className="w-4 h-4 text-purple-400" /> Accuracy Rate
                       </span>
                       <span className="text-white font-black text-sm">{res.percentage || 0}%</span>
+                    </div>
+
+                    {/* Final Marks (out of 100) */}
+                    <div className="p-2.5 rounded-2xl bg-[#162544] border border-indigo-500/30 flex items-center justify-between px-3.5">
+                      <span className="text-indigo-300 flex items-center gap-1.5 text-xs">
+                        <Sparkles className="w-4 h-4 text-indigo-400" /> Final Marks
+                      </span>
+                      <span className="text-white font-black text-sm">{res.score} / {res.totalQuestions || 100}</span>
                     </div>
                   </div>
 
