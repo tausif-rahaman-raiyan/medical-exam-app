@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { Question, UserAnswerMap, ExamResult } from '../types/exam';
 import { parseExplanation } from '../utils/scienceFormatter';
-import { Award, CheckCircle2, XCircle, MinusCircle, Clock, RotateCcw, Home, BookOpen, Filter, Sparkles, BookBookmark, Lightbulb } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Award, CheckCircle2, XCircle, MinusCircle, Clock, RotateCcw, Home, BookOpen, Filter, Sparkles, BookBookmark, Lightbulb, LogIn, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface ResultsModalProps {
   questions: Question[];
@@ -19,7 +20,28 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
   onRetake,
   onBackToCatalog
 }) => {
+  const { isGmailUser, loginAsGoogleUser, saveExamResult } = useAuth();
   const [filterMode, setFilterMode] = useState<'all' | 'correct' | 'wrong' | 'unattempted'>('all');
+  const [savedAfterLogin, setSavedAfterLogin] = useState<boolean>(false);
+
+  const handleSignInAndSave = () => {
+    loginAsGoogleUser();
+    saveExamResult({
+      topicName: examResult.topicName,
+      examCode: examResult.examCode,
+      category: examResult.category,
+      score: examResult.score,
+      totalQuestions: examResult.totalQuestions,
+      correctCount: examResult.correctCount,
+      wrongCount: examResult.wrongCount,
+      unattemptedCount: examResult.unattemptedCount,
+      percentage: examResult.percentage,
+      timeSpentSeconds: examResult.timeSpentSeconds,
+      displayName: 'Medical Aspirant',
+      attempt: examResult.attempt || 1
+    });
+    setSavedAfterLogin(true);
+  };
 
   useEffect(() => {
     // Trigger confetti on high scores (>60%)
@@ -51,7 +73,7 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
   const merit = getMeritBadge(examResult.percentage);
 
   return (
-    <div className="max-w-4xl mx-auto py-6 px-4 space-y-6 animate-fadeIn">
+    <div className="max-w-[1300px] mx-auto py-6 px-3 sm:px-6 space-y-6 animate-fadeIn">
       
       {/* Top Results Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-950 to-slate-950 border border-purple-500/30 p-6 sm:p-8 shadow-2xl text-center space-y-4">
@@ -67,6 +89,36 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
         <div className={`inline-block px-4 py-1.5 rounded-xl border text-xs font-bold ${merit.color}`}>
           {merit.label}
         </div>
+
+        {/* Gmail Login Requirement Banner */}
+        {!isGmailUser && !savedAfterLogin && (
+          <div className="max-w-xl mx-auto p-4 rounded-2xl bg-amber-950/60 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-white leading-tight">
+                  Gmail Login Required to Save Record
+                </p>
+                <p className="text-[11px] text-amber-200/80 mt-0.5">
+                  Sign in with Google so your {examResult.score} marks persist to the database.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleSignInAndSave}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow flex-shrink-0"
+            >
+              <LogIn className="w-3.5 h-3.5" /> Sign in & Save
+            </button>
+          </div>
+        )}
+
+        {savedAfterLogin && (
+          <div className="max-w-xl mx-auto p-3 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center gap-2 text-xs font-bold text-emerald-300">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            Exam score successfully synchronized and saved to your Gmail database!
+          </div>
+        )}
 
         {/* Score Overview Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
@@ -181,36 +233,36 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
                 }`}
               >
                 {/* Question Header */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-start gap-2">
-                    <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-slate-800 text-purple-300">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-start gap-2.5">
+                    <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-purple-300 flex-shrink-0 mt-0.5">
                       #{q.id}
                     </span>
                     <h4 
-                      className="text-sm sm:text-base font-bold text-white font-siliguri leading-relaxed"
+                      className="text-base sm:text-xl font-bold text-white font-siliguri leading-relaxed"
                       dangerouslySetInnerHTML={{ __html: q.q }}
                     />
                   </div>
 
                   <span className="flex-shrink-0">
                     {isUnattempted ? (
-                      <span className="text-[11px] font-bold text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                      <span className="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
                         <MinusCircle className="w-3.5 h-3.5" /> Unanswered
                       </span>
                     ) : isCorrect ? (
-                      <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                      <span className="text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Correct (+1)
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold text-rose-400 bg-rose-950/80 border border-rose-500/40 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                      <span className="text-xs font-bold text-rose-400 bg-rose-950/80 border border-rose-500/40 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
                         <XCircle className="w-3.5 h-3.5" /> Wrong (-0.25)
                       </span>
                     )}
                   </span>
                 </div>
 
-                {/* Options Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-4">
+                {/* Options Grid with Standard Large Readable Bengali Typography */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm sm:text-base mb-5 font-siliguri">
                   {[
                     { key: 'a', label: '(ক)', text: q.a },
                     { key: 'b', label: '(খ)', text: q.b },
@@ -220,20 +272,25 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
                     const isSelected = userAns === opt.key;
                     const isCorrectKey = q.ans === opt.key;
 
-                    let optionStyle = 'bg-slate-900 border-white/5 text-slate-300';
+                    let optionStyle = 'bg-slate-900 border-white/5 text-slate-200';
                     if (isCorrectKey) {
-                      optionStyle = 'bg-emerald-950/80 border-emerald-500/60 text-emerald-200 font-bold';
+                      optionStyle = 'bg-emerald-950/90 border-emerald-500/60 text-emerald-200 font-bold shadow-sm';
                     } else if (isSelected && !isCorrectKey) {
-                      optionStyle = 'bg-rose-950/80 border-rose-500/60 text-rose-200 line-through';
+                      optionStyle = 'bg-rose-950/90 border-rose-500/60 text-rose-200 line-through';
                     }
 
                     return (
                       <div
                         key={opt.key}
-                        className={`p-2.5 rounded-xl border flex items-start gap-2 ${optionStyle}`}
+                        className={`p-3.5 rounded-2xl border flex items-start gap-3 transition-all ${optionStyle}`}
                       >
-                        <span className="font-bold text-purple-400">{opt.label}</span>
-                        <span dangerouslySetInnerHTML={{ __html: opt.text }} />
+                        <span className="w-7 h-7 min-w-[1.75rem] rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm bg-slate-800 text-purple-300 flex-shrink-0 mt-0.5">
+                          {opt.label}
+                        </span>
+                        <span 
+                          className="flex-1 min-w-0 font-siliguri leading-relaxed text-sm sm:text-base"
+                          dangerouslySetInnerHTML={{ __html: opt.text }} 
+                        />
                       </div>
                     );
                   })}
@@ -242,23 +299,23 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
                 {/* Explanation Boxes: Cyan Reference & Amber Concept */}
                 <div className="space-y-2 pt-2 border-t border-white/5">
                   {/* Line 1: রেফারেন্স in Cyan */}
-                  <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex items-start gap-2.5">
-                    <span className="px-2 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-black text-[10px] uppercase tracking-wider flex items-center gap-1 flex-shrink-0">
+                  <div className="p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex items-start gap-2.5">
+                    <span className="px-2 py-0.5 rounded-md bg-cyan-500 text-slate-950 font-black text-[10px] uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mt-0.5">
                       <BookBookmark className="w-3 h-3" /> রেফারেন্স
                     </span>
                     <div 
-                      className="text-xs sm:text-sm font-semibold text-cyan-100 font-siliguri leading-relaxed"
+                      className="font-semibold text-cyan-100 font-siliguri leading-relaxed reference-box-text"
                       dangerouslySetInnerHTML={{ __html: reference }}
                     />
                   </div>
 
                   {/* Line 2: কনসেপ্ট in Amber */}
-                  <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 flex items-start gap-2.5">
-                    <span className="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider flex items-center gap-1 flex-shrink-0">
+                  <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/30 flex items-start gap-2.5">
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider flex items-center gap-1 flex-shrink-0 mt-0.5">
                       <Lightbulb className="w-3 h-3" /> কনসেপ্ট
                     </span>
                     <div 
-                      className="text-xs sm:text-sm font-normal text-amber-100 font-siliguri leading-relaxed"
+                      className="font-normal text-amber-100 font-siliguri leading-relaxed concept-box-text"
                       dangerouslySetInnerHTML={{ __html: concept }}
                     />
                   </div>

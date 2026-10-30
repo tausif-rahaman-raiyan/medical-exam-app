@@ -33,13 +33,13 @@ app.get('/api/health', (_req: Request, res: Response): void => {
 // Secure Firebase Configuration Provider
 app.get('/api/firebase-config', (_req: Request, res: Response): void => {
   res.json({
-    apiKey: process.env.FIREBASE_API_KEY || "AIzaSyCeOGW02mBVV5oQAWzh9scy1xULjwPg1Ek",
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN || "hazera-taju-degree-college.firebaseapp.com",
-    projectId: process.env.FIREBASE_PROJECT_ID || "hazera-taju-degree-college",
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "hazera-taju-degree-college.firebasestorage.app",
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "110273229891",
-    appId: process.env.FIREBASE_APP_ID || "1:110273229891:web:28ca38967befe86a11d0f6",
-    measurementId: process.env.FIREBASE_MEASUREMENT_ID || "G-W129JR3BTP"
+    apiKey: process.env.FIREBASE_API_KEY || "",
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN || "",
+    projectId: process.env.FIREBASE_PROJECT_ID || "",
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "",
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "",
+    appId: process.env.FIREBASE_APP_ID || "",
+    measurementId: process.env.FIREBASE_MEASUREMENT_ID || ""
   });
 });
 

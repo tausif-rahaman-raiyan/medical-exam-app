@@ -36,7 +36,14 @@ const MainAppContent: React.FC = () => {
     userAnswers: UserAnswerMap
   ) => {
     const savedResult = saveExamResult(resultData);
-    setExamResult(savedResult);
+    const finalResult: ExamResult = savedResult || {
+      ...resultData,
+      id: 'session_' + Date.now(),
+      date: new Date().toISOString(),
+      displayName: 'Guest Candidate',
+      attempt: 1
+    };
+    setExamResult(finalResult);
     setActiveQuestions(questions);
     setActiveUserAnswers(userAnswers);
     setActiveExam(null);

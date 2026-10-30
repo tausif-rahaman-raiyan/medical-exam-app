@@ -54,4 +54,5 @@ export interface UserProfile {
   totalExams: number;
   avgScore: number;
   highestScore: number;
+  isLoggedIn?: boolean;
 }

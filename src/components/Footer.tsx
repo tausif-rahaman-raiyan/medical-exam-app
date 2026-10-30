@@ -31,7 +31,10 @@ export const Footer: React.FC = () => {
           </span>
         </div>
 
-        <p className="text-[10px] text-slate-600 mt-1 font-mono">
+        <p className="text-[11px] text-slate-400 font-semibold mt-1">
+          Made by <strong className="text-slate-200">Tausif Rahaman Raiyan</strong> • Medical Secret Files <span className="font-mono text-purple-300">v05.10.08</span>
+        </p>
+        <p className="text-[10px] text-slate-600 font-mono">
           © {new Date().getFullYear()} Medical Secret Files Engine. All rights reserved.
         </p>
       </div>

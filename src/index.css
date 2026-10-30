@@ -4,6 +4,8 @@
   :root {
     --bg-primary: #0F172A;
     --bg-secondary: #1E293B;
+    --concept-font-size: 17px;
+    --reference-font-size: 16px;
   }
 
   body {
@@ -34,6 +36,25 @@
   font-family: 'Hind Siliguri', 'Noto Sans Bengali', 'Kalpurush', sans-serif !important;
 }
 
+/* Dynamic Concept (কনসেপ্ট) & Reference (রেফারেন্স) Font Sizes */
+.concept-box-text,
+.concept-box-text *,
+.concept-box-text p,
+.concept-box-text span {
+  font-size: var(--concept-font-size, 17px) !important;
+  line-height: 1.7 !important;
+  font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif !important;
+}
+
+.reference-box-text,
+.reference-box-text *,
+.reference-box-text p,
+.reference-box-text span {
+  font-size: var(--reference-font-size, 16px) !important;
+  line-height: 1.6 !important;
+  font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif !important;
+}
+
 /* Keyframe Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.98); }
@@ -41,5 +62,5 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

@@ -31,7 +31,11 @@ export async function loadExamQuestions(examItem: ExamItem): Promise<Question[]>
 
 function normalizeQuestions(rawList: any[]): Question[] {
   return rawList.map((item, index) => {
-    const rawQ = item.q || item.question || `প্রশ্ন #${index + 1}`;
+    let rawQ = item.q || item.question || `প্রশ্ন #${index + 1}`;
+    // Strip any empty brackets like '[] #3' or '[]' from question prompt
+    rawQ = rawQ.replace(/^\[\s*\]\s*#?\d*[:\s]*/, '').replace(/^\[\]\s*/, '').trim();
+    if (!rawQ) rawQ = `প্রশ্ন #${index + 1}`;
+
     const rawA = item.a || (item.options && item.options[0]?.text) || 'অপশন ক';
     const rawB = item.b || (item.options && item.options[1]?.text) || 'অপশন খ';
     const rawC = item.c || (item.options && item.options[2]?.text) || 'অপশন গ';
@@ -114,7 +118,7 @@ export function generateHighYieldQuestions(title: string, count: number = 100): 
     const template = sampleBank[(i - 1) % sampleBank.length];
     list.push({
       id: i,
-      q: cleanAndFormatScience(`[${title}] #${i}: ${template.q}`),
+      q: cleanAndFormatScience(template.q),
       a: cleanAndFormatScience(template.a),
       b: cleanAndFormatScience(template.b),
       c: cleanAndFormatScience(template.c),

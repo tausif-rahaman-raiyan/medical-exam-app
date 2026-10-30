@@ -29,6 +29,10 @@ export function cleanAndFormatScience(input: string): string {
 
   s = decodeHTMLEntities(s);
 
+  // Clean legacy font tags and conflicting inline styles that cause Bengali numbers like ১ to clip or overlap
+  s = s.replace(/<\/?font[^>]*>/gi, '');
+  s = s.replace(/style=(["'])[^"']*(?:margin|letter-spacing|font-family)[^"']*\1/gi, '');
+
   // MathML Multi-scripts
   s = s.replace(/<mmultiscripts>([\s\S]*?)<\/mmultiscripts>/gi, (_, inner) => {
     const parts = inner.split(/<mprescripts\s*(?:><\/mprescripts>|\/?>)/i);
