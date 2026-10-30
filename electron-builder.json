@@ -24,5 +24,13 @@
     ],
     "icon": "www/assets/icon.ico"
   },
-  "artifactName": "Medical Secret Files Setup 3.0.0.${ext}"
+  "artifactName": "Medical Secret Files Setup ${version}.${ext}",
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "tausif-rahaman-raiyan",
+      "repo": "medical-exam-app",
+      "releaseType": "release"
+    }
+  ]
 }

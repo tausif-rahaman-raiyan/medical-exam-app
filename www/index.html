@@ -288,6 +288,10 @@
                         </div>
                     </div>
                     
+                    <div class="mt-2 mb-1 px-3 py-2 rounded-xl bg-slate-900/80 border border-white/10">
+                        <div class="flex items-center justify-between gap-2"><span class="text-[11px] font-bold text-slate-300"><i class="fa fa-code-branch text-teal-300 mr-1"></i> App Version</span><span id="appVersionLabel" class="font-mono text-[11px] font-black text-teal-300">05.10.08</span></div>
+                        <div id="desktopUpdateItem" class="hidden mt-2 pt-2 border-t border-white/10"><p id="desktopUpdateStatus" class="text-[10px] leading-relaxed text-slate-400 mb-2" aria-live="polite">Check GitHub for the latest desktop release.</p><button id="desktopUpdateAction" type="button" class="w-full px-3 py-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-[11px] font-black flex items-center justify-center gap-2"><i class="fa fa-rotate"></i><span>Check for updates</span></button></div>
+                    </div>
                     <button onclick="window.AppSync ? window.AppSync.openSyncModal() : null" class="w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-950/50 text-xs font-bold text-indigo-300 flex items-center space-x-2 transition-all">
                         <i class="fa fa-rotate text-indigo-400"></i>
                         <span>Sync with Windows App</span>
@@ -653,6 +657,7 @@ Ans: A
 <script src="assets/app-sync.js"></script>
 <script src="assets/custom-mcq.js"></script>
 <script src="assets/pwa.js"></script>
+<script src="assets/updater.js"></script>
 
 <script>
     // Initial UI Initialization
@@ -1052,21 +1057,19 @@ Ans: A
         if (userDropdown && !userDropdown.contains(e.target) && !profileBtn?.contains(e.target)) userDropdown.classList.add('hidden');
     });
 
-    // Top Header Visibility Controller:
-    // Scroll down: hide profile, leaderboard, branding header
-    // Scrolled to the very top: show header
+    // Smart auto-hide header: hide on downward scroll and reveal on upward scroll.
     const mainHeader = document.getElementById('mainHeader');
+    let lastHeaderScrollY = window.scrollY || document.documentElement.scrollTop || 0;
     function updateMainHeaderVisibility() {
         if (!mainHeader) return;
-        const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-        if (currentScrollY <= 15) {
-            mainHeader.classList.remove('header-hidden');
-        } else {
+        const y = window.scrollY || document.documentElement.scrollTop || 0;
+        const down = y > lastHeaderScrollY + 2, up = y < lastHeaderScrollY - 2;
+        if (y <= 15 || up) mainHeader.classList.remove('header-hidden');
+        else if (down && y > 70) {
             mainHeader.classList.add('header-hidden');
-            if (userDropdown && !userDropdown.classList.contains('hidden')) {
-                userDropdown.classList.add('hidden');
-            }
+            if (userDropdown) userDropdown.classList.add('hidden');
         }
+        lastHeaderScrollY = y;
     }
     window.addEventListener('scroll', updateMainHeaderVisibility, { passive: true });
     updateMainHeaderVisibility();

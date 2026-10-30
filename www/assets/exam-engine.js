@@ -197,9 +197,9 @@
 
           <!-- Mobile: timer on first line and submit on second. Desktop: timer overlays the exact center of the full header row. -->
           <div class="flex flex-col items-end justify-center gap-1 sm:contents min-w-0">
-            <div class="relative sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 px-2 sm:px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-500/40 text-purple-300 font-mono font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-inner whitespace-nowrap">
-              <i class="fa fa-stopwatch text-purple-400 animate-pulse"></i>
-              <span id="exam-live-timer">00:00</span>
+            <div class="relative sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-slate-900 border border-purple-500/50 text-purple-200 font-mono font-black text-sm sm:text-base md:text-lg flex items-center justify-center gap-2 shadow-lg shadow-purple-950/30 whitespace-nowrap min-w-[108px] sm:min-w-[138px]">
+              <i class="fa fa-stopwatch text-purple-400 animate-pulse text-sm sm:text-base"></i>
+              <span id="exam-live-timer" class="tabular-nums tracking-wide">00:00</span>
             </div>
             <button onclick="window.ExamEngine.confirmSubmit()" class="flex-shrink-0 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-[10px] sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-1.5">
               <i class="fa fa-paper-plane"></i> Submit
@@ -312,7 +312,7 @@
                       <span class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 ${isSelected ? 'bg-purple-600 text-white font-black shadow-md' : 'bg-slate-800 text-slate-400'}">
                         ${opt.toUpperCase()}
                       </span>
-                      <span class="text-base sm:text-lg font-medium break-words leading-relaxed text-slate-100 font-siliguri">${q[opt]}</span>
+                      <span lang="bn" class="min-w-0 text-base sm:text-lg font-medium break-words leading-[1.85] text-slate-100 font-siliguri tracking-normal">${q[opt]}</span>
                     </div>
                     ${isSelected ? '<i class="fa fa-circle-check text-purple-400 text-sm ml-2 flex-shrink-0"></i>' : '<i class="fa fa-circle text-slate-700 text-[10px] ml-2 flex-shrink-0"></i>'}
                   </button>
@@ -378,8 +378,8 @@
     return ExamState.questions.map((_, idx) => {
       const isAns = ExamState.userAnswers[idx] !== undefined && ExamState.userAnswers[idx] !== null;
       return `
-        <button id="pal-btn-${idx}" onclick="window.ExamEngine.scrollToQuestion(${idx})" class="w-full py-1.5 rounded-lg font-mono font-black text-xs transition-all flex items-center justify-center ${isAns ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'}">
-          ${idx + 1}
+        <button id="pal-btn-${idx}" onclick="window.ExamEngine.scrollToQuestion(${idx})" lang="bn" class="w-full min-h-9 py-1.5 rounded-lg font-siliguri font-black text-sm sm:text-base leading-none transition-all flex items-center justify-center ${isAns ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}">
+          ${(idx + 1).toLocaleString('bn-BD', { useGrouping: false })}
         </button>
       `;
     }).join('');
@@ -423,7 +423,8 @@
     const btn = document.getElementById(`pal-btn-${idx}`);
     if (!btn) return;
     const isAns = ExamState.userAnswers[idx] !== undefined && ExamState.userAnswers[idx] !== null;
-    btn.className = `flex-shrink-0 w-8 sm:w-9 h-8 sm:h-9 rounded-xl font-mono font-black text-xs transition-all flex items-center justify-center ${isAns ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'}`;
+    btn.className = `flex-shrink-0 min-w-8 sm:min-w-9 h-8 sm:h-9 px-1 rounded-xl font-siliguri font-black text-sm sm:text-base leading-none transition-all flex items-center justify-center ${isAns ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`;
+    btn.textContent = (idx + 1).toLocaleString('bn-BD', { useGrouping: false });
   }
 
   function scrollToQuestion(idx) {

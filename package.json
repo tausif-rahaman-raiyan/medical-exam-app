@@ -1,6 +1,6 @@
 {
   "name": "medical-exam-app",
-  "version": "3.0.0",
+  "version": "5.10.8",
   "author": "Medical Secret Files",
   "type": "module",
   "main": "electron-main.cjs",
@@ -29,7 +29,8 @@
     "lucide-react": "^1.65.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "electron-updater": "^6.6.2"
   },
   "devDependencies": {
     "@cspell/dict-bn": "^1.0.4",
