@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Stethoscope, History, LogIn, LogOut, FilePlus, Sparkles, ChevronDown, RefreshCw, CheckCircle, ArrowDownCircle, ShieldCheck, Maximize2, Minimize2, Type, Smartphone } from 'lucide-react';
+import { Stethoscope, History, LogIn, LogOut, FilePlus, Sparkles, ChevronDown, RefreshCw, CheckCircle, ArrowDownCircle, ShieldCheck, Maximize2, Minimize2, Type, Smartphone, Menu } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'catalog' | 'custom' | 'history';
   setActiveTab: (tab: 'catalog' | 'custom' | 'history') => void;
   openLeaderboardModal: () => void;
+  openSidebar?: () => void;
 }
 
 const CURRENT_VERSION = '05.10.08';
 const GITHUB_REPO = 'tausif-rahaman-raiyan/medical-exam-app';
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, openLeaderboardModal }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, openLeaderboardModal, openSidebar }) => {
   const { user, loginAsGoogleUser, logout, updateProfileName, examHistory, isGmailUser } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -227,28 +228,40 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, openLea
     }`}>
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         
-        {/* Brand Logo & Version Info */}
-        <button 
-          onClick={() => setActiveTab('catalog')}
-          className="flex items-center gap-3 text-left group focus:outline-none"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 group-hover:scale-105 transition-transform">
-            <Stethoscope className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-indigo-300">
-                Medical Secret Files
-              </span>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">
-                v{CURRENT_VERSION}
-              </span>
-            </h1>
-            <p className="text-[11px] text-purple-300/80 font-medium mt-0.5 font-mono">
-              Precision Medical Admission Engine
-            </p>
-          </div>
-        </button>
+        {/* Brand Logo & Version Info with AI Studio Sidebar Toggle */}
+        <div className="flex items-center gap-3">
+          {openSidebar && (
+            <button
+              onClick={openSidebar}
+              className="p-2.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-all shadow-sm flex items-center justify-center"
+              title="Open AI Studio Sidebar Console"
+            >
+              <Menu className="w-5 h-5 text-purple-400" />
+            </button>
+          )}
+
+          <button 
+            onClick={() => setActiveTab('catalog')}
+            className="flex items-center gap-3 text-left group focus:outline-none"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 group-hover:scale-105 transition-transform">
+              <Stethoscope className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-indigo-300">
+                  Medical Secret Files
+                </span>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                  v{CURRENT_VERSION}
+                </span>
+              </h1>
+              <p className="text-[11px] text-purple-300/80 font-medium mt-0.5 font-mono">
+                Precision Medical Admission Engine
+              </p>
+            </div>
+          </button>
+        </div>
 
         {/* Navigation Tabs (Desktop) - Only Question Bank & Custom MCQ Builder */}
         <nav className="hidden md:flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-2xl border border-white/10">

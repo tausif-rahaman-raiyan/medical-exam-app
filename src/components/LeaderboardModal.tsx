@@ -198,8 +198,8 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
           </button>
         </div>
 
-        {/* Exam Attempt Cards Stream (No nested scrollbar, smooth natural scroll) */}
-        <div className="p-4 sm:p-6 space-y-4 max-h-[62vh] overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
+        {/* Exam Attempt Cards Stream (Single unified scroll container with modal) */}
+        <div className="p-4 sm:p-6 space-y-4">
           {filteredResults.length === 0 ? (
             <div className="py-16 text-center text-slate-400 space-y-2">
               <RotateCcw className="w-12 h-12 text-purple-400/30 mx-auto" />

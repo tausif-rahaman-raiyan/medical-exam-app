@@ -9,6 +9,7 @@ import { PreviewModal } from './components/PreviewModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { ResultsModal } from './components/ResultsModal';
 import { BottomNav } from './components/BottomNav';
+import { Sidebar } from './components/Sidebar';
 import { ExamItem, Question, UserAnswerMap, ExamResult } from './types/exam';
 
 const MainAppContent: React.FC = () => {
@@ -18,6 +19,7 @@ const MainAppContent: React.FC = () => {
   const [activeExam, setActiveExam] = useState<ExamItem | null>(null);
   const [previewExam, setPreviewExam] = useState<ExamItem | null>(null);
   const [leaderboardOpen, setLeaderboardOpen] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   // Active exam completion results state
   const [examResult, setExamResult] = useState<ExamResult | null>(null);
@@ -94,6 +96,7 @@ const MainAppContent: React.FC = () => {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             openLeaderboardModal={() => setLeaderboardOpen(true)}
+            openSidebar={() => setSidebarOpen(true)}
           />
           <ResultsModal
             questions={activeQuestions}
@@ -111,6 +114,7 @@ const MainAppContent: React.FC = () => {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             openLeaderboardModal={() => setLeaderboardOpen(true)}
+            openSidebar={() => setSidebarOpen(true)}
           />
 
           <main className="flex-1">
@@ -137,7 +141,7 @@ const MainAppContent: React.FC = () => {
         </div>
       )}
 
-      {/* Modals */}
+      {/* Modals & AI Studio Sidebar Console */}
       {previewExam && (
         <PreviewModal
           examItem={previewExam}
@@ -152,6 +156,14 @@ const MainAppContent: React.FC = () => {
       <LeaderboardModal
         isOpen={leaderboardOpen}
         onClose={() => setLeaderboardOpen(false)}
+      />
+
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        openLeaderboardModal={() => setLeaderboardOpen(true)}
       />
 
     </div>

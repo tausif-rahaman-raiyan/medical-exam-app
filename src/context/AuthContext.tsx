@@ -47,44 +47,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const saved = localStorage.getItem(STORAGE_KEY_HISTORY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch {}
-    // Seed with initial realistic attempts matching user's exam records
-    return [
-      {
-        id: 'res_1730311500',
-        topicName: 'প্রাণীর বিভিন্নতা ও শ্রেণিবিন্যাস',
-        examCode: '1020325015',
-        category: 'প্রাণিবিজ্ঞান',
-        score: 80,
-        totalQuestions: 100,
-        correctCount: 82,
-        wrongCount: 8,
-        unattemptedCount: 10,
-        percentage: 80,
-        timeSpentSeconds: 1680,
-        date: '2026-10-29T20:05:00.000Z',
-        displayName: 'Tausif Rahaman (Raiyan)',
-        attempt: 1
-      },
-      {
-        id: 'res_1730325400',
-        topicName: 'English Grammar Mastery Part 1',
-        examCode: '1020325076',
-        category: 'ইংরেজি',
-        score: 74.25,
-        totalQuestions: 100,
-        correctCount: 78,
-        wrongCount: 15,
-        unattemptedCount: 7,
-        percentage: 74,
-        timeSpentSeconds: 1540,
-        date: '2026-10-29T23:58:00.000Z',
-        displayName: 'Tausif Rahaman (Raiyan)',
-        attempt: 1
-      }
-    ];
+    return [];
   });
 
   const [globalHistory, setGlobalHistory] = useState<ExamResult[]>(() => {
@@ -169,7 +135,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearHistory = () => {
-    console.info('Permanent database preservation active. History cannot be cleared.');
+    setExamHistory([]);
+    setGlobalHistory([]);
+    localStorage.removeItem(STORAGE_KEY_HISTORY);
+    localStorage.removeItem(STORAGE_KEY_GLOBAL);
+    setUser(prev => ({ ...prev, totalExams: 0, avgScore: 0, highestScore: 0 }));
   };
 
   const updateProfileName = (name: string) => {
