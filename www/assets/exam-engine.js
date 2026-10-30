@@ -45,7 +45,7 @@
       signedInUser.providerData.some(provider => provider.providerId === 'google.com'));
     const hasSyncedGoogleAccount = !!(isDesktopApp && savedProfile &&
       savedProfile.uid && savedProfile.uid !== 'guest' && savedProfile.email);
-    if (!hasLiveGoogleAccount && !hasSyncedGoogleAccount) {
+    if (!hasLiveGoogleAccount && !hasSyncedGoogleAccount && !examItem.customQuestions) {
       if (typeof global.showLoginRequiredModal === 'function') global.showLoginRequiredModal(examItem);
       else alert('Please sign in with Google before starting an exam.');
       return;
@@ -78,20 +78,21 @@
     // Show Loading
     const container = document.getElementById('exam-render-container');
     if (container) {
+      const qCountDisplay = examItem.customQuestions?.length || 100;
       container.innerHTML = `
         <div class="flex flex-col items-center justify-center min-h-[60vh] py-16 text-center w-full">
           <div class="w-16 h-16 rounded-3xl bg-purple-900/40 border border-purple-500/40 flex items-center justify-center mb-4 animate-pulse">
             <i class="fa fa-stethoscope text-2xl text-purple-400"></i>
           </div>
           <h2 class="text-xl sm:text-2xl font-black text-white mb-2">Preparing ${examItem.t || examItem.title || 'Medical Exam'}</h2>
-          <p class="text-sm text-slate-400">Loading 100 high-yield questions & scientific models...</p>
+          <p class="text-sm text-slate-400">Loading ${qCountDisplay} high-yield questions & scientific models...</p>
         </div>
       `;
     }
 
     try {
       if (examItem.customQuestions && Array.isArray(examItem.customQuestions)) {
-        ExamState.questions = examItem.customQuestions;
+        ExamState.questions = normalizeQuestions(examItem.customQuestions);
       } else if (examItem.url) {
         const res = await fetch(examItem.url);
         if (!res.ok) throw new Error('Exam file fetch error: ' + res.status);
@@ -233,12 +234,12 @@
             <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
               <div>
                 <h3 class="text-xs sm:text-sm font-black text-white flex items-center gap-1.5">
-                  <i class="fa fa-table-cells text-purple-400"></i> Question Palette (1-100)
+                  <i class="fa fa-table-cells text-purple-400"></i> Question Palette (1-${ExamState.questions.length})
                 </h3>
                 <p class="text-[10px] text-slate-400 mt-0.5">1-Click Lock • Negative (-0.25)</p>
               </div>
               <span class="px-2 py-0.5 rounded-lg bg-slate-900 text-purple-300 font-mono text-[11px] font-bold">
-                100 MCQs
+                ${ExamState.questions.length} MCQs
               </span>
             </div>
 
@@ -1034,6 +1035,10 @@
     }
     if (mainContainer) {
       mainContainer.classList.remove('exam-active-fullwidth');
+    }
+    const mainHeader = document.getElementById('mainHeader');
+    if (mainHeader) {
+      mainHeader.classList.remove('header-hidden');
     }
   }
 

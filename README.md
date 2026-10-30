@@ -1,25 +1,35 @@
-# Medical Secret Files
+# Medical Secret Files - Precision Medical Admission Exam Platform
 
-Medical admission exam preparation platform with a Windows desktop build.
+Medical Secret Files is a comprehensive medical admission exam preparation platform built with React, TypeScript, and Vite.
 
-## Windows app
+## Features
 
-The GitHub Actions workflow builds two Windows x64 downloads:
-- **Setup installer (.exe):** choose a custom installation folder during setup.
-- **Portable (.exe):** run without installing; you can keep it on another drive or in a folder such as a synced Google Drive folder. Avoid running from a cloud-synced folder while files are actively syncing.
+- **114 Exam Serial Catalog**: Complete coverage of Botany, Zoology, Physics 1st & 2nd Paper, Chemistry 1st & 2nd Paper, General Knowledge, English, Subject Finals, Full Model Tests, and 12 years of Medical Past Board Papers (2013-2025).
+- **Interactive Exam Engine**:
+  - **Card View**: Clean, large Bengali typography with 1-click answer lock and instant question jump palette.
+  - **OMR Sheet Simulator**: Simulated realistic OMR bubble sheet with live response sync.
+  - **Countdown Timer**: 50 minutes timer per test with automatic submission.
+  - **Negative Marking**: Standard medical admission marking rule (+1 for correct, -0.25 for incorrect).
+- **In-Depth Solution Review**:
+  - Vibrant **Cyan (রেফারেন্স / Reference)** and **Amber (কনসেপ্ট / Concept)** solution cards.
+  - Filter solutions by All, Correct, Wrong, or Unanswered questions.
+  - Full scientific formula formatting (MathML, chemical formulas like H₂O, CO₂, CaCO₃, C₆H₁₂O₆).
+- **Custom MCQ Builder**: Create custom practice tests with custom time limits, question counts, or manual question entry.
+- **Leaderboard & Result Logs**: Local history tracking and global merit ranking preview.
 
-To build it, open **Actions → Medical Secret Files CI → Run workflow** (or push a commit). After it finishes, open the run and download the `Medical-Secret-Files-Windows-x64` artifact. GitHub stores the artifact for 30 days.
+## Getting Started
 
-The Windows app icon is generated from `www/assets/icon.svg` during the build.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Bengali AI proofreading
+2. Run development server:
+   ```bash
+   npm run dev
+   ```
 
-To enable automated Bengali spelling, grammar, punctuation and sentence-clarity review, add a repository secret named `GEMINI_API_KEY` in **Settings → Secrets and variables → Actions**. The workflow produces a `Bengali-AI-Proofreading-Report` artifact. The report flags suggestions only; it does not rewrite application files automatically. Without the secret, the optional proofreading job skips the AI request.
-
-## Run locally
-
-Prerequisite: Node.js 22 or newer.
-
-1. Install dependencies: `npm install`
-2. Set `GEMINI_API_KEY` in your local environment or `.env.local` for AI-powered features.
-3. Run the development server: `npm run dev`
+3. Build for production:
+   ```bash
+   npm run build
+   ```
