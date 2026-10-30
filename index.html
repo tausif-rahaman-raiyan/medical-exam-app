@@ -163,12 +163,23 @@
         @media (min-width: 641px) and (max-width: 1023px) {
           #userDropdown { width: min(20rem, calc(100vw - 2rem)); }
         }
-        /* Keep site chrome visible even when the browser is maximized/fullscreen. */
-        #mainHeader { position: sticky !important; top: 0 !important; z-index: 100 !important; transform: none !important; visibility: visible !important; }
+        /* Main top header: smooth hide on scroll down, shows only when at the very top */
+        #mainHeader {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 40 !important;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible !important;
+        }
+        #mainHeader.header-hidden {
+            transform: translateY(-100%) !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
         #appFooter { display: block !important; visibility: visible !important; }
         @media (max-width: 640px) {
-          /* Use the compact bottom navigation on phones; keep the full command header for larger screens. */
-          #mainHeader { display: none !important; }
           #appFooter { font-size: 14px; padding-top: 14px; padding-bottom: 16px; }
           #mainContent { padding-top: 12px; }
           #mainHeader > div { gap: .5rem !important; }
@@ -715,6 +726,7 @@ Ans: A
         if (section === 'profile') window.refreshProfilePanel?.();
         if (section === 'install') window.refreshInstallPanel?.();
         window.activeAppSection = section;
+        document.getElementById('mainHeader')?.classList.remove('header-hidden');
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
     window.showAppSection = showAppSection;
@@ -802,60 +814,209 @@ Ans: A
         }
     }
 
+    // Robust Custom Medical MCQ Parser
+    function parseCustomExamText(rawText) {
+        if (!rawText || !rawText.trim()) return [];
+        const fmt = window.cleanAndFormatScience || ((s) => s);
+
+        const text = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+        const questions = [];
+        let cur = null;
+
+        const normalizeAns = (str) => {
+            if (!str) return 'a';
+            const s = String(str).trim().toLowerCase();
+            if (s.includes('ক') || s.includes('ka')) return 'a';
+            if (s.includes('খ') || s.includes('kha')) return 'b';
+            if (s.includes('গ') || s.includes('ga')) return 'c';
+            if (s.includes('ঘ') || s.includes('gha')) return 'd';
+            if (s.includes('1') || s.includes('১')) return 'a';
+            if (s.includes('2') || s.includes('২')) return 'b';
+            if (s.includes('3') || s.includes('৩')) return 'c';
+            if (s.includes('4') || s.includes('৪')) return 'd';
+            const m = s.match(/[abcd]/);
+            return m ? m[0] : 'a';
+        };
+
+        const isQuestionStart = (line) => {
+            // Must NOT look like an option, answer, or explanation prefix
+            if (/^(?:\([A-Da-dকখগঘ]\)|[A-Da-dকখগঘ][\.\)\:\/\-])\s*/i.test(line)) return false;
+            if (/^(?:Ans|Answer|উত্তর|উঃ|উ:)\s*[:\.\-\=]/i.test(line)) return false;
+            if (/^(?:Exp|Expl|Explanation|ব্যাখ্যা|রেফারেন্স|কনসেপ্ট)\s*[:\.\-\=]/i.test(line)) return false;
+
+            // Matches Bengali or English digits: "১.", "১)", "(১)", "1.", "1)", "(1)", "১০.", "১০০.", "প্রশ্ন ১:", "Q1."
+            if (/^(?:প্রশ্ন\s*(?:নং|no\.?)?\s*[:\.\-]?)?\s*[0-9০-৯]+[\.\)\:\/\-]\s*/i.test(line)) return true;
+            if (/^\([0-9০-৯]+\)\s*/.test(line)) return true;
+            if (/^\[[0-9০-৯]+\]\s*/.test(line)) return true;
+            if (/^(?:Q|Ques|Question|প্রশ্ন)\s*[:\.\-]?[0-9০-৯]*[\.\)\:\-]?\s*/i.test(line)) return true;
+
+            // If we have no active question yet, any text line is question 1
+            if (!cur && line.length > 2) return true;
+
+            // If current question has options and an answer/options set, a non-option line is a new question
+            if (cur && cur.a && cur.b && (cur.ansSet || (cur.c && cur.d))) return true;
+
+            return false;
+        };
+
+        const stripQuestionPrefix = (line) => {
+            return line
+                .replace(/^(?:প্রশ্ন\s*(?:নং|no\.?)?\s*[:\.\-]?)?\s*[0-9০-৯]+[\.\)\:\/\-]\s*/i, '')
+                .replace(/^\([0-9০-৯]+\)\s*/, '')
+                .replace(/^\[[0-9০-৯]+\]\s*/, '')
+                .replace(/^(?:Q|Ques|Question|প্রশ্ন)\s*[:\.\-]?[0-9০-৯]*[\.\)\:\-]?\s*/i, '')
+                .trim();
+        };
+
+        const extractInlineOptions = (line) => {
+            // 4 options on 1 line: (A)...(B)...(C)...(D)... or A.... B.... C.... D.... or (ক)...(খ)...(গ)...(ঘ)...
+            const pat4 = /(?:\(|^|\s+)(?:[A|a]|ক)[\.\)\:\-]?\s+([\s\S]*?)(?:\s+)(?:\(|^|\s+)(?:[B|b]|খ)[\.\)\:\-]?\s+([\s\S]*?)(?:\s+)(?:\(|^|\s+)(?:[C|c]|গ)[\.\)\:\-]?\s+([\s\S]*?)(?:\s+)(?:\(|^|\s+)(?:[D|d]|ঘ)[\.\)\:\-]?\s+([\s\S]*)$/i;
+            const m4 = line.match(pat4);
+            if (m4) {
+                return { a: m4[1].trim(), b: m4[2].trim(), c: m4[3].trim(), d: m4[4].trim() };
+            }
+            // 2 options on 1 line: A & B
+            const patAB = /(?:\(|^|\s+)(?:[A|a]|ক)[\.\)\:\-]?\s+([\s\S]*?)(?:\s{2,}|\t|\s+)(?:\(|^|\s+)(?:[B|b]|খ)[\.\)\:\-]?\s+([\s\S]*)$/i;
+            const mAB = line.match(patAB);
+            if (mAB) {
+                return { a: mAB[1].trim(), b: mAB[2].trim() };
+            }
+            // 2 options on 1 line: C & D
+            const patCD = /(?:\(|^|\s+)(?:[C|c]|গ)[\.\)\:\-]?\s+([\s\S]*?)(?:\s{2,}|\t|\s+)(?:\(|^|\s+)(?:[D|d]|ঘ)[\.\)\:\-]?\s+([\s\S]*)$/i;
+            const mCD = line.match(patCD);
+            if (mCD) {
+                return { c: mCD[1].trim(), d: mCD[2].trim() };
+            }
+            return null;
+        };
+
+        const pushCurrent = () => {
+            if (!cur) return;
+            if (!cur.q || !cur.q.trim()) return;
+            if (!cur.a) cur.a = 'অপশন ক';
+            if (!cur.b) cur.b = 'অপশন খ';
+            if (!cur.c) cur.c = 'অপশন গ';
+            if (!cur.d) cur.d = 'অপশন ঘ';
+            if (!cur.exp || !cur.exp.trim()) {
+                cur.exp = 'রেফারেন্স: কাস্টম প্রশ্নব্যাংক। কনসেপ্ট: স্ব-মূল্যায়ন ও অনুশীলন সমাধান।';
+            }
+            questions.push({
+                id: questions.length + 1,
+                q: fmt(cur.q.trim()),
+                a: fmt(cur.a.trim()),
+                b: fmt(cur.b.trim()),
+                c: fmt(cur.c.trim()),
+                d: fmt(cur.d.trim()),
+                ans: cur.ans || 'a',
+                exp: fmt(cur.exp.trim())
+            });
+            cur = null;
+        };
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+
+            if (isQuestionStart(line)) {
+                pushCurrent();
+                cur = {
+                    q: stripQuestionPrefix(line),
+                    a: '', b: '', c: '', d: '',
+                    ans: 'a',
+                    ansSet: false,
+                    exp: '',
+                    inExp: false
+                };
+                continue;
+            }
+
+            if (!cur) {
+                cur = {
+                    q: stripQuestionPrefix(line),
+                    a: '', b: '', c: '', d: '',
+                    ans: 'a',
+                    ansSet: false,
+                    exp: '',
+                    inExp: false
+                };
+                continue;
+            }
+
+            // Check inline options
+            const inlineOpts = extractInlineOptions(line);
+            if (inlineOpts) {
+                if (inlineOpts.a !== undefined) cur.a = inlineOpts.a;
+                if (inlineOpts.b !== undefined) cur.b = inlineOpts.b;
+                if (inlineOpts.c !== undefined) cur.c = inlineOpts.c;
+                if (inlineOpts.d !== undefined) cur.d = inlineOpts.d;
+                cur.inExp = false;
+                continue;
+            }
+
+            // Single option checks: A, B, C, D or ক, খ, গ, ঘ
+            if (/^(?:\([A|a]|\[[A|a]|[A|a][\.\)\:\/\-]|(?:ক|\(ক|\[ক)[\.\)\:\/\-]|\(ক\))\s*/i.test(line)) {
+                cur.a = line.replace(/^(?:\([A|a]|\[[A|a]|[A|a][\.\)\:\/\-]|(?:ক|\(ক|\[ক)[\.\)\:\/\-]|\(ক\))\s*/i, '').trim();
+                cur.inExp = false;
+            } else if (/^(?:\([B|b]|\[[B|b]|[B|b][\.\)\:\/\-]|(?:খ|\(খ|\[খ)[\.\)\:\/\-]|\(খ\))\s*/i.test(line)) {
+                cur.b = line.replace(/^(?:\([B|b]|\[[B|b]|[B|b][\.\)\:\/\-]|(?:খ|\(খ|\[খ)[\.\)\:\/\-]|\(খ\))\s*/i, '').trim();
+                cur.inExp = false;
+            } else if (/^(?:\([C|c]|\[[C|c]|[C|c][\.\)\:\/\-]|(?:গ|\(গ|\[গ)[\.\)\:\/\-]|\(গ\))\s*/i.test(line)) {
+                cur.c = line.replace(/^(?:\([C|c]|\[[C|c]|[C|c][\.\)\:\/\-]|(?:গ|\(গ|\[গ)[\.\)\:\/\-]|\(গ\))\s*/i, '').trim();
+                cur.inExp = false;
+            } else if (/^(?:\([D|d]|\[[D|d]|[D|d][\.\)\:\/\-]|(?:ঘ|\(ঘ|\[ঘ)[\.\)\:\/\-]|\(ঘ\))\s*/i.test(line)) {
+                cur.d = line.replace(/^(?:\([D|d]|\[[D|d]|[D|d][\.\)\:\/\-]|(?:ঘ|\(ঘ|\[ঘ)[\.\)\:\/\-]|\(ঘ\))\s*/i, '').trim();
+                cur.inExp = false;
+            } else if (/^(?:Ans|Answer|উত্তর|উঃ|উ:)\s*[:\.\-\=]?\s*/i.test(line)) {
+                const rawAns = line.replace(/^(?:Ans|Answer|উত্তর|উঃ|উ:)\s*[:\.\-\=]?\s*/i, '').trim();
+                cur.ans = normalizeAns(rawAns);
+                cur.ansSet = true;
+                cur.inExp = false;
+            } else if (/^(?:Exp|Expl|Explanation|ব্যাখ্যা)\s*[:\.\-\=]?\s*/i.test(line)) {
+                const expText = line.replace(/^(?:Exp|Expl|Explanation|ব্যাখ্যা)\s*[:\.\-\=]?\s*/i, '').trim();
+                cur.exp = expText;
+                cur.inExp = true;
+            } else if (/^(?:রেফারেন্স|Reference|Ref)\s*[:\.\-\=]?\s*/i.test(line)) {
+                cur.exp = cur.exp ? (cur.exp + '\n' + line) : line;
+                cur.inExp = true;
+            } else if (/^(?:কনসেপ্ট|Concept)\s*[:\.\-\=]?\s*/i.test(line)) {
+                cur.exp = cur.exp ? (cur.exp + '\n' + line) : line;
+                cur.inExp = true;
+            } else if (cur.inExp) {
+                cur.exp += '\n' + line;
+            } else if (!cur.a) {
+                cur.q += ' ' + line;
+            }
+        }
+
+        pushCurrent();
+        return questions;
+    }
+
     // Custom Exam Parser & Launcher
     function launchCustomExam() {
-        const title = document.getElementById('customExamTitle')?.value || 'Custom Practice Exam';
+        const title = document.getElementById('customExamTitle')?.value.trim() || 'Custom Practice Exam';
         const raw = document.getElementById('customQuestionsRaw')?.value || '';
         if (!raw.trim()) {
             alert('Please paste at least one question.');
             return;
         }
 
-        const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-        const parsed = [];
-        let cur = null;
-        const fmt = window.cleanAndFormatScience || ((s) => s);
+        const parsed = parseCustomExamText(raw);
 
-        lines.forEach(line => {
-            if (/^\d+[\.\)]\s*/.test(line) || (!cur && line.length > 5)) {
-                if (cur && cur.q && cur.a) parsed.push(cur);
-                cur = {
-                    id: parsed.length + 1,
-                    q: fmt(line.replace(/^\d+[\.\)]\s*/, '')),
-                    a: '', b: '', c: '', d: '',
-                    ans: 'a',
-                    exp: 'রেফারেন্স: কাস্টম প্রশ্নব্যাংক। কনসেপ্ট: স্ব-মূল্যায়ন ও অনুশীলন সমাধান।'
-                };
-            } else if (cur) {
-                if (/^[A|a][\.\)]\s*/.test(line)) cur.a = fmt(line.replace(/^[A|a][\.\)]\s*/, ''));
-                else if (/^[B|b][\.\)]\s*/.test(line)) cur.b = fmt(line.replace(/^[B|b][\.\)]\s*/, ''));
-                else if (/^[C|c][\.\)]\s*/.test(line)) cur.c = fmt(line.replace(/^[C|c][\.\)]\s*/, ''));
-                else if (/^[D|d][\.\)]\s*/.test(line)) cur.d = fmt(line.replace(/^[D|d][\.\)]\s*/, ''));
-                else if (/^Ans[:\s]+/i.test(line)) cur.ans = line.replace(/^Ans[:\s]+/i, '').trim().toLowerCase()[0] || 'a';
-                else if (/^(Exp|ব্যাখ্যা|Expl|Explanation)[:\s]+/i.test(line)) {
-                    cur.exp = fmt(line.replace(/^(Exp|ব্যাখ্যা|Expl|Explanation)[:\s]+/i, '').trim());
-                } else if (/^রেফারেন্স[:\s]+/i.test(line) || /^কনসেপ্ট[:\s]+/i.test(line)) {
-                    if (cur.exp && cur.exp.startsWith('রেফারেন্স: কাস্টম প্রশ্নব্যাংক')) cur.exp = line;
-                    else if (cur.exp) cur.exp += ' ' + line;
-                    else cur.exp = line;
-                }
-            }
-        });
-        if (cur && cur.q) parsed.push(cur);
-
-        if (parsed.length === 0) {
-            parsed.push({
-                id: 1, q: fmt('কাস্টম প্রশ্ন ১: নিম্নের কোনটি সঠিক?'),
-                a: fmt('অপশন ক'), b: fmt('অপশন খ'), c: fmt('অপশন গ'), d: fmt('অপশন ঘ'),
-                ans: 'a', exp: 'রেফারেন্স: কাস্টম প্রশ্নব্যাংক। কনসেপ্ট: অনুশীলন সমাধান।'
-            });
+        if (!parsed || parsed.length === 0) {
+            alert('Could not detect any valid questions. Please check the question format and try again.');
+            return;
         }
+
+        // 30 seconds timer per question (0.5 minutes per question)
+        const totalDurationMinutes = Math.max(1, Math.ceil(parsed.length * 0.5));
 
         window.ExamEngine.launchExam({
             title: title,
             category: 'Custom Practice',
             code: 'CUSTOM_' + Date.now().toString().slice(-6),
-            durationMinutes: Math.max(10, Math.ceil(parsed.length * 0.5)),
+            durationMinutes: totalDurationMinutes,
             customQuestions: parsed
         });
     }
@@ -891,13 +1052,24 @@ Ans: A
         if (userDropdown && !userDropdown.contains(e.target) && !profileBtn?.contains(e.target)) userDropdown.classList.add('hidden');
     });
 
-    // Header is intentionally never auto-hidden. Keep it visible on every scroll position.
+    // Top Header Visibility Controller:
+    // Scroll down: hide profile, leaderboard, branding header
+    // Scrolled to the very top: show header
     const mainHeader = document.getElementById('mainHeader');
-    mainHeader?.classList.remove('-translate-y-full');
-    if (mainHeader) {
-        mainHeader.style.transform = 'none';
-        mainHeader.style.visibility = 'visible';
+    function updateMainHeaderVisibility() {
+        if (!mainHeader) return;
+        const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        if (currentScrollY <= 15) {
+            mainHeader.classList.remove('header-hidden');
+        } else {
+            mainHeader.classList.add('header-hidden');
+            if (userDropdown && !userDropdown.classList.contains('hidden')) {
+                userDropdown.classList.add('hidden');
+            }
+        }
     }
+    window.addEventListener('scroll', updateMainHeaderVisibility, { passive: true });
+    updateMainHeaderVisibility();
 
     // Dynamic Chapter Dropdown population based on selected Subject
     function populateLeaderboardChapters(selectedSubject = 'all') {

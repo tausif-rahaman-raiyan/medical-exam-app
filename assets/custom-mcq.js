@@ -66,7 +66,7 @@
     var fmt = window.cleanAndFormatScience || function(s){return s;};
     var parsed = valid.map(function(q,i){return {id:i+1,q:fmt(q.q.trim()),a:fmt(q.a.trim()),b:fmt(q.b.trim()),c:fmt(q.c.trim()),d:fmt(q.d.trim()),ans:q.ans,exp:fmt(q.exp.trim()||'রেফারেন্স: কাস্টম প্রশ্নব্যাংক। কনসেপ্ট: স্ব-মূল্যায়ন ও অনুশীলন সমাধান।')};});
     if (!window.ExamEngine || !window.ExamEngine.launchExam) { alert('Exam engine is not ready yet. Please reload the page and try again.'); return; }
-    window.ExamEngine.launchExam({title:$('customMcqTitle').value.trim()||'My Custom MCQ Test',category:'Custom Practice',code:'CUSTOM_'+Date.now().toString().slice(-6),durationMinutes:Math.max(10,Math.ceil(parsed.length*0.5)),customQuestions:parsed});
+    window.ExamEngine.launchExam({title:$('customMcqTitle').value.trim()||'My Custom MCQ Test',category:'Custom Practice',code:'CUSTOM_'+Date.now().toString().slice(-6),durationMinutes:Math.max(1,Math.ceil(parsed.length*0.5)),customQuestions:parsed});
   }
   function exportDraft() {
     collect(); saveDraft();
