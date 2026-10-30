@@ -1,6 +1,6 @@
 /* Versioned, same-origin PWA cache. Do not cache Firebase writes or cross-origin requests. */
 'use strict';
-const CACHE_NAME = 'medical-secret-files-shell-v9';
+const CACHE_NAME = 'medical-secret-files-shell-05.10.11';
 const SHELL = [
   './',
   './index.html',
@@ -13,6 +13,10 @@ const SHELL = [
   './assets/app-sync.js',
   './assets/custom-mcq.js',
   './assets/pwa.js',
+  './assets/updater.js',
+  './assets/omr-processor.js',
+  './assets/gemini-omr-proxy.js',
+  './version.json',
   './assets/science-formatter.js',
   './assets/firebase-app-compat.js',
   './assets/firebase-auth-compat.js',
@@ -23,7 +27,7 @@ self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('medical-secret-files-shell-') && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
   const request = event.request;
