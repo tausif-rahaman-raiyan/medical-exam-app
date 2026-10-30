@@ -181,7 +181,6 @@
         const src = [tl, tr, bl, br];
 
         // Compute H: src → dst, then Hinv for inverse mapping
-        const H    = _homography(src, dst);
         const Hinv = _homography(dst, src);
 
         const out = new Uint8Array(OW * OH);
