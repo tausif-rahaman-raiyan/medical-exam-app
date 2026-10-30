@@ -106,11 +106,32 @@
           throw new Error('Questions array regex not found in HTML');
         }
       } else {
-        ExamState.questions = generateFallbackQuestions(examItem.t || examItem.title || 'Medical Test');
+        throw new Error('This exam has no question source configured.');
+      }
+
+      if (!Array.isArray(ExamState.questions) || ExamState.questions.length === 0) {
+        throw new Error('The question file did not contain any usable questions.');
       }
     } catch (err) {
-      console.warn('Fallback generator activated:', err);
-      ExamState.questions = generateFallbackQuestions(examItem.t || examItem.title || 'Medical Test');
+      console.error('Exam question loading failed:', err);
+      clearInterval(ExamState.timerId);
+      ExamState.active = false;
+      ExamState.examData = null;
+      ExamState.questions = [];
+      ExamState.userAnswers = {};
+      if (container) {
+        container.innerHTML = `
+          <div class="min-h-[55vh] flex flex-col items-center justify-center text-center p-6">
+            <div class="w-16 h-16 rounded-2xl bg-rose-950/60 border border-rose-500/30 text-rose-400 flex items-center justify-center text-2xl mb-4">
+              <i class="fa fa-triangle-exclamation"></i>
+            </div>
+            <h2 class="text-xl font-black text-white mb-2">Could not load this exam</h2>
+            <p class="text-sm text-slate-400 max-w-lg mb-5">The original question set could not be loaded. Check your internet connection and try again. No placeholder questions have been substituted.</p>
+            <button onclick="window.ExamEngine.exitExam()" class="px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">Back to Question Bank</button>
+          </div>
+        `;
+      }
+      return;
     }
 
     // Set Timer: 30 seconds per question
@@ -147,24 +168,6 @@
         exp: exp
       };
     });
-  }
-
-  function generateFallbackQuestions(title) {
-    const fmt = global.cleanAndFormatScience || ((s) => s);
-    const list = [];
-    for (let i = 1; i <= 100; i++) {
-      list.push({
-        id: i,
-        q: fmt(`[${title}] প্রশ্ন #${i}: নিম্নের কোন তথ্যটি মেডিকেল পরীক্ষার ক্ষেত্রে সর্বাধিক নির্ভুল ও প্রযোজ্য?`),
-        a: fmt('অপশন ক: প্রধান জৈবিক ও রাসায়নিক ক্রিয়াকলাপের সঠিক নির্দেশক।'),
-        b: fmt('অপশন খ: পর্যায়বৃত্ত ধর্ম ও তাপগতীয় নিয়ম পরিপূর্ণভাবে মেনে চলে।'),
-        c: fmt('অপশন গ: এনজাইম ও অনুঘটকীয় প্রভাবে দ্রুত শারীরবৃত্তীয় বিক্রিয়া ঘটায়।'),
-        d: fmt('অপশন ঘ: কোষীয় গঠন ও মেটাবলিজমে সুনির্দিষ্ট সহায়তা প্রদান করে।'),
-        ans: ['a', 'b', 'c', 'd'][(i - 1) % 4],
-        exp: `রেফারেন্স: মেডিকেল ভর্তি প্রশ্নব্যাংক ও মূল পাঠ্যবই। কনসেপ্ট: প্রশ্ন #${i} এর তথ্য ও যৌক্তিকতা মেডিকেল কারিকুলাম অনুসারে সাজানো।`
-      });
-    }
-    return list;
   }
 
   /**
