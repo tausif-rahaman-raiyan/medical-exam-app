@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { SubjectCategory, ExamItem } from '../types/exam';
 import { subjectData } from '../data/subjectData';
-import { Search, ChevronDown, BookOpen, Clock, ListChecks, Scale, Eye, Play, Sparkles } from 'lucide-react';
+import { Search, ChevronDown, BookOpen, Clock, ListChecks, Scale, Eye, Play, Sparkles, Target, Layers3, TrendingUp, X } from 'lucide-react';
 
 interface CatalogViewProps {
   onStartExam: (exam: ExamItem) => void;
@@ -62,66 +62,107 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
       .filter((s): s is SubjectCategory => s !== null);
   }, [searchQuery, activeCategory]);
 
+  const totalExams = subjectData.reduce((total, subject) => total + subject.items.length, 0);
+  const filteredExamCount = filteredSubjects.reduce((total, subject) => total + subject.items.length, 0);
+
   const toggleAccordion = (index: number) => {
     setOpenSubjectIndex(prev => (prev === index ? null : index));
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 space-y-6">
+    <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 space-y-6">
       
-      {/* Hero Banner Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-950/80 to-slate-900 border border-purple-500/30 p-6 sm:p-8 md:p-10 shadow-2xl text-center">
+      {/* Dashboard Header */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-950/80 to-slate-900 border border-purple-500/30 p-5 sm:p-8 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
 
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold mb-3 shadow-inner">
-          <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Complete 114 Exam Serial Taxonomy
-        </span>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+          <div className="max-w-3xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold mb-3 shadow-inner">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Complete medical preparation hub
+            </span>
+            <h1 className="text-2xl sm:text-4xl font-black text-white font-siliguri leading-tight tracking-tight">
+              মেডিকেল ভর্তি পরীক্ষা প্রস্তুতি প্ল্যাটফর্ম
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 mt-2 font-siliguri leading-relaxed max-w-2xl">
+              অধ্যায়ভিত্তিক মক টেস্ট, সাবজেক্ট ফাইনাল ও পূর্ণাঙ্গ মডেল টেস্ট—সবকিছু এক জায়গায় সাজানো।
+            </p>
+          </div>
 
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white font-siliguri leading-tight tracking-tight max-w-4xl mx-auto">
-          মেডিকেল ভর্তি পরীক্ষা প্রস্তুতি প্ল্যাটফর্ম
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto mt-2 font-siliguri leading-relaxed">
-          উদ্ভিদবিজ্ঞান, প্রাণিবিজ্ঞান, পদার্থবিজ্ঞান, রসায়ন, সাধারণ জ্ঞান ও ইংরেজির সকল অধ্যায়ভিত্তিক ১০০ এমসিকিউ মক টেস্ট ও নেগেটিভ মার্কিং ওএমআর সিমুলেটর।
-        </p>
-
-        {/* Live Search Input */}
-        <div className="mt-6 max-w-2xl mx-auto relative">
-          <Search className="w-5 h-5 text-purple-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by chapter, topic title, or exam code (e.g. 1020325001)..."
-            className="w-full bg-slate-950/90 border border-purple-500/40 rounded-2xl pl-12 pr-4 py-3.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 shadow-xl transition-all"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-white"
-            >
-              Clear
-            </button>
-          )}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:min-w-[360px]">
+            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3">
+              <Layers3 className="w-4 h-4 text-purple-400 mb-2" />
+              <p className="text-lg sm:text-xl font-black text-white font-mono">{totalExams}</p>
+              <p className="text-[10px] text-slate-400 font-semibold">Exam sets</p>
+            </div>
+            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3">
+              <BookOpen className="w-4 h-4 text-cyan-400 mb-2" />
+              <p className="text-lg sm:text-xl font-black text-white font-mono">{subjectData.length}</p>
+              <p className="text-[10px] text-slate-400 font-semibold">Subjects</p>
+            </div>
+            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3">
+              <Target className="w-4 h-4 text-emerald-400 mb-2" />
+              <p className="text-lg sm:text-xl font-black text-white font-mono">100</p>
+              <p className="text-[10px] text-slate-400 font-semibold">MCQs / test</p>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {categoryFilters.map(filter => (
-          <button
-            key={filter.id}
-            onClick={() => setActiveCategory(filter.id)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
-              activeCategory === filter.id
-                ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-900/40'
-                : 'bg-slate-900/80 text-slate-300 border-white/10 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
+        <div className="relative z-10 mt-6 max-w-3xl">
+          <label htmlFor="exam-search" className="sr-only">Search exams</label>
+          <div className="relative">
+            <Search className="w-5 h-5 text-purple-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              id="exam-search"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by chapter, topic title, or exam code..."
+              className="w-full bg-slate-950/90 border border-purple-500/40 rounded-2xl pl-12 pr-12 py-3.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 shadow-xl transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Catalog Controls */}
+      <section className="space-y-3" aria-label="Exam filters">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">Question bank</p>
+            <h2 className="text-lg sm:text-xl font-black text-white mt-1">Choose a subject to begin</h2>
+          </div>
+          <p className="text-xs text-slate-400 flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+            Showing <span className="font-bold text-slate-200">{filteredExamCount}</span> of {totalExams} exam sets
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {categoryFilters.map(filter => (
+            <button
+              key={filter.id}
+              onClick={() => setActiveCategory(filter.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+                activeCategory === filter.id
+                  ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-900/40'
+                  : 'bg-slate-900/80 text-slate-300 border-white/10 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Accordion List of Subjects */}
       <div className="space-y-3">
