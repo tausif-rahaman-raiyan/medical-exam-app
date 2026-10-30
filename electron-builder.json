@@ -24,5 +24,5 @@
     ],
     "icon": "www/assets/icon.ico"
   },
-  "artifactName": "Medical Secret Files Setup 3.0.0.${ext}"
+  "artifactName": "Medical Secret Files Setup ${version}.${ext}"
 }
