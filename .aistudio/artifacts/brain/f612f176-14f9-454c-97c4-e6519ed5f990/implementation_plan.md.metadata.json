@@ -1,0 +1,6 @@
+{
+  "summary": "Implementation plan to integrate the auto-detected title, 100/50 MCQ segmented toggle, and duration directly into the chapter selection box header in CustomMcqCreator, and clean up (+1) and (-0.25 Neg) labels from LeaderboardModal.",
+  "updatedAt": "2026-11-05T14:54:02.559634940Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

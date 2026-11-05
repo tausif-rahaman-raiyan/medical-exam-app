@@ -124,7 +124,9 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
           
           <div className="p-4 rounded-2xl bg-slate-950/80 border border-white/5 text-center">
-            <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
+            <div className={`text-2xl sm:text-3xl font-black font-mono ${
+              examResult.score > 0 ? 'text-emerald-400' : examResult.score < 0 ? 'text-rose-400' : 'text-slate-200'
+            }`}>
               {examResult.score}
             </div>
             <div className="text-[10px] text-slate-400 uppercase font-semibold mt-1">
@@ -146,7 +148,7 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
               <CheckCircle2 className="w-5 h-5 text-emerald-400 inline" /> {examResult.correctCount}
             </div>
             <div className="text-[10px] text-slate-400 uppercase font-semibold mt-1">
-              Correct (+1)
+              Correct
             </div>
           </div>
 
@@ -155,7 +157,7 @@ export const ResultsModal: React.FC<ResultsModalProps> = ({
               <XCircle className="w-5 h-5 text-rose-400 inline" /> {examResult.wrongCount}
             </div>
             <div className="text-[10px] text-slate-400 uppercase font-semibold mt-1">
-              Wrong (-0.25 Neg)
+              Wrong
             </div>
           </div>
 

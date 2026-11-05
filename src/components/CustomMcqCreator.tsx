@@ -59,17 +59,10 @@ const DEMO_JSON_QUESTIONS = [
 export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCustomExam }) => {
   const [activeMode, setActiveMode] = useState<'blend' | 'auto' | 'manual'>('blend');
   
-  // Basic configurations
-  const [title, setTitle] = useState<string>('Combined Multi-Subject Blend Mock Test');
-  const [qCount, setQCount] = useState<number>(100);
-  const [duration, setDuration] = useState<number>(50); // Auto-calculated 30s per question
+  // Target MCQs: 100 (50 mins) or 50 (25 mins) at 30s per MCQ
+  const [qCount, setQCount] = useState<100 | 50>(100);
+  const duration = qCount === 100 ? 50 : 25;
   const [loadingBlend, setLoadingBlend] = useState<boolean>(false);
-
-  // Auto-calculate duration whenever question count changes (30 seconds per question)
-  useEffect(() => {
-    const autoMins = Math.ceil((qCount * 30) / 60);
-    setDuration(autoMins);
-  }, [qCount]);
 
   // Blend Mode: Selected exams from 114 sets
   const allExamItems = subjectData.flatMap(s => s.items.map(item => ({ ...item, categoryName: s.cat })));
@@ -77,6 +70,33 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
     // Default select first 5-8 exams for immediate blend
     return allExamItems.slice(0, 10).map(i => i.c);
   });
+
+  // Auto-detect exam title based on selected subjects
+  const getAutoDetectedTitle = () => {
+    if (activeMode === 'manual') {
+      return 'Custom Manual & JSON Practice Test';
+    }
+    if (activeMode === 'auto') {
+      return `${selectedCat} Rapid Mock Exam`;
+    }
+    if (selectedExamCodes.length === allExamItems.length) {
+      return 'All Subjects (114 Sets) Medical Blend Exam';
+    }
+    const selectedCats = Array.from(
+      new Set(
+        allExamItems
+          .filter(i => selectedExamCodes.includes(i.c))
+          .map(i => i.categoryName)
+      )
+    );
+    if (selectedCats.length === 0) {
+      return 'Custom Multi-Subject Blend Exam';
+    }
+    if (selectedCats.length <= 3) {
+      return `${selectedCats.join(' + ')} Blend Test`;
+    }
+    return `${selectedCats.slice(0, 2).join(' + ')} + ${selectedCats.length - 2} more subjects Blend Test`;
+  };
 
   const [openSubjectIndex, setOpenSubjectIndex] = useState<number | null>(0);
 
@@ -151,7 +171,6 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
   const handleLoadDemoJson = () => {
     setJsonText(JSON.stringify(DEMO_JSON_QUESTIONS, null, 2));
     setJsonError('');
-    setQCount(DEMO_JSON_QUESTIONS.length);
   };
 
   // Add Form Question
@@ -172,7 +191,6 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
 
     const updated = [...formQuestions, newQ];
     setFormQuestions(updated);
-    setQCount(updated.length);
     setNewQText('');
     setNewA('');
     setNewB('');
@@ -205,7 +223,7 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
         });
 
         if (pool.length === 0) {
-          pool = generateHighYieldQuestions(title, qCount);
+          pool = generateHighYieldQuestions(getAutoDetectedTitle(), qCount);
         }
 
         // CRITICAL REQUIREMENT: Thoroughly SHUFFLE all questions so they are randomized, not serial!
@@ -220,13 +238,13 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
 
       } catch (err) {
         console.error('Blend failed, falling back:', err);
-        finalQuestions = generateHighYieldQuestions(title, qCount);
+        finalQuestions = generateHighYieldQuestions(getAutoDetectedTitle(), qCount);
       } finally {
         setLoadingBlend(false);
       }
 
     } else if (activeMode === 'auto') {
-      finalQuestions = generateHighYieldQuestions(title, qCount);
+      finalQuestions = generateHighYieldQuestions(getAutoDetectedTitle(), qCount);
 
     } else if (activeMode === 'manual') {
       if (manualInputMode === 'json') {
@@ -265,7 +283,7 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
     }
 
     const customExam: ExamItem = {
-      t: title,
+      t: getAutoDetectedTitle(),
       c: 'BLEND_' + Math.floor(100000 + Math.random() * 900000),
       qCount: finalQuestions.length,
       duration: duration,
@@ -278,47 +296,23 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
       
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-500/30 p-6 sm:p-8 rounded-3xl shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold mb-2.5">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Advanced Custom MCQ Engine
-          </span>
-          <h2 className="text-xl sm:text-3xl font-black text-white font-siliguri leading-tight">
-            কাস্টম ও মাল্টি-সাবজেক্ট ব্লেন্ড এক্সাম বিল্ডার
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1 font-siliguri">
-            ১১৪ টি এক্সাম সেট থেকে ব্লেন্ড মোডে ১০০ টি শাফেলড প্রশ্ন নির্বাচন করুন অথবা সরাসরি JSON ইনপুট দিয়ে পরীক্ষা দিন।
-          </p>
-        </div>
-
-        <button
-          onClick={handleLaunchExam}
-          disabled={loadingBlend}
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-emerald-950/60 transition-all flex items-center gap-2 flex-shrink-0 active:scale-95 disabled:opacity-50"
-        >
-          {loadingBlend ? (
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              Blending Questions...
-            </span>
-          ) : (
-            <>
-              <Play className="w-4 h-4 fill-current" />
-              Start {qCount}-MCQ Exam Now
-            </>
-          )}
-        </button>
+      {/* Top Banner (Clean without duplicate launch button) */}
+      <div className="bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-500/30 p-6 sm:p-8 rounded-3xl shadow-2xl">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold mb-2.5">
+          <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Advanced Custom MCQ Engine
+        </span>
+        <h2 className="text-xl sm:text-3xl font-black text-white font-siliguri leading-tight">
+          কাস্টম ও মাল্টি-সাবজেক্ট ব্লেন্ড এক্সাম বিল্ডার
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-300 mt-1 font-siliguri">
+          ১১৪ টি এক্সাম সেট থেকে ব্লেন্ড মোডে ১০০ টি শাফেলড প্রশ্ন নির্বাচন করুন অথবা সরাসরি JSON ইনপুট দিয়ে পরীক্ষা দিন।
+        </p>
       </div>
 
       {/* Mode Switcher Tabs */}
       <div className="flex items-center bg-slate-900/90 p-1.5 rounded-2xl border border-white/10 shadow-lg">
         <button
-          onClick={() => {
-            setActiveMode('blend');
-            setTitle('Multi-Subject 100-MCQ Blend Exam');
-            setQCount(100);
-          }}
+          onClick={() => setActiveMode('blend')}
           className={`flex-1 py-3 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
             activeMode === 'blend'
               ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
@@ -329,10 +323,7 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
         </button>
 
         <button
-          onClick={() => {
-            setActiveMode('manual');
-            setTitle('Custom Manual & JSON Practice Test');
-          }}
+          onClick={() => setActiveMode('manual')}
           className={`flex-1 py-3 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
             activeMode === 'manual'
               ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
@@ -343,11 +334,7 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
         </button>
 
         <button
-          onClick={() => {
-            setActiveMode('auto');
-            setTitle('Rapid Auto-Generated Topic Test');
-            setQCount(50);
-          }}
+          onClick={() => setActiveMode('auto')}
           className={`flex-1 py-3 text-xs sm:text-sm font-black rounded-xl transition-all flex items-center justify-center gap-2 ${
             activeMode === 'auto'
               ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
@@ -358,98 +345,84 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
         </button>
       </div>
 
-      {/* Main Configurations Box */}
-      <div className="bg-slate-900 border border-white/10 p-5 sm:p-7 rounded-3xl shadow-xl space-y-5">
-        <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 border-b border-white/10 pb-3">
-          <Sliders className="w-4 h-4 text-purple-400" /> পরীক্ষার কনফিগারেশন ও সময়সীমা
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-bold text-slate-300 mb-1.5">পরীক্ষার নাম (Exam Title)</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-950 border border-white/10 focus:border-purple-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1.5">
-              পরীক্ষার সময়সীমা (Duration Mins)
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                min={5}
-                max={180}
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full bg-slate-950 border border-white/10 focus:border-purple-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none font-mono"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-purple-400">
-                Mins
-              </span>
-            </div>
-            <p className="text-[11px] text-emerald-400 mt-1 font-mono flex items-center gap-1">
-              <Clock className="w-3 h-3" /> Auto-calculated: 30s per MCQ ({qCount * 30}s = {duration}m)
-            </p>
-          </div>
-        </div>
-
-        {/* Question Count Selector for Blend / Auto */}
-        {activeMode !== 'manual' && (
-          <div className="pt-2">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-300 mb-2">
-              <span>মোট প্রশ্নসংখ্যা (Target MCQs): <strong className="text-purple-300 font-mono text-sm">{qCount} Questions</strong></span>
-              <span className="text-slate-400 font-mono text-[11px]">{duration} Minutes Limit</span>
-            </div>
-            <div className="flex gap-2">
-              {[25, 50, 75, 100].map(cnt => (
-                <button
-                  key={cnt}
-                  type="button"
-                  onClick={() => setQCount(cnt)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border font-mono ${
-                    qCount === cnt
-                      ? 'bg-purple-600 text-white border-purple-500 shadow-md'
-                      : 'bg-slate-950 text-slate-400 border-white/10 hover:text-white'
-                  }`}
-                >
-                  {cnt} MCQs
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* 1. BLEND EXAM MODE */}
       {activeMode === 'blend' && (
         <div className="bg-slate-900 border border-purple-500/30 p-5 sm:p-7 rounded-3xl shadow-xl space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
-            <div>
-              <h3 className="text-base font-black text-white flex items-center gap-2">
-                <Shuffle className="w-5 h-5 text-purple-400" /> ১১৪ টি এক্সাম থেকে চ্যাপ্টার নির্বাচন করুন
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                নির্বাচিত সকল চ্যাপ্টারের প্রশ্নসমূহ এলোমেলোভাবে (Shuffle) ব্লেন্ড করে ১০০ টি প্রশ্নে পরীক্ষা সাজানো হবে।
-              </p>
+          
+          {/* Integrated Header: Auto-Detected Title & Controls */}
+          <div className="border-b border-white/10 pb-4 space-y-3.5">
+            {/* Row 1: Section Title & Selection Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <Shuffle className="w-5 h-5 text-purple-400" /> ১১৪ টি এক্সাম থেকে চ্যাপ্টার নির্বাচন করুন
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  নির্বাচিত সকল চ্যাপ্টারের প্রশ্নসমূহ এলোমেলোভাবে (Shuffle) ব্লেন্ড করে {qCount} টি প্রশ্নে পরীক্ষা সাজানো হবে।
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={selectAll114Exams}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-purple-300 border border-white/10 transition-all flex items-center gap-1.5 active:scale-95"
+                >
+                  {selectedExamCodes.length === allExamItems.length ? <Square className="w-3.5 h-3.5" /> : <CheckSquare className="w-3.5 h-3.5" />}
+                  {selectedExamCodes.length === allExamItems.length ? 'Deselect All' : 'Select All 114'}
+                </button>
+                <span className="px-3 py-1.5 rounded-xl bg-purple-950/80 border border-purple-500/40 text-xs font-mono font-bold text-purple-200">
+                  {selectedExamCodes.length} Sets Selected
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={selectAll114Exams}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-purple-300 border border-white/10 transition-all flex items-center gap-1.5"
-              >
-                {selectedExamCodes.length === allExamItems.length ? <Square className="w-3.5 h-3.5" /> : <CheckSquare className="w-3.5 h-3.5" />}
-                {selectedExamCodes.length === allExamItems.length ? 'Deselect All' : 'Select All 114'}
-              </button>
-              <span className="px-3 py-1.5 rounded-xl bg-purple-950/80 border border-purple-500/40 text-xs font-mono font-bold text-purple-200">
-                {selectedExamCodes.length} Sets Selected
-              </span>
+            {/* Row 2: Auto-Detected Title & Target MCQs Segmented Toggle (100 vs 50) */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1 bg-slate-950/80 p-3.5 sm:p-4 rounded-2xl border border-white/5">
+              <div className="min-w-0">
+                <span className="text-[10px] font-mono text-purple-300/80 uppercase tracking-wider block">
+                  স্বয়ংক্রিয় পরীক্ষার নাম (Auto Detected Title)
+                </span>
+                <h4 className="text-sm font-bold text-white font-siliguri truncate">
+                  {getAutoDetectedTitle()}
+                </h4>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                {/* Segmented Toggle for Target MCQs: 100 vs 50 */}
+                <div className="flex items-center gap-1 p-1 bg-slate-900 rounded-xl border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setQCount(100)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                      qCount === 100
+                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    100 MCQs (50 Min)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQCount(50)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                      qCount === 50
+                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    50 MCQs (25 Min)
+                  </button>
+                </div>
+
+                {/* Auto timing badge */}
+                <span className="px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-[11px] font-mono text-emerald-300 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                  Auto-calculated: 30s per MCQ
+                </span>
+              </div>
             </div>
+
           </div>
 
           {/* Grouped Category Dropdown Accordions */}
@@ -730,10 +703,7 @@ export const CustomMcqCreator: React.FC<CustomMcqCreatorProps> = ({ onStartCusto
             <label className="block text-xs font-bold text-slate-300 mb-1.5">মূল বিষয় (Subject Category)</label>
             <select
               value={selectedCat}
-              onChange={(e) => {
-                setSelectedCat(e.target.value);
-                setTitle(`${e.target.value} Rapid Mock Exam`);
-              }}
+              onChange={(e) => setSelectedCat(e.target.value)}
               className="w-full bg-slate-950 border border-white/10 focus:border-purple-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none font-siliguri"
             >
               {subjectData.map(s => (

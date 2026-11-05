@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
@@ -8,13 +9,22 @@
     --reference-font-size: 16px;
   }
 
+  html, body {
+    overflow-x: clip;
+    max-width: 100%;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
   body {
     background:
       radial-gradient(circle at 8% -10%, rgba(124, 58, 237, 0.16), transparent 28rem),
       radial-gradient(circle at 92% 8%, rgba(14, 165, 233, 0.09), transparent 24rem),
       #0F172A;
     color: #F1F5F9;
-    font-family: 'Hind Siliguri', 'Noto Sans Bengali', 'SolaimanLipi', 'Kalpurush', 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Noto Sans Bengali', 'Hind Siliguri', 'SolaimanLipi', 'Kalpurush', 'Plus Jakarta Sans', sans-serif;
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -41,7 +51,21 @@
 }
 
 .font-siliguri {
-  font-family: 'Hind Siliguri', 'Noto Sans Bengali', 'Kalpurush', sans-serif !important;
+  font-family: 'Noto Sans Bengali', 'Hind Siliguri', 'Kalpurush', sans-serif !important;
+}
+
+/* Dedicated Bengali Year and Numeral Box styling */
+.bn-year-badge {
+  font-family: 'Noto Sans Bengali', 'Hind Siliguri', sans-serif;
+  font-feature-settings: "liga" 1, "dlig" 1;
+  letter-spacing: 0.04em;
+  text-rendering: optimizeLegibility;
+}
+
+.bn-num-box {
+  font-family: 'Noto Sans Bengali', 'Hind Siliguri', sans-serif;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
 }
 
 /* Dynamic Concept (কনসেপ্ট) & Reference (রেফারেন্স) Font Sizes */

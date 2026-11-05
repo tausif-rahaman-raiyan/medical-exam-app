@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { SubjectCategory, ExamItem } from '../types/exam';
 import { subjectData } from '../data/subjectData';
-import { Search, ChevronDown, BookOpen, Clock, ListChecks, Scale, Eye, Play, Sparkles, Target, Layers3, TrendingUp, X } from 'lucide-react';
+import { Search, ChevronDown, BookOpen, Clock, ListChecks, Scale, Eye, Play, Sparkles, Target, Layers3, TrendingUp, X, Calendar } from 'lucide-react';
+import { parseExamSessionYear, toBengaliDigits } from '../utils/bengaliFormatter';
 
 interface CatalogViewProps {
   onStartExam: (exam: ExamItem) => void;
@@ -15,7 +16,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
 
   // Category filters list
   const categoryFilters = [
-    { id: 'all', label: 'All Subjects' },
+    { id: 'all', label: 'All Subjects (সব বিষয়)' },
     { id: 'উদ্ভিদবিজ্ঞান', label: 'Botany (উদ্ভিদবিজ্ঞান)' },
     { id: 'প্রাণিবিজ্ঞান', label: 'Zoology (প্রাণিবিজ্ঞান)' },
     { id: 'পদার্থবিজ্ঞান প্রথম পত্র', label: 'Physics 1st' },
@@ -26,7 +27,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
     { id: 'ইংরেজি', label: 'English' },
     { id: 'সাবজেক্ট ফাইনাল', label: 'Subject Finals' },
     { id: 'পূর্ণাঙ্গ মডেল টেস্ট', label: 'Full Model Tests' },
-    { id: 'বিগত ১২ বছরের মেডিকেল প্রশ্ন', label: 'Past 12 Years' }
+    { id: 'বিগত ১২ বছরের মেডিকেল প্রশ্ন', label: 'Past 12 Years (বিগত ১২ বছর)' }
   ];
 
   // Filter subject data based on search and selected category filter
@@ -70,7 +71,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 space-y-6">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-4 space-y-6 overflow-x-hidden">
       
       {/* Dashboard Header */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-950/80 to-slate-900 border border-purple-500/30 p-5 sm:p-8 shadow-2xl">
@@ -91,20 +92,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
           </div>
 
           <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:min-w-[360px]">
-            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3">
-              <Layers3 className="w-4 h-4 text-purple-400 mb-2" />
+            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3 text-center sm:text-left">
+              <Layers3 className="w-4 h-4 text-purple-400 mb-2 mx-auto sm:mx-0" />
               <p className="text-lg sm:text-xl font-black text-white font-mono">{totalExams}</p>
-              <p className="text-[10px] text-slate-400 font-semibold">Exam sets</p>
+              <p className="text-[10px] text-slate-400 font-semibold font-siliguri">{toBengaliDigits(totalExams)}টি এক্সাম সেট</p>
             </div>
-            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3">
-              <BookOpen className="w-4 h-4 text-cyan-400 mb-2" />
+            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3 text-center sm:text-left">
+              <BookOpen className="w-4 h-4 text-cyan-400 mb-2 mx-auto sm:mx-0" />
               <p className="text-lg sm:text-xl font-black text-white font-mono">{subjectData.length}</p>
-              <p className="text-[10px] text-slate-400 font-semibold">Subjects</p>
+              <p className="text-[10px] text-slate-400 font-semibold font-siliguri">{toBengaliDigits(subjectData.length)}টি বিষয়</p>
             </div>
-            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3">
-              <Target className="w-4 h-4 text-emerald-400 mb-2" />
+            <div className="rounded-2xl bg-slate-950/70 border border-white/10 p-3 text-center sm:text-left">
+              <Target className="w-4 h-4 text-emerald-400 mb-2 mx-auto sm:mx-0" />
               <p className="text-lg sm:text-xl font-black text-white font-mono">100</p>
-              <p className="text-[10px] text-slate-400 font-semibold">MCQs / test</p>
+              <p className="text-[10px] text-slate-400 font-semibold font-siliguri">১০০টি MCQs / টেস্ট</p>
             </div>
           </div>
         </div>
@@ -141,9 +142,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
             <p className="text-xs font-black uppercase tracking-[0.18em] text-purple-300">Question bank</p>
             <h2 className="text-lg sm:text-xl font-black text-white mt-1">Choose a subject to begin</h2>
           </div>
-          <p className="text-xs text-slate-400 flex items-center gap-1.5">
+          <p className="text-xs text-slate-400 flex items-center gap-1.5 font-siliguri">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-            Showing <span className="font-bold text-slate-200">{filteredExamCount}</span> of {totalExams} exam sets
+            Showing <span className="font-bold text-slate-200 font-mono">{filteredExamCount}</span> ({toBengaliDigits(filteredExamCount)}টি) of {totalExams} ({toBengaliDigits(totalExams)}টি) exam sets
           </p>
         </div>
 
@@ -169,8 +170,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
         {filteredSubjects.length === 0 ? (
           <div className="p-12 text-center bg-slate-900/60 rounded-3xl border border-white/10 shadow-xl">
             <Search className="w-8 h-8 text-purple-400/40 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-white">No matching exams found</h3>
-            <p className="text-xs text-slate-400 mt-1">Try searching by topic, chapter code (e.g. 1020325001), or title</p>
+            <h3 className="text-base font-bold text-white font-siliguri">কোনো পরীক্ষা পাওয়া যায়নি</h3>
+            <p className="text-xs text-slate-400 mt-1 font-siliguri">অধ্যায়, বিষয় বা কোড লিখে পুনরায় অনুসন্ধান করুন (যেমন: 1020325001)</p>
           </div>
         ) : (
           filteredSubjects.map((subject, subjectIdx) => {
@@ -195,15 +196,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
                       <span className="text-base sm:text-lg font-black block text-slate-100 leading-snug font-siliguri">
                         {subject.cat}
                       </span>
-                      <span className="text-xs font-semibold text-slate-400 block mt-0.5">
-                        {subject.items.length} topics available · 100 MCQs per exam
+                      <span className="text-xs font-semibold text-slate-400 block mt-0.5 font-siliguri">
+                        {subject.items.length}টি অধ্যায় ({toBengaliDigits(subject.items.length)} Topics) · ১০০ MCQs per exam
                       </span>
-                      <div className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-purple-950/80 border border-purple-700/60 text-purple-200">
-                        <span>100 Questions</span>
+                      <div className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-purple-950/80 border border-purple-700/60 text-purple-200 font-siliguri">
+                        <span>১০০ Questions</span>
                         <span className="text-purple-400">•</span>
-                        <span>50 Minutes</span>
+                        <span>৫০ Minutes</span>
                         <span className="text-purple-400">•</span>
-                        <span>-0.25 Negative Marking</span>
+                        <span>-০.২৫ Negative Marking</span>
                       </div>
                     </div>
                   </div>
@@ -216,32 +217,48 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
                 {/* Accordion Content */}
                 {isOpen && (
                   <div className="p-3 sm:p-4 space-y-2 border-t border-white/5 bg-slate-900/50">
-                    {subject.items.map((item) => (
-                      <div
-                        key={item.c}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#1E293B] to-slate-900 border border-white/10 hover:border-purple-500/50 hover:bg-[#243248] transition-all gap-3 shadow-sm"
-                      >
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="text-sm sm:text-base font-black text-white leading-snug font-siliguri mb-1.5">
-                            {item.t}
-                          </span>
-                          <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs">
-                            <span className="text-[10px] text-purple-200 font-mono font-black uppercase tracking-wider bg-purple-950/90 border border-purple-600/50 px-2 py-0.5 rounded-lg">
-                              Code: {item.c}
-                            </span>
-                            <span className="text-slate-300 font-semibold flex items-center gap-1">
-                              <ListChecks className="w-3.5 h-3.5 text-purple-400" /> 100 Questions
-                            </span>
-                            <span className="text-slate-600">•</span>
-                            <span className="text-slate-300 font-semibold flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5 text-cyan-400" /> 50 Mins
-                            </span>
-                            <span className="text-slate-600">•</span>
-                            <span className="text-amber-300 font-bold bg-amber-950/50 border border-amber-500/40 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                              <Scale className="w-3.5 h-3.5 text-amber-400" /> Full Marks: 100 (-0.25 Neg)
-                            </span>
+                    {subject.items.map((item) => {
+                      const sessionInfo = parseExamSessionYear(item.t);
+
+                      return (
+                        <div
+                          key={item.c}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#1E293B] to-slate-900 border border-white/10 hover:border-purple-500/50 hover:bg-[#243248] transition-all gap-3 shadow-sm"
+                        >
+                          <div className="flex flex-col min-w-0 flex-1">
+                            {sessionInfo.hasYear ? (
+                              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-purple-950 via-indigo-950 to-slate-900 border border-purple-500/50 text-purple-200 text-xs sm:text-sm font-black bn-year-badge shadow-md shadow-purple-950/40">
+                                  <Calendar className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                                  <span>সেশন: {sessionInfo.sessionYear}</span>
+                                </span>
+                                <span className="text-sm sm:text-base font-black text-white leading-snug font-siliguri">
+                                  {sessionInfo.displayTitle}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-sm sm:text-base font-black text-white leading-snug font-siliguri mb-1.5">
+                                {item.t}
+                              </span>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs">
+                              <span className="text-[10px] text-purple-200 font-mono font-black uppercase tracking-wider bg-purple-950/90 border border-purple-600/50 px-2 py-0.5 rounded-lg">
+                                Code: {item.c}
+                              </span>
+                              <span className="text-slate-300 font-semibold flex items-center gap-1 font-siliguri">
+                                <ListChecks className="w-3.5 h-3.5 text-purple-400" /> ১০০ Questions
+                              </span>
+                              <span className="text-slate-600">•</span>
+                              <span className="text-slate-300 font-semibold flex items-center gap-1 font-siliguri">
+                                <Clock className="w-3.5 h-3.5 text-cyan-400" /> ৫০ Mins
+                              </span>
+                              <span className="text-slate-600">•</span>
+                              <span className="text-amber-300 font-bold bg-amber-950/50 border border-amber-500/40 px-2 py-0.5 rounded-lg flex items-center gap-1 font-siliguri">
+                                <Scale className="w-3.5 h-3.5 text-amber-400" /> Full Marks: ১০০ (-০.২৫ Neg)
+                              </span>
+                            </div>
                           </div>
-                        </div>
 
                         {/* Action Buttons */}
                         <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto flex-shrink-0">
@@ -259,7 +276,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
                           </button>
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 )}
               </div>

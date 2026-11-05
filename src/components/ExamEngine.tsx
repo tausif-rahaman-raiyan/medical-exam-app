@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ExamItem, Question, UserAnswerMap, ExamResult } from '../types/exam';
 import { loadExamQuestions } from '../utils/questionFetcher';
-import { Clock, ArrowLeft, Send, Loader2, Flag, RotateCcw, AlertTriangle, CheckCircle2, ListOrdered, Sparkles, Type } from 'lucide-react';
+import { Clock, ArrowLeft, Send, Loader2, Flag, Lock, AlertTriangle, CheckCircle2, ListOrdered, Sparkles, Type, Calendar } from 'lucide-react';
+import { toBengaliDigits, parseExamSessionYear } from '../utils/bengaliFormatter';
 
 interface ExamEngineProps {
   examItem: ExamItem;
@@ -87,18 +88,13 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({ examItem, onFinishExam, 
   }, [loading, questions]);
 
   const handleSelectAnswer = (qId: number, optionKey: 'a' | 'b' | 'c' | 'd') => {
+    // Single-selection lock: if this question is already answered, it cannot be changed
+    if (userAnswers[qId] !== undefined) return;
+
     setUserAnswers((prev) => ({
       ...prev,
       [qId]: optionKey
     }));
-  };
-
-  const handleClearAnswer = (qId: number) => {
-    setUserAnswers((prev) => {
-      const copy = { ...prev };
-      delete copy[qId];
-      return copy;
-    });
   };
 
   const toggleFlag = (qId: number) => {
@@ -130,9 +126,10 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({ examItem, onFinishExam, 
     });
 
     const unattemptedCount = questions.length - (correctCount + wrongCount);
+    // Negative marking: 1 mark per correct, exactly -0.25 deducted per wrong answer (no clamping to 0)
     const rawScore = correctCount * 1 - wrongCount * 0.25;
-    const finalScore = Math.max(0, Math.round(rawScore * 100) / 100);
-    const percentage = Math.round((finalScore / (questions.length || 100)) * 100);
+    const finalScore = Math.round(rawScore * 100) / 100;
+    const percentage = Math.max(0, Math.round((finalScore / (questions.length || 100)) * 100));
 
     const resultData: ExamResult = {
       id: 'res_' + Date.now(),
@@ -176,56 +173,104 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({ examItem, onFinishExam, 
     );
   }
 
+  const sessionInfo = parseExamSessionYear(examItem.t);
+
   return (
     <div className="min-h-screen bg-[#0F172A] text-slate-100 pb-20">
       
-      {/* ALWAYS STICKY Command Header (Never hides on scroll during exam as requested) */}
-      <header className="sticky top-0 z-50 bg-[#0F172A]/95 backdrop-blur-md border-b border-purple-500/30 px-3 sm:px-6 py-3 shadow-2xl shadow-purple-950/40">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3 sm:gap-4">
+      {/* ALWAYS STICKY Command Header (Responsive mobile 2-tier + full desktop row) */}
+      <header 
+        className="sticky top-0 z-50 w-full bg-[#0F172A]/95 backdrop-blur-md border-b border-purple-500/30 px-3 sm:px-6 py-2.5 sm:py-3 shadow-2xl shadow-purple-950/40"
+        style={{ position: 'sticky', top: 0, zIndex: 50 }}
+      >
+        <div className="max-w-[1400px] mx-auto">
           
-          {/* Left: Exit & Exam Title */}
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <button
-              onClick={() => setShowExitConfirm(true)}
-              className="px-3 sm:px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all flex-shrink-0 shadow-sm border border-white/10 active:scale-95"
-            >
-              <ArrowLeft className="w-4 h-4" /> Exit
-            </button>
-            <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-black text-white truncate font-siliguri leading-tight">
-                {examItem.t}
-              </h2>
-              <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-400 font-mono">
-                <span>Code: {examItem.c}</span>
-                <span className="hidden sm:inline text-slate-600">•</span>
-                <span className="hidden sm:inline text-purple-400">{questions.length} Questions</span>
+          {/* Main Controls Row: Exit, Centered Timer, Submit */}
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            
+            {/* Left: Exit & Desktop Exam Title */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 sm:flex-1">
+              <button
+                onClick={() => setShowExitConfirm(true)}
+                className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all flex-shrink-0 shadow-sm border border-white/10 active:scale-95"
+              >
+                <ArrowLeft className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                <span>Exit</span>
+              </button>
+              
+              {/* Desktop-only title placement (Clean single line) */}
+              <div className="hidden sm:block min-w-0">
+                <h2 className="text-sm sm:text-base font-black text-white truncate font-siliguri leading-tight">
+                  {sessionInfo.hasYear ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-lg bg-purple-950 border border-purple-500/40 text-purple-200 text-xs font-black bn-year-badge">
+                        সেশন: {sessionInfo.sessionYear}
+                      </span>
+                      <span>{sessionInfo.displayTitle}</span>
+                    </span>
+                  ) : (
+                    examItem.t
+                  )}
+                </h2>
+                <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-400 font-mono">
+                  <span>Code: {examItem.c}</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-purple-400">{questions.length} Questions</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Center: Standard Prominent Rounded Pill Timer Bar (Always visible) */}
-          <div className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-slate-900/95 border-2 border-purple-500/70 shadow-xl shadow-purple-950/70 text-purple-200 flex items-center gap-2 sm:gap-3 ring-2 ring-purple-500/20 whitespace-nowrap flex-shrink-0">
-            <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-purple-400 animate-pulse flex-shrink-0" />
-            <span className="text-base sm:text-2xl font-mono font-black tracking-widest text-white">
-              {formatTimer(timeRemaining)}
-            </span>
-          </div>
-
-          {/* Right: Answered Counter & Submit Button */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-white/10 text-xs font-mono">
-              <span className="text-slate-400">Answered:</span>
-              <strong className="text-emerald-400 font-black">{answeredCount}</strong>
-              <span className="text-slate-600">/</span>
-              <span className="text-slate-400">{questions.length}</span>
+            {/* Center: Standard Prominent Rounded Pill Timer Bar */}
+            <div className="px-3.5 sm:px-6 py-1.5 sm:py-2.5 rounded-full bg-slate-900/95 border-2 border-purple-500/70 shadow-xl shadow-purple-950/70 text-purple-200 flex items-center gap-2 sm:gap-3 ring-2 ring-purple-500/20 whitespace-nowrap flex-shrink-0">
+              <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-purple-400 animate-pulse flex-shrink-0" />
+              <span className="text-sm sm:text-2xl font-mono font-black tracking-wider sm:tracking-widest text-white">
+                {formatTimer(timeRemaining)}
+              </span>
             </div>
 
-            <button
-              onClick={() => setShowSubmitConfirm(true)}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-900/50 transition-all flex items-center gap-1.5 transform active:scale-95"
-            >
-              <Send className="w-3.5 h-3.5" /> Submit
-            </button>
+            {/* Right: Answered Counter & Submit Button */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-white/10 text-xs font-mono">
+                <span className="text-slate-400">Answered:</span>
+                <strong className="text-emerald-400 font-black">{answeredCount}</strong>
+                <span className="text-slate-600">/</span>
+                <span className="text-slate-400">{questions.length}</span>
+              </div>
+
+              <button
+                onClick={() => setShowSubmitConfirm(true)}
+                className="px-3.5 sm:px-6 py-1.5 sm:py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-900/50 transition-all flex items-center gap-1.5 transform active:scale-95"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Submit</span>
+              </button>
+            </div>
+
+          </div>
+
+          {/* Mobile-only Second Row: Full Bengali Exam Title & Year (No truncation to প্রা...) */}
+          <div className="sm:hidden pt-2 mt-2 border-t border-white/10 flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              {sessionInfo.hasYear ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-950 border border-purple-500/40 text-purple-200 text-[10px] font-black bn-year-badge shrink-0">
+                    <Calendar className="w-3 h-3 text-purple-400" />
+                    <span>সেশন: {sessionInfo.sessionYear}</span>
+                  </span>
+                  <span className="text-xs font-bold text-white font-siliguri leading-snug break-words">
+                    {sessionInfo.displayTitle}
+                  </span>
+                </div>
+              ) : (
+                <h2 className="text-xs font-bold text-white font-siliguri leading-snug break-words">
+                  {examItem.t}
+                </h2>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono shrink-0">
+              <span className="text-purple-300 bg-purple-950/80 px-1.5 py-0.5 rounded border border-purple-800/40">#{examItem.c}</span>
+              <span>{answeredCount}/{questions.length}</span>
+            </div>
           </div>
 
         </div>
@@ -301,23 +346,13 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({ examItem, onFinishExam, 
                         Question #{idx + 1}
                       </span>
                       {isAnswered && (
-                        <span className="px-2.5 py-0.5 rounded-lg bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1 font-mono shadow-sm">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Answered
+                        <span className="px-2.5 py-0.5 rounded-lg bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1.5 font-mono shadow-sm">
+                          <Lock className="w-3.5 h-3.5 text-emerald-400" /> Answer Locked
                         </span>
                       )}
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {isAnswered && (
-                        <button
-                          onClick={() => handleClearAnswer(q.id)}
-                          className="px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-rose-400 text-xs font-semibold border border-white/10 transition-all flex items-center gap-1 shadow-sm"
-                          title="Clear Selected Answer"
-                        >
-                          <RotateCcw className="w-3 h-3" /> Clear
-                        </button>
-                      )}
-
                       <button
                         onClick={() => toggleFlag(q.id)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-sm ${
@@ -339,7 +374,7 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({ examItem, onFinishExam, 
                     dangerouslySetInnerHTML={{ __html: q.q }}
                   />
 
-                  {/* 4 MCQ Option Boxes with Generous Badge Width and dynamic font size */}
+                  {/* 4 MCQ Option Boxes - Locked immediately once an answer is chosen */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     {[
                       { key: 'a', label: '(ক)', text: q.a },
@@ -353,22 +388,31 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({ examItem, onFinishExam, 
                         <button
                           key={opt.key}
                           type="button"
+                          disabled={isAnswered}
                           onClick={() => handleSelectAnswer(q.id, opt.key as 'a' | 'b' | 'c' | 'd')}
-                          className={`w-full p-4 rounded-2xl border text-left transition-all flex items-start gap-3.5 transform active:scale-[0.99] select-none ${
+                          className={`w-full p-4 rounded-2xl border text-left transition-all flex items-start gap-3.5 transform select-none ${
                             isSelected
-                              ? 'bg-gradient-to-r from-purple-700/80 via-purple-800/80 to-indigo-800/80 border-purple-400 text-white shadow-lg ring-2 ring-purple-500/50'
-                              : 'bg-slate-950/80 border-white/10 text-slate-200 hover:bg-slate-800/80 hover:border-purple-400/40'
+                              ? 'bg-gradient-to-r from-purple-700/80 via-purple-800/80 to-indigo-800/80 border-purple-400 text-white shadow-lg ring-2 ring-purple-500/50 cursor-default'
+                              : isAnswered
+                              ? 'bg-slate-950/40 border-white/5 text-slate-500 opacity-60 cursor-not-allowed'
+                              : 'bg-slate-950/80 border-white/10 text-slate-200 hover:bg-slate-800/80 hover:border-purple-400/40 active:scale-[0.99] cursor-pointer'
                           }`}
                         >
                           {/* Option Badge with generous width: Bengali '১', 'ক', etc. never overlap */}
                           <span className={`w-8 h-8 min-w-[2rem] rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0 mt-0.5 ${
-                            isSelected ? 'bg-purple-500 text-white font-black shadow' : 'bg-slate-800 text-purple-300 border border-white/5'
+                            isSelected 
+                              ? 'bg-purple-500 text-white font-black shadow' 
+                              : isAnswered 
+                              ? 'bg-slate-900 text-slate-600 border border-white/5' 
+                              : 'bg-slate-800 text-purple-300 border border-white/5'
                           }`}>
                             {opt.label}
                           </span>
                           <span 
                             style={{ fontSize: `${questionFontSize}px` }}
-                            className="flex-1 min-w-0 font-siliguri font-medium leading-relaxed text-slate-100 pl-1 break-words"
+                            className={`flex-1 min-w-0 font-siliguri font-medium leading-relaxed pl-1 break-words ${
+                              isSelected ? 'text-white font-semibold' : isAnswered ? 'text-slate-400' : 'text-slate-100'
+                            }`}
                             dangerouslySetInnerHTML={{ __html: opt.text }} 
                           />
                         </button>

@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Stethoscope, History, LogIn, LogOut, FilePlus, Sparkles, ChevronDown, RefreshCw, CheckCircle, ArrowDownCircle, ShieldCheck, Maximize2, Minimize2, Type, Smartphone, Menu } from 'lucide-react';
+import { Stethoscope, History, LogIn, LogOut, FilePlus, Sparkles, ChevronDown, RefreshCw, CheckCircle, ArrowDownCircle, ShieldCheck, Maximize2, Minimize2, Type, Smartphone } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'catalog' | 'custom' | 'history';
   setActiveTab: (tab: 'catalog' | 'custom' | 'history') => void;
   openLeaderboardModal: () => void;
-  openSidebar?: () => void;
 }
 
 const CURRENT_VERSION = '05.10.08';
 const GITHUB_REPO = 'tausif-rahaman-raiyan/medical-exam-app';
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, openLeaderboardModal, openSidebar }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, openLeaderboardModal }) => {
   const { user, loginAsGoogleUser, logout, updateProfileName, examHistory, isGmailUser } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -223,23 +222,16 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, openLea
   }
 
   return (
-    <header className={`sticky top-0 z-50 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 px-4 py-3 shadow-xl transition-all duration-400 ease-out ${
-      headerVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
-    }`}>
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+    <header 
+      style={{ position: 'sticky', top: 0, zIndex: 50 }}
+      className={`sticky top-0 z-50 w-full bg-[#0F172A]/95 backdrop-blur-md border-b border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 shadow-xl transition-all duration-400 ease-out ${
+        headerVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
         
-        {/* Brand Logo & Version Info with AI Studio Sidebar Toggle */}
+        {/* Brand Logo & Version Info */}
         <div className="flex items-center gap-3">
-          {openSidebar && (
-            <button
-              onClick={openSidebar}
-              className="p-2.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-all shadow-sm flex items-center justify-center"
-              title="Open AI Studio Sidebar Console"
-            >
-              <Menu className="w-5 h-5 text-purple-400" />
-            </button>
-          )}
-
           <button 
             onClick={() => setActiveTab('catalog')}
             className="flex items-center gap-3 text-left group focus:outline-none"
@@ -317,11 +309,17 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, openLea
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 transition-all focus:outline-none"
           >
-            <img
-              src={user.photoURL}
-              alt={user.displayName}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover ring-2 ring-purple-500/50"
-            />
+            {user.photoURL && user.photoURL.trim() !== '' ? (
+              <img
+                src={user.photoURL}
+                alt={user.displayName}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover ring-2 ring-purple-500/50"
+              />
+            ) : (
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-purple-500/50">
+                {(user.displayName || 'G').charAt(0).toUpperCase()}
+              </div>
+            )}
             <span className="hidden lg:inline text-xs font-bold text-slate-200 max-w-[120px] truncate">
               {user.displayName}
             </span>
@@ -335,11 +333,17 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, openLea
             >
               {/* Authenticated User Details */}
               <div className="flex items-center gap-3 pb-3 border-b border-white/10">
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName}
-                  className="w-12 h-12 rounded-xl object-cover ring-2 ring-purple-500"
-                />
+                {user.photoURL && user.photoURL.trim() !== '' ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName}
+                    className="w-12 h-12 rounded-xl object-cover ring-2 ring-purple-500"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl ring-2 ring-purple-500">
+                    {(user.displayName || 'G').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   {editingName ? (
                     <form onSubmit={handleSaveName} className="flex items-center gap-1">

@@ -9,7 +9,6 @@ import { PreviewModal } from './components/PreviewModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { ResultsModal } from './components/ResultsModal';
 import { BottomNav } from './components/BottomNav';
-import { Sidebar } from './components/Sidebar';
 import { ExamItem, Question, UserAnswerMap, ExamResult } from './types/exam';
 
 const MainAppContent: React.FC = () => {
@@ -19,7 +18,6 @@ const MainAppContent: React.FC = () => {
   const [activeExam, setActiveExam] = useState<ExamItem | null>(null);
   const [previewExam, setPreviewExam] = useState<ExamItem | null>(null);
   const [leaderboardOpen, setLeaderboardOpen] = useState<boolean>(false);
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   // Active exam completion results state
   const [examResult, setExamResult] = useState<ExamResult | null>(null);
@@ -80,7 +78,7 @@ const MainAppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen w-full bg-transparent text-slate-100 flex flex-col font-sans">
       
       {/* 1. Active Exam Screen (Full viewport) */}
       {activeExam ? (
@@ -91,12 +89,11 @@ const MainAppContent: React.FC = () => {
         />
       ) : examResult ? (
         /* 2. Exam Results & Solution Review Screen */
-        <div className="flex-1 pb-16">
+        <div className="flex-1 pb-16 w-full max-w-full overflow-x-clip">
           <Header
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             openLeaderboardModal={() => setLeaderboardOpen(true)}
-            openSidebar={() => setSidebarOpen(true)}
           />
           <ResultsModal
             questions={activeQuestions}
@@ -109,12 +106,11 @@ const MainAppContent: React.FC = () => {
         </div>
       ) : (
         /* 3. Main Catalog / Builder Dashboard */
-        <div className="flex-1 flex flex-col pb-16 md:pb-0">
+        <div className="flex-1 flex flex-col pb-16 md:pb-0 w-full max-w-full overflow-x-clip">
           <Header
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             openLeaderboardModal={() => setLeaderboardOpen(true)}
-            openSidebar={() => setSidebarOpen(true)}
           />
 
           <main className="flex-1">
@@ -141,7 +137,7 @@ const MainAppContent: React.FC = () => {
         </div>
       )}
 
-      {/* Modals & AI Studio Sidebar Console */}
+      {/* Modals */}
       {previewExam && (
         <PreviewModal
           examItem={previewExam}
@@ -156,14 +152,6 @@ const MainAppContent: React.FC = () => {
       <LeaderboardModal
         isOpen={leaderboardOpen}
         onClose={() => setLeaderboardOpen(false)}
-      />
-
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        openLeaderboardModal={() => setLeaderboardOpen(true)}
       />
 
     </div>
