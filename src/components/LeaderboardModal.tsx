@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { subjectData } from '../data/subjectData';
-import { X, RotateCcw, CheckCircle2, XCircle, Target, RefreshCw, Sparkles, Calendar } from 'lucide-react';
+import { X, RotateCcw, CheckCircle2, XCircle, Target, RefreshCw, Sparkles, Calendar, Trophy } from 'lucide-react';
 import { parseExamSessionYear, toBengaliDigits } from '../utils/bengaliFormatter';
 
 interface LeaderboardModalProps {
@@ -10,16 +10,23 @@ interface LeaderboardModalProps {
 }
 
 export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose }) => {
-  const { examHistory, globalHistory, user, isGmailUser } = useAuth();
+  const { examHistory, globalHistory, user, isGmailUser, syncDatabaseResults } = useAuth();
   const [boardType, setBoardType] = useState<'personal' | 'global'>('personal');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedTopic, setSelectedTopic] = useState<string>('all');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
+  // Auto-sync real-time data from Firestore when modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      syncDatabaseResults();
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  // Base list depending on active tab
-  const baseList = boardType === 'personal' ? examHistory : (globalHistory.length > 0 ? globalHistory : examHistory);
+  // Base list depending on active tab (No local fallback when database has zero records)
+  const baseList = boardType === 'personal' ? examHistory : globalHistory;
 
   // Filter exam results
   let filteredResults = [...baseList];
@@ -35,16 +42,20 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
     filteredResults = filteredResults.filter(r => r.topicName.includes(selectedTopic));
   }
 
+  // Global Leaderboard (মেরিট বোর্ড): Sort by highest score first (Merit ranking)
+  if (boardType === 'global') {
+    filteredResults.sort((a, b) => b.score - a.score);
+  }
+
   const handleResetFilters = () => {
     setSelectedSubject('all');
     setSelectedTopic('all');
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 500);
+    await syncDatabaseResults();
+    setIsRefreshing(false);
   };
 
   const userInitial = (user.displayName || 'S').charAt(0).toUpperCase();
@@ -242,18 +253,41 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onCl
                     {/* Top Line: Attempt Pill, User Badge, Subject Pill, Code & Timestamp */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        {/* Attempt Pill */}
-                        <span className="px-3 py-1 rounded-full bg-[#162544] border border-purple-500/30 text-purple-200 text-xs font-bold font-mono flex items-center gap-1.5 shadow-sm">
-                          <RotateCcw className="w-3 h-3 text-purple-400" /> Attempt #{res.attempt || 1} ({toBengaliDigits(res.attempt || 1)}ম)
-                        </span>
+                        {/* Attempt Pill or Rank Badge for Global */}
+                        {boardType === 'global' ? (
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono flex items-center gap-1.5 shadow-sm ${
+                            index === 0
+                              ? 'bg-amber-500/20 border border-amber-500/50 text-amber-300'
+                              : index === 1
+                              ? 'bg-slate-300/20 border border-slate-300/50 text-slate-200'
+                              : index === 2
+                              ? 'bg-amber-700/20 border border-amber-600/50 text-amber-400'
+                              : 'bg-[#162544] border border-purple-500/30 text-purple-200'
+                          }`}>
+                            <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" /> Merit #{index + 1} ({toBengaliDigits(index + 1)}ম)
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full bg-[#162544] border border-purple-500/30 text-purple-200 text-xs font-bold font-mono flex items-center gap-1.5 shadow-sm">
+                            <RotateCcw className="w-3 h-3 text-purple-400" /> Attempt #{res.attempt || 1} ({toBengaliDigits(res.attempt || 1)}ম)
+                          </span>
+                        )}
 
                         {/* Candidate Avatar & Verified Name */}
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#162544] border border-white/5 text-xs font-bold text-white shadow-sm">
-                          <span className="w-4 h-4 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-[9px] font-black text-white">
-                            T
-                          </span>
-                          <span className="truncate max-w-[130px] sm:max-w-none">{res.displayName || user.displayName || 'Tausif Rahaman (Raiyan)'}</span>
-                          <span className="w-4 h-4 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-[10px] font-black shrink-0">
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#162544] border border-white/10 text-xs font-bold text-white shadow-sm">
+                          {res.photoURL ? (
+                            <img
+                              src={res.photoURL}
+                              alt={res.displayName || 'Candidate'}
+                              className="w-5 h-5 rounded-full object-cover shrink-0 border border-white/20"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <span className="w-5 h-5 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center text-[10px] font-black text-white shrink-0">
+                              {(res.displayName || user?.displayName || 'C').charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <span className="truncate max-w-[130px] sm:max-w-none">{res.displayName || user?.displayName || 'পরীক্ষার্থী'}</span>
+                          <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-[9px] font-black shrink-0" title="যাচাইকৃত পরীক্ষার্থী">
                             ✓
                           </span>
                         </div>

@@ -1,0 +1,44 @@
+name: Cleanup Stale Branches
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_delete:
+        description: "Type DELETE to confirm wiping all stale branches (main and gh-pages will be preserved)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup-branches:
+    name: Remove old feature & bugfix branches
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm_delete == 'DELETE'
+    steps:
+      - name: Scan and Delete Stale Branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Scanning remote branches in $REPO..."
+          
+          # Fetch all branch names
+          BRANCHES=$(gh api --paginate "repos/$REPO/branches" --jq '.[].name')
+          
+          for branch in $BRANCHES; do
+            # Protected branches to always preserve
+            if [ "$branch" = "main" ] || [ "$branch" = "master" ] || [ "$branch" = "gh-pages" ]; then
+              echo "Preserving primary branch: $branch"
+            else
+              echo "Deleting stale branch: $branch"
+              gh api --method DELETE "repos/$REPO/git/refs/heads/$branch" || {
+                echo "Could not delete $branch; continuing."
+              }
+            fi
+          done
+          
+          echo "Branch cleanup completed successfully! Only main and gh-pages remain."

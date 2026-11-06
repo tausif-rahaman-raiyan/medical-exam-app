@@ -175,7 +175,7 @@ export const subjectData: SubjectCategory[] = [
   },
   { 
     cat: "বিগত ১২ বছরের মেডিকেল প্রশ্ন", 
-    icon: "fa-clock-rotate-left",
+    icon: "fa-history",
     color: "from-amber-600 to-rose-600",
     items: [
       {t:"২০১৩-২০১৪ মেডিকেল প্রশ্নপত্র", c:"1020324100", url:"Question/blog-page_64.html", qCount: 100, duration: 50},

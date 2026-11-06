@@ -9,6 +9,7 @@ interface AuthContextType {
   examHistory: ExamResult[];
   globalHistory: ExamResult[];
   saveExamResult: (result: Omit<ExamResult, 'id' | 'date'>) => ExamResult | null;
+  syncDatabaseResults: () => Promise<void>;
   clearHistory: () => void;
   updateProfileName: (name: string) => void;
   loginAsGoogleUser: (customEmail?: string, customName?: string) => Promise<void>;
@@ -79,40 +80,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isLoggedIn: true
         };
         setUser(updatedUser);
-
-        // Fetch exam history from Firestore if available
-        try {
-          const q = query(collection(db, 'exam_results'), orderBy('serverTimestamp', 'desc'));
-          const querySnapshot = await getDocs(q);
-          const cloudResults: ExamResult[] = [];
-          querySnapshot.forEach((doc) => {
-            const data = doc.data() as any;
-            if (data.uid === firebaseUser.uid || data.email === firebaseUser.email) {
-              cloudResults.push({
-                id: doc.id,
-                topicName: data.topicName,
-                examCode: data.examCode,
-                category: data.category,
-                score: data.score,
-                totalQuestions: data.totalQuestions,
-                correctCount: data.correctCount,
-                wrongCount: data.wrongCount,
-                unattemptedCount: data.unattemptedCount,
-                percentage: data.percentage,
-                timeSpentSeconds: data.timeSpentSeconds,
-                date: data.date || new Date().toISOString(),
-                displayName: data.displayName,
-                attempt: data.attempt || 1
-              });
-            }
-          });
-          if (cloudResults.length > 0) {
-            setExamHistory(cloudResults);
-          }
-        } catch (e) {
-          console.warn('Failed to fetch user results from Firestore:', e);
-        }
       }
+      // Realtime initial sync from Firestore
+      syncDatabaseResults();
     });
     return () => unsubscribe();
   }, []);
@@ -134,6 +104,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isGmailUser = Boolean(user && user.isLoggedIn && user.email && user.email.includes('@'));
 
+  // Authoritative real-time sync from Firestore
+  const syncDatabaseResults = async () => {
+    try {
+      const q = query(collection(db, 'exam_results'), orderBy('serverTimestamp', 'desc'));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        // If not found in database, do not show previous locally saved data!
+        setGlobalHistory([]);
+        setExamHistory([]);
+        localStorage.removeItem(STORAGE_KEY_HISTORY);
+        localStorage.removeItem(STORAGE_KEY_GLOBAL);
+        return;
+      }
+
+      const allResults: ExamResult[] = [];
+      const userResults: ExamResult[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data() as any;
+        const item: ExamResult = {
+          id: doc.id,
+          topicName: data.topicName,
+          examCode: data.examCode,
+          category: data.category || 'Medical Exam',
+          score: typeof data.score === 'number' ? data.score : 0,
+          totalQuestions: data.totalQuestions || 100,
+          correctCount: data.correctCount || 0,
+          wrongCount: data.wrongCount || 0,
+          unattemptedCount: data.unattemptedCount || 0,
+          percentage: data.percentage || 0,
+          timeSpentSeconds: data.timeSpentSeconds || 0,
+          date: data.date || data.serverTimestamp || new Date().toISOString(),
+          displayName: data.displayName || 'Candidate',
+          photoURL: data.photoURL || '',
+          attempt: data.attempt || 1
+        };
+
+        allResults.push(item);
+
+        if (
+          (user && user.uid && data.uid === user.uid) ||
+          (user && user.email && data.email === user.email)
+        ) {
+          userResults.push(item);
+        }
+      });
+
+      setGlobalHistory(allResults);
+      setExamHistory(userResults);
+      localStorage.setItem(STORAGE_KEY_GLOBAL, JSON.stringify(allResults));
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(userResults));
+    } catch (e) {
+      console.warn('Realtime database sync error:', e);
+    }
+  };
+
   const saveExamResult = (data: Omit<ExamResult, 'id' | 'date'>): ExamResult | null => {
     const attemptsForTopic = examHistory.filter(r => r.topicName === data.topicName).length + 1;
     const newResult: ExamResult = {
@@ -141,7 +168,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: 'res_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
       date: new Date().toISOString(),
       attempt: attemptsForTopic,
-      displayName: user.displayName || 'Tausif Rahaman (Raiyan)'
+      displayName: user.displayName || 'Tausif Rahaman (Raiyan)',
+      photoURL: user.photoURL || ''
     };
 
     const updatedPersonal = [newResult, ...examHistory];
@@ -156,6 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...newResult,
         uid: user.uid,
         email: user.email,
+        photoURL: user.photoURL || '',
         serverTimestamp: new Date().toISOString()
       }).catch((err) => console.warn('Firestore write error:', err));
     } catch (e) {
@@ -251,6 +280,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         examHistory,
         globalHistory,
         saveExamResult,
+        syncDatabaseResults,
         clearHistory,
         updateProfileName,
         loginAsGoogleUser,

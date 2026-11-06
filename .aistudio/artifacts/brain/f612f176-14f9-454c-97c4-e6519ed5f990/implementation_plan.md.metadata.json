@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan to integrate the auto-detected title, 100/50 MCQ segmented toggle, and duration directly into the chapter selection box header in CustomMcqCreator, and clean up (+1) and (-0.25 Neg) labels from LeaderboardModal.",
-  "updatedAt": "2026-11-05T14:54:02.559634940Z",
+  "summary": "Implementation plan to fix the Netlify deploy by setting Vite outDir to dist and adding netlify.toml, implement real-time Firestore database synchronization on refresh without fallback to stale local data, and display all candidates in Global Leaderboard ranked by highest score with profile pictures beside names.",
+  "updatedAt": "2026-11-05T15:15:01.701172350Z",
   "requestFeedback": true,
   "userFacing": true
 }

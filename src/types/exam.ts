@@ -43,6 +43,7 @@ export interface ExamResult {
   timeSpentSeconds: number;
   date: string;
   displayName: string;
+  photoURL?: string;
   attempt: number;
 }
 

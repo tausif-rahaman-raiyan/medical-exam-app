@@ -1,8 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { SubjectCategory, ExamItem } from '../types/exam';
 import { subjectData } from '../data/subjectData';
-import { Search, ChevronDown, BookOpen, Clock, ListChecks, Scale, Eye, Play, Sparkles, Target, Layers3, TrendingUp, X, Calendar } from 'lucide-react';
+import { 
+  Search, ChevronDown, BookOpen, Clock, ListChecks, Scale, Eye, Play, Sparkles, Target, Layers3, 
+  TrendingUp, X, Calendar, HelpCircle, AlertCircle, Sprout, Dna, Atom, Zap, FlaskConical, 
+  TestTubes, Languages, Globe2, History, Stethoscope 
+} from 'lucide-react';
 import { parseExamSessionYear, toBengaliDigits } from '../utils/bengaliFormatter';
+
+const getSubjectIcon = (cat: string) => {
+  if (cat.includes('উদ্ভিদবিজ্ঞান')) return <Sprout className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('প্রাণিবিজ্ঞান')) return <Dna className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('পদার্থবিজ্ঞান প্রথম')) return <Atom className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('পদার্থবিজ্ঞান দ্বিতীয়')) return <Zap className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('রসায়ন প্রথম')) return <FlaskConical className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('রসায়ন দ্বিতীয়')) return <TestTubes className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('ইংরেজি')) return <Languages className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('সাধারণ জ্ঞান')) return <Globe2 className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('বিগত ১২ বছর') || cat.includes('বিগত')) return <History className="w-5 h-5 text-white shrink-0" />;
+  if (cat.includes('মডেল টেস্ট')) return <Stethoscope className="w-5 h-5 text-white shrink-0" />;
+  return <BookOpen className="w-5 h-5 text-white shrink-0" />;
+};
 
 interface CatalogViewProps {
   onStartExam: (exam: ExamItem) => void;
@@ -189,7 +207,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
                 >
                   <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                     <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br ${subject.color || 'from-purple-600 to-indigo-600'} flex items-center justify-center text-white shadow-lg flex-shrink-0`}>
-                      <i className={`fa ${subject.icon || 'fa-book-medical'} text-base`} />
+                      {getSubjectIcon(subject.cat)}
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -197,14 +215,23 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
                         {subject.cat}
                       </span>
                       <span className="text-xs font-semibold text-slate-400 block mt-0.5 font-siliguri">
-                        {subject.items.length}টি অধ্যায় ({toBengaliDigits(subject.items.length)} Topics) · ১০০ MCQs per exam
+                        {subject.items.length}টি অধ্যায় ({toBengaliDigits(subject.items.length)} Topics) · 100 MCQs per exam
                       </span>
-                      <div className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-purple-950/80 border border-purple-700/60 text-purple-200 font-siliguri">
-                        <span>১০০ Questions</span>
-                        <span className="text-purple-400">•</span>
-                        <span>৫০ Minutes</span>
-                        <span className="text-purple-400">•</span>
-                        <span>-০.২৫ Negative Marking</span>
+                      <div className="mt-2 inline-flex flex-wrap items-center gap-2 text-[11px] font-bold px-3 py-1 rounded-xl bg-purple-950/80 border border-purple-700/60 text-purple-200">
+                        <span className="inline-flex items-center gap-1.5 text-purple-200 font-mono">
+                          <HelpCircle className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                          <span>100 Questions</span>
+                        </span>
+                        <span className="text-purple-400 font-bold">•</span>
+                        <span className="inline-flex items-center gap-1.5 text-cyan-200 font-mono">
+                          <Clock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>50 Minutes</span>
+                        </span>
+                        <span className="text-purple-400 font-bold">•</span>
+                        <span className="inline-flex items-center gap-1.5 text-rose-300 font-mono">
+                          <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                          <span>-0.25 Negative Marking</span>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -246,16 +273,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ onStartExam, onPreview
                               <span className="text-[10px] text-purple-200 font-mono font-black uppercase tracking-wider bg-purple-950/90 border border-purple-600/50 px-2 py-0.5 rounded-lg">
                                 Code: {item.c}
                               </span>
-                              <span className="text-slate-300 font-semibold flex items-center gap-1 font-siliguri">
-                                <ListChecks className="w-3.5 h-3.5 text-purple-400" /> ১০০ Questions
+                              <span className="text-slate-300 font-semibold flex items-center gap-1 font-mono">
+                                <HelpCircle className="w-3.5 h-3.5 text-purple-400 shrink-0" /> 100 Questions
                               </span>
                               <span className="text-slate-600">•</span>
-                              <span className="text-slate-300 font-semibold flex items-center gap-1 font-siliguri">
-                                <Clock className="w-3.5 h-3.5 text-cyan-400" /> ৫০ Mins
+                              <span className="text-slate-300 font-semibold flex items-center gap-1 font-mono">
+                                <Clock className="w-3.5 h-3.5 text-cyan-400 shrink-0" /> 50 Minutes
                               </span>
                               <span className="text-slate-600">•</span>
-                              <span className="text-amber-300 font-bold bg-amber-950/50 border border-amber-500/40 px-2 py-0.5 rounded-lg flex items-center gap-1 font-siliguri">
-                                <Scale className="w-3.5 h-3.5 text-amber-400" /> Full Marks: ১০০ (-০.২৫ Neg)
+                              <span className="text-rose-300 font-semibold bg-rose-950/40 border border-rose-500/40 px-2 py-0.5 rounded-lg flex items-center gap-1 font-mono">
+                                <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" /> -0.25 Negative Marking
                               </span>
                             </div>
                           </div>
