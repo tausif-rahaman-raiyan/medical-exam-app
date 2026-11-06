@@ -2,11 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'medical-exam-app';
-const base = process.env.GITHUB_ACTIONS ? `/${repositoryName}/` : '/';
-
 export default defineConfig({
-  base,
+  base: './',
   plugins: [react(), tailwindcss()],
   publicDir: 'public',
   build: {
